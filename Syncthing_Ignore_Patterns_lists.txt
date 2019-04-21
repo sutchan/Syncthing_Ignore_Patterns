@@ -20,7 +20,6 @@
 **@Recycle
 **Backup_of_*
 **BaiduNetdiskDownload*
-**BaiduNetdiskDownload*
 **Cache*
 **download*
 **downloads*
