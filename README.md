@@ -1,4 +1,4 @@
-# Syncthing_Ignore_Patterns
+# Syncthing Ignore Patterns
 
 Syncthing 同步工具的忽略清单位于各同步目录内的 .stignore
 
