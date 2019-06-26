@@ -1,0 +1,41 @@
+//Syncthing Ignore Patterns Lists
+**$RECYCLE.BIN
+**.@__thumb
+**.AppleDB
+**.baiduyun.uploading.cfg
+**.bak
+**.cache
+**.crdownload
+**.delete
+**.dropbox.cache
+**.DS_Store
+**.hls
+**.ldb
+**.log
+**.resona
+**.streams
+**.thumbnails
+**.tmfs
+**.tmp
+**.webaxs
+**@Recycle
+**Backup_of_*
+**BaiduNetdiskDownload*
+**Cache*
+**download*
+**downloads*
+**hls*
+**Internet*
+**KwDownload*
+**nplayerdisk*
+**Program Files (x86)*
+**Program Files*
+**QLDownload*
+**qycache*
+**Temp*
+**Thumbs.db
+**trashbox*
+**UpdateCache*
+**Youku Files*
+**~$*
+System Volume Information
