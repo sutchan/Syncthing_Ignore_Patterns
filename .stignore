@@ -12,6 +12,7 @@
 **.hls
 **.ldb
 **.log
+**.Recovery
 **.resona
 **.streams
 **.thumbnails
@@ -33,8 +34,8 @@
 **QLDownload*
 **qycache*
 **Temp*
-**Thumbs.db
 **Tencent Files
+**Thumbs.db
 **trashbox*
 **UpdateCache*
 **Youku Files*
