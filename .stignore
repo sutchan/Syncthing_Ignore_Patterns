@@ -32,8 +32,9 @@
 **Program Files (x86)/
 **Program Files/
 **QLDownload/
-**qycache*
-**Temp*
+**qycache/
+**System Volume Information/
+**Temp/
 **Tencent Files/
 **Thumbs.db
 **trashbox*
@@ -41,4 +42,3 @@
 **WeChat Files/
 **Youku Files/
 **~$*
-System Volume Information
