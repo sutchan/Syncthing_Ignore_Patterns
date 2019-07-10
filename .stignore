@@ -21,24 +21,24 @@
 **.webaxs
 **@Recycle
 **Backup_of_*
-**BaiduNetdiskDownload*
+**BaiduNetdiskDownload/
 **Cache*
 **download*
 **downloads*
 **hls*
 **Internet*
-**KwDownload*
-**nplayerdisk*
-**Program Files (x86)*
-**Program Files*
-**QLDownload*
+**KwDownload/
+**nplayerdisk/
+**Program Files (x86)/
+**Program Files/
+**QLDownload/
 **qycache*
 **Temp*
-**Tencent Files
+**Tencent Files/
 **Thumbs.db
 **trashbox*
-**UpdateCache*
-**WeChat Files
-**Youku Files*
+**UpdateCache/
+**WeChat Files/
+**Youku Files/
 **~$*
 System Volume Information
