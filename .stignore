@@ -23,8 +23,8 @@
 **Backup_of_*
 **BaiduNetdiskDownload/
 **Cache*
-**download*
-**downloads*
+**download/
+**downloads/
 **hls*
 **Internet*
 **KwDownload/
@@ -42,3 +42,5 @@
 **WeChat Files/
 **Youku Files/
 **~$*
+**swapfile.sys
+**pagefile.sys
