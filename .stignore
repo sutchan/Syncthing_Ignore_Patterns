@@ -15,6 +15,7 @@
 **.Recovery
 **.resona
 **.streams
+**.stversions
 **.thumbnails
 **.tmfs
 **.tmp
@@ -29,10 +30,13 @@
 **Internet*
 **KwDownload/
 **nplayerdisk/
+**pagefile.sys
 **Program Files (x86)/
 **Program Files/
 **QLDownload/
 **qycache/
+**sync.ffs_db
+**swapfile.sys
 **System Volume Information/
 **Temp/
 **Tencent Files/
@@ -42,5 +46,3 @@
 **WeChat Files/
 **Youku Files/
 **~$*
-**swapfile.sys
-**pagefile.sys
