@@ -7,7 +7,7 @@
 **.cache
 **.crdownload
 **.delete
-**.dropbox.cache
+**.dropbox.cache/
 **.DS_Store
 **.hls
 **.ldb
@@ -15,6 +15,7 @@
 **.Recovery
 **.resona
 **.streams/
+**.stfolder/
 **.stversions
 **.thumbnails
 **.tmfs
