@@ -2,48 +2,51 @@
 **$RECYCLE.BIN
 **.@__thumb
 **.AppleDB
+**.DS_Store
+**.Recovery
 **.baiduyun.uploading.cfg
 **.bak
 **.cache
 **.crdownload
 **.delete
 **.dropbox.cache/
-**.DS_Store
 **.hls
 **.ldb
 **.log
-**.Recovery
+**.midownloading
 **.resona
-**.streams/
 **.stfolder/
+**.streams/
 **.stversions
 **.thumbnails
 **.tmfs
 **.tmp
 **.webaxs
 **@Recycle
+**AliWorkbenchData/
 **Backup_of_*
 **BaiduNetdiskDownload/
 **Cache*
-**download/
-**downloads/
-**hls*
 **Internet*
 **KwDownload/
-**nplayerdisk/
-**pagefile.sys
 **Program Files (x86)/
 **Program Files/
 **QLDownload/
-**qycache/
-**sync.ffs_db
-**swapfile.sys
 **System Volume Information/
 **Temp/
 **Tencent Files/
 **Thumbs.db
-**trashbox*
 **UpdateCache/
 **WeChat Files/
 **Youku Files/
+**desktop.ini
+**download/
+**downloads/
+**hls*
+**nplayerdisk/
+**pagefile.sys
+**qycache/
+**swapfile.sys
+**sync.ffs_db
+**trashbox*
 **~$*
