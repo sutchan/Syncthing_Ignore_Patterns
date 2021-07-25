@@ -5,11 +5,11 @@
 **.DS_Store
 **.Recovery
 **.baiduyun.uploading.cfg
-**.bak
 **.cache
 **.crdownload
 **.delete
 **.dropbox.cache/
+**.egstore/
 **.hls
 **.ldb
 **.log
