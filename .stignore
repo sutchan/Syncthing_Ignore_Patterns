@@ -5,6 +5,7 @@
 **.DS_Store
 **.Recovery
 **.baiduyun.uploading.cfg
+**.bak
 **.cache
 **.crdownload
 **.delete
@@ -13,14 +14,18 @@
 **.hls
 **.ldb
 **.log
+**.microthumbnailFile/
 **.midownloading
 **.resona
+**.secretAlbum/
 **.stfolder/
 **.streams/
 **.stversions
+**.thumb
 **.thumbnails
 **.tmfs
 **.tmp
+**.trashBin/
 **.webaxs
 **@Recycle
 **AliWorkbenchData/
@@ -40,6 +45,7 @@
 **UpdateCache/
 **WeChat Files/
 **Youku Files/
+**debug_log/
 **desktop.ini
 **download/
 **downloads/
@@ -49,5 +55,6 @@
 **qycache/
 **swapfile.sys
 **sync.ffs_db
+**thumb/
 **trashbox*
 **~$*
