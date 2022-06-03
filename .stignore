@@ -1,26 +1,24 @@
-//Syncthing Ignore Patterns Lists
-**#Recycle
+//Syncthing Ignore Patterns Lists**#Recycle
 **$RECYCLE.BIN
 **.@__thumb
+**.@datasync_temp_*
 **.AppleDB
-**.DS_Store
-**.Recovery
 **.baiduyun.uploading.cfg
 **.bak
 **.cache
 **.crdownload
 **.delete
 **.dropbox.cache/
+**.DS_Store
 **.egstore/
 **.gs/
-**.gs_*/
-**.gs_fs0/
-**.gs_fs3/
+**.gs_*
 **.hls
 **.ldb
 **.log
 **.microthumbnailFile/
 **.midownloading
+**.Recovery
 **.resona
 **.secretAlbum/
 **.stfolder/
@@ -37,29 +35,29 @@
 **Backup_of_*
 **BaiduNetdiskDownload/
 **Cache*
-**Internet*
-**KwDownload/
-**Program Files (x86)/
-**Program Files/
-**QLDownload/
-**SteamLibrary/
-**System Volume Information/
-**Temp/
-**Tencent Files/
-**Thumbs.db
-**UpdateCache/
-**WeChat Files/
-**Youku Files/
 **debug_log/
 **desktop.ini
 **download/
 **downloads/
 **hls*
+**Internet*
+**KwDownload/
 **nplayerdisk/
 **pagefile.sys
+**Program Files (x86)/
+**Program Files/
+**QLDownload/
 **qycache/
+**SteamLibrary/
 **swapfile.sys
 **sync.ffs_db
+**System Volume Information/
+**Temp/
+**Tencent Files/
 **thumb/
+**Thumbs.db
 **trashbox*
+**UpdateCache/
+**WeChat Files/
+**Youku Files/
 **~$*
