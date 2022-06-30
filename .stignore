@@ -1,4 +1,5 @@
-//Syncthing Ignore Patterns Lists**#Recycle
+//Syncthing Ignore Patterns Lists**
+#Recycle
 **$RECYCLE.BIN
 **.@__thumb
 **.@datasync_temp_*
