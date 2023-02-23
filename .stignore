@@ -1,5 +1,5 @@
-//Syncthing Ignore Patterns Lists**
-#Recycle
+//Syncthing Ignore Patterns Lists
+**#Recycle
 **$RECYCLE.BIN
 **.@__thumb
 **.@datasync_temp_*
@@ -12,6 +12,7 @@
 **.dropbox.cache/
 **.DS_Store
 **.egstore/
+**.git/
 **.gs/
 **.gs_*
 **.hls
@@ -43,6 +44,7 @@
 **hls*
 **Internet*
 **KwDownload/
+**LOST.DIR/
 **nplayerdisk/
 **pagefile.sys
 **Program Files (x86)/
