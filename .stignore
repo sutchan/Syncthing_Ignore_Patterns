@@ -9,6 +9,7 @@
 **.cache
 **.crdownload
 **.delete
+**.deletedByTMM/
 **.dropbox.cache/
 **.DS_Store
 **.egstore/
@@ -20,12 +21,15 @@
 **.log
 **.microthumbnailFile/
 **.midownloading
+**.pnpm-store/
 **.Recovery
+**.Recycle_bin
 **.resona
 **.secretAlbum/
 **.stfolder/
 **.streams/
 **.stversions
+**.sync/
 **.thumb
 **.thumbnails
 **.tmfs
@@ -33,6 +37,7 @@
 **.trashBin/
 **.webaxs
 **@Recycle
+**~$*
 **AliWorkbenchData/
 **Backup_of_*
 **BaiduNetdiskDownload/
@@ -44,7 +49,10 @@
 **hls*
 **Internet*
 **KwDownload/
+**log/
+**logs/
 **LOST.DIR/
+**metadata/
 **nplayerdisk/
 **pagefile.sys
 **Program Files (x86)/
@@ -62,5 +70,6 @@
 **trashbox*
 **UpdateCache/
 **WeChat Files/
+**xiaoya/media/
 **Youku Files/
-**~$*
+
