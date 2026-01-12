@@ -1,9 +1,11 @@
-//Syncthing Ignore Patterns Lists
 **#Recycle
 **$RECYCLE.BIN
 **.@__thumb
 **.@datasync_temp_*
 **.AppleDB
+**.DS_Store
+**.Recovery
+**.Recycle_bin
 **.baiduyun.uploading.cfg
 **.bak
 **.cache
@@ -11,7 +13,6 @@
 **.delete
 **.deletedByTMM/
 **.dropbox.cache/
-**.DS_Store
 **.egstore/
 **.git/
 **.gs/
@@ -22,8 +23,6 @@
 **.microthumbnailFile/
 **.midownloading
 **.pnpm-store/
-**.Recovery
-**.Recycle_bin
 **.resona
 **.secretAlbum/
 **.stfolder/
@@ -36,41 +35,43 @@
 **.tmp
 **.trashBin/
 **.webaxs
+**/config/index-v1/*
+**/config/index-v2/*
 **@Recycle
 **AliWorkbenchData/
 **Backup_of_*
 **BaiduNetdiskDownload/
 **Cache*
+**Internet*
+**KwDownload/
+**LOST.DIR/
+**Program Files (x86)/
+**Program Files/
+**QLDownload/
+**SteamLibrary/
+**System Volume Information/
+**Temp/
+**Tencent Files/
+**Thumbs.db
+**UpdateCache/
+**WeChat Files/
+**Youku Files/
 **debug_log/
 **desktop.ini
 **download/
 **downloads/
 **hls*
-**Internet*
-**KwDownload/
 **log/
 **logs/
-**LOST.DIR/
 **metadata/
+**node_modules/*
 **nplayerdisk/
 **pagefile.sys
-**Program Files (x86)/
-**Program Files/
-**QLDownload/
 **qycache/
-**SteamLibrary/
 **swapfile.sys
 **sync.ffs_db
-**System Volume Information/
-**Temp/
-**Tencent Files/
 **thumb/
-**Thumbs.db
 **trashbox*
-**UpdateCache/
-**WeChat Files/
 **xiaoya/media/
-**Youku Files/
-**/config/index-v2/*
-**/config/index-v1/*
 **~$*
+//Syncthing Ignore Patterns Lists
