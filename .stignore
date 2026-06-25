@@ -1,3 +1,4 @@
+//Syncthing Ignore Patterns Lists
 **#Recycle
 **$RECYCLE.BIN
 **.@__thumb
@@ -65,6 +66,7 @@
 **logs/
 **metadata/
 **node_modules/*
+**/node_modules/*
 **nplayerdisk/
 **pagefile.sys
 **qycache/
@@ -74,4 +76,3 @@
 **trashbox*
 **xiaoya/media/
 **~$*
-//Syncthing Ignore Patterns Lists
