@@ -1,17 +1,9 @@
 # Syncthing 忽略模式
 
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-[English](#english) | [中文](README_CN.md)
-=======
 ![Version](https://img.shields.io/badge/version-v1.0.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--07--01-brightgreen)
 
 [中文](#中文说明) | [English](README_EN.md)
->>>>>>> Stashed changes
-=======
-[中文](#中文说明) | [English](README_EN.md)
->>>>>>> 74a3b29c991900d1363ae7003b07035216fc0c0e
 
 ---
 
@@ -19,26 +11,7 @@
 
 精心整理的 `.stignore` 集合，可将系统文件、缓存、构建产物和应用数据排除在 Syncthing 同步之外。
 
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-### Pattern Syntax
-
-| Pattern | Description |
-|---------|-------------|
-| `(?d)` | Allow deletion when blocked parent dir is removed |
-| `(?i)` | Case-insensitive matching |
-| `!` | Negation (include this pattern) |
-| `*` | Single-level wildcard |
-| `**` | Multi-level wildcard |
-| `//` | Comment |
-=======
 ### 通配符语法
->>>>>>> Stashed changes
-=======
-**当前版本：v1.0.0**（更新于 2026-07-01）
-
-### 通配符语法
->>>>>>> 74a3b29c991900d1363ae7003b07035216fc0c0e
 
 | 模式 | 说明 |
 |------|------|
