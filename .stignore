@@ -1,4 +1,6 @@
 //Syncthing Ignore Patterns Lists
+//Version: 1.0.0
+//Updated: 2026-07-01
 
 //System & OS Files
 **#Recycle
