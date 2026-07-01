@@ -6,135 +6,101 @@
 
 ## English
 
-### Overview
-
-A curated collection of Syncthing ignore patterns (`.stignore`) to help you sync only the files you need. This repository provides a comprehensive, well-organized `.stignore` file that excludes system files, cache directories, build artifacts, and application data from Syncthing synchronization.
-
-Syncthing uses `.stignore` files in each sync folder to define which files and folders to exclude from synchronization. You can configure these patterns either through the Syncthing Web GUI (Config → Ignore Patterns) or by directly editing the `.stignore` file.
+A curated `.stignore` collection to exclude system files, caches, build artifacts, and app data from Syncthing sync.
 
 ### Pattern Syntax
 
 | Pattern | Description |
 |---------|-------------|
-| `(?d)` | Prefix that allows files to be deleted if the blocked parent directory is removed |
-| `(?i)` | Case-insensitive matching prefix |
-| `!` | Negation — include this pattern (e.g., `!**/.git/` to sync `.git` folders) |
-| `*` | Single-level wildcard (matches one directory level only) |
-| `**` | Multi-level wildcard (matches across nested directories) |
-| `//` | Comment — lines starting with `//` are ignored |
+| `(?d)` | Allow deletion when blocked parent dir is removed |
+| `(?i)` | Case-insensitive matching |
+| `!` | Negation (include this pattern) |
+| `*` | Single-level wildcard |
+| `**` | Multi-level wildcard |
+| `//` | Comment |
 
-### Included Pattern Categories
+### Included Categories
 
-The `.stignore` file is organized into the following sections:
+The `.stignore` file covers the following categories (see the file for full details):
 
-#### 1. General Exclusions
-
-Common system files, recycle bins, and temporary files across platforms.
-
-- **System files**: `.DS_Store`, `desktop.ini`, `Thumbs.db`, `pagefile.sys`, `swapfile.sys`, `~$*` (Office temp files)
-- **Recycle bins**: `$RECYCLE.BIN`, `@Recycle`, `.Recovery`, `.Recycle_bin`, `trashbox*`, `LOST.DIR/`
-- **Temp/cache files**: `.tmp`, `.cache`, `.log`, `.crdownload`, `.bak`, `.delete`
-- **Version control**: `.git/`, `.sync/`
-- **Cloud sync internals**: `.dropbox.cache/`, `.stfolder/`, `.stversions`, `sync.ffs_db`
-- **App data**: WeChat Files, QQ, Baidu Netdisk, AliWorkbench, Tencent Files, Youku Files
-- **System directories**: `Program Files/`, `Program Files (x86)/`, `System Volume Information/`
-
-#### 2. Package Manager Caches & Dependencies
-
-- **Node.js**: `.npm/`, `.pnpm-store/`, `.pnpm-local-store`, `.yarn/cache/`, `.bun/`, `node_modules/`
-- **Python**: `.venv/`, `__pycache__/`, `.ipynb_checkpoints/`
-- **Rust**: `.cargo/`
-- **Java/JVM**: `.gradle/`, `.m2/`
-- **.NET**: `.nuget/`
-- **Deno**: `.deno/`
-- **Dart/Flutter**: `.dart_tool/`, `.pub-cache/`
-- **Haskell**: `.stack-work/`
-
-#### 3. Build Outputs & Artifacts
-
-- **Directories**: `bin/`, `build/`, `dist/`, `out/`, `output/`, `target/`, `vendor/`
-- **Binary files**: `*.exe`, `*.dll`, `*.so`, `*.dylib`, `*.a`, `*.lib`, `*.o`, `*.obj`, `*.pyc`, `*.pyo`
-
-#### 4. Frontend Framework Build Caches
-
-- **Astro**: `.astro/`
-- **Next.js**: `.next/`
-- **Nuxt**: `.nuxt/`
-- **SvelteKit**: `.svelte-kit/`
-- **Vite**: `.vite/`, `.turbo/`
-- **Parcel**: `.parcel-cache/`
-- **Docusaurus**: `.docusaurus/`
-- **VuePress**: `.vuepress/dist/`
-- **Deployment**: `.vercel/`, `.netlify/`
-
-#### 5. Python & Testing Caches
-
-- **Python**: `.eggs/`, `.coverage`, `htmlcov/`
-- **Testing**: `.pytest_cache/`, `.jest-cache/`, `.vitest/`, `.nyc_output/`, `.tox/`, `.nox/`
-- **Type checking**: `.mypy_cache/`, `.ruff_cache/`
-- **Notebooks**: `.ipynb_checkpoints/`
-
-#### 6. C/C++ & Rust Build Caches
-
-- **CMake**: `CMakeCache.txt`, `CMakeFiles/`, `cmake-build-debug/`, `cmake-build-release/`
-- **Compiler**: `compile_commands.json`, `.ccls-cache/`, `.clangd/`
-- **Rust**: `.rustc_cache/`
-
-#### 7. JVM & Scala Build Caches
-
-- **Scala**: `.ammonite/`, `.bloop/`, `.metals/`
-- **Kotlin**: `.kotlintest/`
-
-#### 8. IDE & Tool Caches
-
-- **JetBrains**: `.idea/`
-- **VS Code**: `.vscode/`, `.vs/`, `.history/`
-- **Infrastructure**: `.terraform/`, `.terragrunt-cache/`, `.helm/`, `.kube/`, `.flyway/`
-
-#### 9. Lock & Log Files
-
-- `*.lock`, `*.log.*`
+- **System & Temp Files** — OS-generated files, recycle bins, caches, logs
+- **Version Control & Cloud Sync** — `.git/`, `.stfolder/`, `.stversions`, etc.
+- **Dependencies & Caches** — `node_modules/`, `.venv/`, `.cargo/`, `.gradle/`, etc.
+- **Build Outputs** — `bin/`, `dist/`, `target/`, `*.exe`, `*.pyc`, etc.
+- **Framework Caches** — `.next/`, `.nuxt/`, `.vite/`, `.turbo/`, etc.
+- **Testing & Type Checking** — `.pytest_cache/`, `.mypy_cache/`, `.coverage`, etc.
+- **IDE & Tools** — `.idea/`, `.vscode/`, `.terraform/`, `.kube/`, etc.
+- **App Data** — WeChat, QQ, Baidu Netdisk, Tencent Files, etc.
+- **Lock & Logs** — `*.lock`, `*.log.*`
 
 ### Usage
 
-1. **Copy the file**: Copy the `.stignore` file from this repository into your Syncthing sync folder root
-2. **Or use the Web GUI**: Open Syncthing Web UI → click the folder → "Ignored Files" → paste the patterns
-3. **Real-time effect**: Patterns are applied immediately; Syncthing will re-scan to enforce them
+#### Prerequisites
+
+- A running [Syncthing](https://syncthing.net/) instance
+- At least one configured sync folder
+
+#### Method 1: Copy the file directly
+
+1. Download `.stignore` from this repository
+2. Place it at the **root** of your Syncthing sync folder
+3. Restart Syncthing or trigger a rescan — patterns take effect on the next scan
+
+#### Method 2: Use the Syncthing Web GUI
+
+1. Open the Syncthing Web UI (default: `http://localhost:8384`)
+2. Click the target folder → **Edit** → **Ignore Patterns**
+3. Paste the contents of `.stignore` into the editor
+4. Click **Save** — patterns apply immediately and a rescan is triggered
+
+#### Method 3: Include external files
+
+Syncthing supports `// #include` directives to split patterns across files:
+
+```
+// Include this repo's patterns
+#include .stignore-base
+
+// Add your own custom rules below
+**/my-secret-folder
+*.local
+```
+
+#### Customization Tips
+
+- **Whitelist files**: Use `!` to re-include patterns, e.g. `!**/.git/` keeps `.git` folders in sync
+- **Case-insensitive**: Prefix with `(?i)` to match across cases, e.g. `(?i)**.jpg` matches `.JPG`, `.jpg`, `.Jpg`
+- **Safe deletion**: Use `(?d)` prefix to allow Syncthing to delete files when their parent directory is removed
+- **Comments**: Lines starting with `//` are ignored — use them to document your rules
+- **Test before committing**: Use the "Ignore Patterns" preview in the Web UI to verify which files are matched
+
+#### Verification
+
+After applying the patterns:
+
+1. Open the Syncthing Web UI → folder → **Ignore Patterns** to confirm rules are loaded
+2. Check the folder status — files matching the patterns should no longer appear in the sync queue
+3. Use **Recent Changes** to verify ignored files are not being synced
 
 ### Examples
 
 ```
-// Exclude Recycle Bin folders recursively
+// Recursively exclude Recycle Bin
 **$RECYCLE.BIN
 
-// Exclude macOS system files
+// macOS system files
 **.DS_Store
 
-// Exclude Windows thumbnail caches
-**Thumbs.db
-
-// Exclude node_modules recursively
+// node_modules
 **/node_modules/*
-
-// Exclude temporary/download files
-**.tmp
-**.crdownload
 
 // Case-insensitive match
 (?i)**.JPG
-```
 
-### Project Structure
-
-```
-SyncthingIgnorePatterns/
-├── .stignore                              # The ignore patterns file
-├── .gitignore                             # Git ignore rules
-├── README.md                              # English documentation
-├── README_CN.md                           # Chinese documentation
-└── SyncthingIgnorePatterns.code-workspace # VS Code workspace config
+// Whitelist .git folders
+!**/.git/
 ```
 
 ### License
 
-This project is open source and available under the MIT License.
+MIT

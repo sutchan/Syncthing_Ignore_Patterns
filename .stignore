@@ -1,30 +1,44 @@
 //Syncthing Ignore Patterns Lists
+
+//System & OS Files
 **#Recycle
 **$RECYCLE.BIN
 **.@__thumb
 **.@datasync_temp_*
 **.AppleDB
-**.pnpm-local-store
 **.DS_Store
 **.Recovery
 **.Recycle_bin
-**.baiduyun.uploading.cfg
-**.bak
+**@Recycle
+**LOST.DIR/
+**Program Files (x86)/
+**Program Files/
+**System Volume Information/
+**Thumbs.db
+**desktop.ini
+**pagefile.sys
+**swapfile.sys
+**~$*
+
+//Backup & Temporary Files
 **.cache
-**.crdownload
 **.delete
 **.deletedByTMM/
+**.tmp
+**Backup_of_*
+**Temp/
+
+//Application Data & Caches
+**.baiduyun.uploading.cfg
+**.crdownload
 **.dropbox.cache/
 **.egstore/
-**.git/
 **.gs/
 **.gs_*
 **.hls
 **.ldb
-**.log
 **.microthumbnailFile/
 **.midownloading
-**.pnpm-store/
 **.resona
 **.secretAlbum/
 **.stfolder/
@@ -34,49 +48,37 @@
 **.thumb
 **.thumbnails
 **.tmfs
-**.tmp
 **.trashBin/
 **.webaxs
 **/config/index-v1/*
 **/config/index-v2/*
-**@Recycle
 **AliWorkbenchData/
-**Backup_of_*
 **BaiduNetdiskDownload/
 **Cache*
 **Internet*
 **KwDownload/
-**LOST.DIR/
-**Program Files (x86)/
-**Program Files/
 **QLDownload/
 **SteamLibrary/
-**System Volume Information/
-**Temp/
 **Tencent Files/
-**Thumbs.db
 **UpdateCache/
 **WeChat Files/
 **Youku Files/
 **debug_log/
-**desktop.ini
 **download/
 **downloads/
 **hls*
 **log/
 **logs/
 **metadata/
-**node_modules/*
-**/node_modules/*
 **nplayerdisk/
-**pagefile.sys
 **qycache/
-**swapfile.sys
 **sync.ffs_db
 **thumb/
 **trashbox*
 **xiaoya/media/
-**~$*
+
+//Version Control Systems
+**.git/
 
 //Package Manager Caches & Dependencies
 **.bun/
@@ -87,6 +89,7 @@
 **.m2/
 **.npm/
 **.nuget/
+**.pnpm-local-store
 **.pnpm-store/
 **.pub-cache/
 **.stack-work/
@@ -94,29 +97,24 @@
 **.venv-*/
 **.yarn/cache/
 **.yarn/install-state.gz
+**/node_modules/*
 **__pycache__/
+**node_modules/*
 **packages/
-
-//Build Outputs & Artifacts
-**bin/
-**build/
-**dist/
-**target/
-**vendor/
 
 //Frontend Framework Build Caches
 **.astro/
+**.docusaurus/
+**.netlify/
 **.next/
 **.nuxt/
 **.output/
 **.parcel-cache/
 **.svelte-kit/
 **.turbo/
-**.vite/
-**.docusaurus/
-**.vuepress/dist/
 **.vercel/
-**.netlify/
+**.vite/
+**.vuepress/dist/
 
 //Python & Testing Caches
 **.coverage
@@ -152,15 +150,14 @@
 //IDE & Tool Caches
 **.flyway/
 **.helm/
+**.history/
 **.idea/
 **.kube/
 **.terraform/
 **.terraform.lock.hcl
 **.terragrunt-cache/
-**.vs/
-**.vscode/
-**.history/
 
 //Lock & Log Files
 *.lock
 *.log.*
+**.log

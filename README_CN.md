@@ -6,135 +6,101 @@
 
 ## 中文说明
 
-### 概述
-
-精心整理的 Syncthing 忽略模式（`.stignore`）集合，帮助您只同步需要的文件。本仓库提供了一份全面、分类清晰的 `.stignore` 文件，可将系统文件、缓存目录、构建产物和应用数据排除在 Syncthing 同步之外。
-
-Syncthing 使用每个同步文件夹内的 `.stignore` 文件来定义哪些文件和文件夹应排除在同步之外。您可以通过 Syncthing Web 界面（配置 → 忽略模式）进行设置，或直接编辑 `.stignore` 文件。
+精心整理的 `.stignore` 集合，可将系统文件、缓存、构建产物和应用数据排除在 Syncthing 同步之外。
 
 ### 通配符语法
 
 | 模式 | 说明 |
 |------|------|
-| `(?d)` | 前缀，表示如果删除了阻止目录则文件可被删除 |
-| `(?i)` | 前缀，表示该模式匹配时忽略大小写差异 |
-| `!` | 取反条件（例如：`!**/.git/` 表示不要排除 `.git` 文件夹） |
-| `*` | 单级通配符（仅匹配单层文件夹） |
-| `**` | 多级通配符（用以匹配多层嵌套文件夹） |
-| `//` | 注释（行首使用） |
+| `(?d)` | 删除阻止目录时允许删除文件 |
+| `(?i)` | 忽略大小写匹配 |
+| `!` | 取反（包含此模式） |
+| `*` | 单级通配符 |
+| `**` | 多级通配符 |
+| `//` | 注释 |
 
-### 已包含的忽略模式分类
+### 已包含的分类
 
-`.stignore` 文件按以下章节组织：
+`.stignore` 文件涵盖以下分类（完整内容请查看文件本身）：
 
-#### 1. 通用排除项
-
-各平台通用的系统文件、回收站和临时文件。
-
-- **系统文件**：`.DS_Store`、`desktop.ini`、`Thumbs.db`、`pagefile.sys`、`swapfile.sys`、`~$*`（Office 临时文件）
-- **回收站**：`$RECYCLE.BIN`、`@Recycle`、`.Recovery`、`.Recycle_bin`、`trashbox*`、`LOST.DIR/`
-- **临时/缓存文件**：`.tmp`、`.cache`、`.log`、`.crdownload`、`.bak`、`.delete`
-- **版本控制**：`.git/`、`.sync/`
-- **云同步内部文件**：`.dropbox.cache/`、`.stfolder/`、`.stversions`、`sync.ffs_db`
-- **应用数据**：微信文件、QQ、百度网盘、阿里工作台、腾讯文件、优酷文件
-- **系统目录**：`Program Files/`、`Program Files (x86)/`、`System Volume Information/`
-
-#### 2. 包管理器缓存与依赖
-
-- **Node.js**：`.npm/`、`.pnpm-store/`、`.pnpm-local-store`、`.yarn/cache/`、`.bun/`、`node_modules/`
-- **Python**：`.venv/`、`__pycache__/`、`.ipynb_checkpoints/`
-- **Rust**：`.cargo/`
-- **Java/JVM**：`.gradle/`、`.m2/`
-- **.NET**：`.nuget/`
-- **Deno**：`.deno/`
-- **Dart/Flutter**：`.dart_tool/`、`.pub-cache/`
-- **Haskell**：`.stack-work/`
-
-#### 3. 构建产物
-
-- **目录**：`bin/`、`build/`、`dist/`、`out/`、`output/`、`target/`、`vendor/`
-- **二进制文件**：`*.exe`、`*.dll`、`*.so`、`*.dylib`、`*.a`、`*.lib`、`*.o`、`*.obj`、`*.pyc`、`*.pyo`
-
-#### 4. 前端框架构建缓存
-
-- **Astro**：`.astro/`
-- **Next.js**：`.next/`
-- **Nuxt**：`.nuxt/`
-- **SvelteKit**：`.svelte-kit/`
-- **Vite**：`.vite/`、`.turbo/`
-- **Parcel**：`.parcel-cache/`
-- **Docusaurus**：`.docusaurus/`
-- **VuePress**：`.vuepress/dist/`
-- **部署平台**：`.vercel/`、`.netlify/`
-
-#### 5. Python 与测试缓存
-
-- **Python**：`.eggs/`、`.coverage`、`htmlcov/`
-- **测试框架**：`.pytest_cache/`、`.jest-cache/`、`.vitest/`、`.nyc_output/`、`.tox/`、`.nox/`
-- **类型检查**：`.mypy_cache/`、`.ruff_cache/`
-- **Jupyter**：`.ipynb_checkpoints/`
-
-#### 6. C/C++ 与 Rust 构建缓存
-
-- **CMake**：`CMakeCache.txt`、`CMakeFiles/`、`cmake-build-debug/`、`cmake-build-release/`
-- **编译器**：`compile_commands.json`、`.ccls-cache/`、`.clangd/`
-- **Rust**：`.rustc_cache/`
-
-#### 7. JVM 与 Scala 构建缓存
-
-- **Scala**：`.ammonite/`、`.bloop/`、`.metals/`
-- **Kotlin**：`.kotlintest/`
-
-#### 8. IDE 与工具缓存
-
-- **JetBrains**：`.idea/`
-- **VS Code**：`.vscode/`、`.vs/`、`.history/`
-- **基础设施**：`.terraform/`、`.terragrunt-cache/`、`.helm/`、`.kube/`、`.flyway/`
-
-#### 9. 锁文件与日志
-
-- `*.lock`、`*.log.*`
+- **系统与临时文件** — 系统生成文件、回收站、缓存、日志
+- **版本控制与云同步** — `.git/`、`.stfolder/`、`.stversions` 等
+- **依赖与缓存** — `node_modules/`、`.venv/`、`.cargo/`、`.gradle/` 等
+- **构建产物** — `bin/`、`dist/`、`target/`、`*.exe`、`*.pyc` 等
+- **框架缓存** — `.next/`、`.nuxt/`、`.vite/`、`.turbo/` 等
+- **测试与类型检查** — `.pytest_cache/`、`.mypy_cache/`、`.coverage` 等
+- **IDE 与工具** — `.idea/`、`.vscode/`、`.terraform/`、`.kube/` 等
+- **应用数据** — 微信、QQ、百度网盘、腾讯文件等
+- **锁文件与日志** — `*.lock`、`*.log.*`
 
 ### 使用方法
 
-1. **复制文件**：将本仓库中的 `.stignore` 文件复制到您的 Syncthing 同步文件夹根目录
-2. **或使用 Web 界面**：打开 Syncthing Web 界面 → 点击文件夹 → "Ignored Files" → 粘贴模式内容
-3. **实时生效**：模式会立即应用；Syncthing 将重新扫描以强制执行这些规则
+#### 前置条件
+
+- 已安装并运行的 [Syncthing](https://syncthing.net/) 实例
+- 至少配置了一个同步文件夹
+
+#### 方法一：直接复制文件
+
+1. 从本仓库下载 `.stignore` 文件
+2. 将其放置在 Syncthing 同步文件夹的**根目录**
+3. 重启 Syncthing 或触发重新扫描 — 模式将在下次扫描时生效
+
+#### 方法二：通过 Syncthing Web 界面
+
+1. 打开 Syncthing Web 界面（默认地址：`http://localhost:8384`）
+2. 点击目标文件夹 → **编辑** → **忽略模式（Ignore Patterns）**
+3. 将 `.stignore` 内容粘贴到编辑框中
+4. 点击 **保存** — 模式立即生效并触发重新扫描
+
+#### 方法三：引入外部文件
+
+Syncthing 支持 `// #include` 指令，可将模式拆分到多个文件中：
+
+```
+// 引入本仓库的模式
+#include .stignore-base
+
+// 在下方添加您的自定义规则
+**/my-secret-folder
+*.local
+```
+
+#### 自定义建议
+
+- **白名单**：使用 `!` 重新包含模式，例如 `!**/.git/` 可让 `.git` 文件夹继续同步
+- **忽略大小写**：使用 `(?i)` 前缀，例如 `(?i)**.jpg` 可匹配 `.JPG`、`.jpg`、`.Jpg`
+- **安全删除**：使用 `(?d)` 前缀，允许在父目录被删除时同步删除文件
+- **注释**：以 `//` 开头的行会被忽略，可用于规则说明
+- **提交前测试**：在 Web 界面的"忽略模式"预览中验证哪些文件被匹配
+
+#### 验证生效
+
+应用模式后：
+
+1. 打开 Syncthing Web 界面 → 文件夹 → **忽略模式** 确认规则已加载
+2. 检查文件夹状态 — 匹配模式的文件不应再出现在同步队列中
+3. 使用 **最近更改** 验证被忽略的文件未被同步
 
 ### 示例
 
 ```
-// 递归排除回收站文件夹
+// 递归排除回收站
 **$RECYCLE.BIN
 
-// 排除 macOS 系统文件
+// macOS 系统文件
 **.DS_Store
 
-// 排除 Windows 缩略图缓存
-**Thumbs.db
-
-// 递归排除 node_modules
+// node_modules
 **/node_modules/*
-
-// 排除临时/下载文件
-**.tmp
-**.crdownload
 
 // 忽略大小写匹配
 (?i)**.JPG
-```
 
-### 项目结构
-
-```
-SyncthingIgnorePatterns/
-├── .stignore                              # 忽略模式文件
-├── .gitignore                             # Git 忽略规则
-├── README.md                              # 英文文档
-├── README_CN.md                           # 中文文档
-└── SyncthingIgnorePatterns.code-workspace # VS Code 工作区配置
+// 白名单 .git 文件夹
+!**/.git/
 ```
 
 ### 开源许可
 
-本项目为开源项目，基于 MIT 许可证发布。
+MIT
