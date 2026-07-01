@@ -77,3 +77,90 @@
 **trashbox*
 **xiaoya/media/
 **~$*
+
+//Package Manager Caches & Dependencies
+**.bun/
+**.cargo/
+**.dart_tool/
+**.deno/
+**.gradle/
+**.m2/
+**.npm/
+**.nuget/
+**.pnpm-store/
+**.pub-cache/
+**.stack-work/
+**.venv/
+**.venv-*/
+**.yarn/cache/
+**.yarn/install-state.gz
+**__pycache__/
+**packages/
+
+//Build Outputs & Artifacts
+**bin/
+**build/
+**dist/
+**target/
+**vendor/
+
+//Frontend Framework Build Caches
+**.astro/
+**.next/
+**.nuxt/
+**.output/
+**.parcel-cache/
+**.svelte-kit/
+**.turbo/
+**.vite/
+**.docusaurus/
+**.vuepress/dist/
+**.vercel/
+**.netlify/
+
+//Python & Testing Caches
+**.coverage
+**.eggs/
+**.ipynb_checkpoints/
+**.jest-cache/
+**.mypy_cache/
+**.nox/
+**.nyc_output/
+**.pytest_cache/
+**.ruff_cache/
+**.tox/
+**.vitest/
+**coverage/
+**htmlcov/
+
+//C/C++ & Rust Build Caches
+**.ccls-cache/
+**.clangd/
+**.rustc_cache/
+**CMakeCache.txt
+**CMakeFiles/
+**cmake-build-debug/
+**cmake-build-release/
+**compile_commands.json
+
+//JVM & Scala Build Caches
+**.ammonite/
+**.bloop/
+**.kotlintest/
+**.metals/
+
+//IDE & Tool Caches
+**.flyway/
+**.helm/
+**.idea/
+**.kube/
+**.terraform/
+**.terraform.lock.hcl
+**.terragrunt-cache/
+**.vs/
+**.vscode/
+**.history/
+
+//Lock & Log Files
+*.lock
+*.log.*

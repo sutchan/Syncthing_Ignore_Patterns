@@ -1,15 +1,6 @@
-# Syncthing Ignore Patterns / Syncthing 忽略模式
+# Syncthing Ignore Patterns
 
-A curated collection of Syncthing ignore patterns (.stignore) to help you sync only the files you need.
-
-精心整理的 Syncthing 忽略模式 (.stignore) 集合，帮助您只同步需要的文件。
-
----
-
-## Table of Contents / 目录
-
-- [English](#english)
-- [中文说明](#中文说明)
+[English](#english) | [中文](README_CN.md)
 
 ---
 
@@ -17,9 +8,11 @@ A curated collection of Syncthing ignore patterns (.stignore) to help you sync o
 
 ### Overview
 
+A curated collection of Syncthing ignore patterns (`.stignore`) to help you sync only the files you need. This repository provides a comprehensive, well-organized `.stignore` file that excludes system files, cache directories, build artifacts, and application data from Syncthing synchronization.
+
 Syncthing uses `.stignore` files in each sync folder to define which files and folders to exclude from synchronization. You can configure these patterns either through the Syncthing Web GUI (Config → Ignore Patterns) or by directly editing the `.stignore` file.
 
-### Supported Pattern Syntax
+### Pattern Syntax
 
 | Pattern | Description |
 |---------|-------------|
@@ -29,6 +22,84 @@ Syncthing uses `.stignore` files in each sync folder to define which files and f
 | `*` | Single-level wildcard (matches one directory level only) |
 | `**` | Multi-level wildcard (matches across nested directories) |
 | `//` | Comment — lines starting with `//` are ignored |
+
+### Included Pattern Categories
+
+The `.stignore` file is organized into the following sections:
+
+#### 1. General Exclusions
+
+Common system files, recycle bins, and temporary files across platforms.
+
+- **System files**: `.DS_Store`, `desktop.ini`, `Thumbs.db`, `pagefile.sys`, `swapfile.sys`, `~$*` (Office temp files)
+- **Recycle bins**: `$RECYCLE.BIN`, `@Recycle`, `.Recovery`, `.Recycle_bin`, `trashbox*`, `LOST.DIR/`
+- **Temp/cache files**: `.tmp`, `.cache`, `.log`, `.crdownload`, `.bak`, `.delete`
+- **Version control**: `.git/`, `.sync/`
+- **Cloud sync internals**: `.dropbox.cache/`, `.stfolder/`, `.stversions`, `sync.ffs_db`
+- **App data**: WeChat Files, QQ, Baidu Netdisk, AliWorkbench, Tencent Files, Youku Files
+- **System directories**: `Program Files/`, `Program Files (x86)/`, `System Volume Information/`
+
+#### 2. Package Manager Caches & Dependencies
+
+- **Node.js**: `.npm/`, `.pnpm-store/`, `.pnpm-local-store`, `.yarn/cache/`, `.bun/`, `node_modules/`
+- **Python**: `.venv/`, `__pycache__/`, `.ipynb_checkpoints/`
+- **Rust**: `.cargo/`
+- **Java/JVM**: `.gradle/`, `.m2/`
+- **.NET**: `.nuget/`
+- **Deno**: `.deno/`
+- **Dart/Flutter**: `.dart_tool/`, `.pub-cache/`
+- **Haskell**: `.stack-work/`
+
+#### 3. Build Outputs & Artifacts
+
+- **Directories**: `bin/`, `build/`, `dist/`, `out/`, `output/`, `target/`, `vendor/`
+- **Binary files**: `*.exe`, `*.dll`, `*.so`, `*.dylib`, `*.a`, `*.lib`, `*.o`, `*.obj`, `*.pyc`, `*.pyo`
+
+#### 4. Frontend Framework Build Caches
+
+- **Astro**: `.astro/`
+- **Next.js**: `.next/`
+- **Nuxt**: `.nuxt/`
+- **SvelteKit**: `.svelte-kit/`
+- **Vite**: `.vite/`, `.turbo/`
+- **Parcel**: `.parcel-cache/`
+- **Docusaurus**: `.docusaurus/`
+- **VuePress**: `.vuepress/dist/`
+- **Deployment**: `.vercel/`, `.netlify/`
+
+#### 5. Python & Testing Caches
+
+- **Python**: `.eggs/`, `.coverage`, `htmlcov/`
+- **Testing**: `.pytest_cache/`, `.jest-cache/`, `.vitest/`, `.nyc_output/`, `.tox/`, `.nox/`
+- **Type checking**: `.mypy_cache/`, `.ruff_cache/`
+- **Notebooks**: `.ipynb_checkpoints/`
+
+#### 6. C/C++ & Rust Build Caches
+
+- **CMake**: `CMakeCache.txt`, `CMakeFiles/`, `cmake-build-debug/`, `cmake-build-release/`
+- **Compiler**: `compile_commands.json`, `.ccls-cache/`, `.clangd/`
+- **Rust**: `.rustc_cache/`
+
+#### 7. JVM & Scala Build Caches
+
+- **Scala**: `.ammonite/`, `.bloop/`, `.metals/`
+- **Kotlin**: `.kotlintest/`
+
+#### 8. IDE & Tool Caches
+
+- **JetBrains**: `.idea/`
+- **VS Code**: `.vscode/`, `.vs/`, `.history/`
+- **Infrastructure**: `.terraform/`, `.terragrunt-cache/`, `.helm/`, `.kube/`, `.flyway/`
+
+#### 9. Lock & Log Files
+
+- `*.lock`, `*.log.*`
+
+### Usage
+
+1. **Copy the file**: Copy the `.stignore` file from this repository into your Syncthing sync folder root
+2. **Or use the Web GUI**: Open Syncthing Web UI → click the folder → "Ignored Files" → paste the patterns
+3. **Real-time effect**: Patterns are applied immediately; Syncthing will re-scan to enforce them
 
 ### Examples
 
@@ -48,81 +119,22 @@ Syncthing uses `.stignore` files in each sync folder to define which files and f
 // Exclude temporary/download files
 **.tmp
 **.crdownload
+
+// Case-insensitive match
+(?i)**.JPG
 ```
 
-### Included Patterns
-
-This repository contains a comprehensive `.stignore` file covering:
-
-- **System files**: `.DS_Store`, `desktop.ini`, `Thumbs.db`, `pagefile.sys`, `swapfile.sys`
-- **Recycle bins**: `$RECYCLE.BIN`, `@Recycle`, `trashbox*`
-- **Temp/cache files**: `**.tmp`, `**.cache`, `**.log`, `**.crdownload`
-- **Version control**: `.git/`, `**.sync/`
-- **App data**: WeChat Files, QQ, Baidu Netdisk, AliWorkbench, Tencent Files
-- **Media apps**: Youku Files, nplayerdisk, hls*, **.midownloading
-- **Build artifacts**: `node_modules/*`, `**.stversions`, `**.stfolder/`
-- **Cloud sync**: Dropbox cache, Syncthing internal files
-
-### Usage
-
-1. Copy the `.stignore` file from this repository into your Syncthing sync folder
-2. Or add the patterns manually via Syncthing Web GUI: Settings → Ignore Patterns
-3. Patterns are applied in real-time; Syncthing will re-scan to enforce them
-
----
-
-## 中文说明
-
-### 概述
-
-Syncthing 使用每个同步文件夹内的 `.stignore` 文件来定义哪些文件和文件夹应排除在同步之外。您可以通过 Syncthing Web 界面（配置 → 忽略模式）进行设置，或直接编辑 `.stignore` 文件。
-
-### 支持的通配符语法
-
-| 模式 | 说明 |
-|------|------|
-| `(?d)` | 前缀，表示如果删除了阻止目录则文件可被删除 |
-| `(?i)` | 前缀，表示该模式匹配时忽略大小写差异 |
-| `!` | 取反条件（例如：`!**/.git/` 表示不要排除 `.git` 文件夹） |
-| `*` | 单级通配符（仅匹配单层文件夹） |
-| `**` | 多级通配符（用以匹配多层嵌套文件夹） |
-| `//` | 注释（行首使用） |
-
-### 示例
+### Project Structure
 
 ```
-// 递归排除回收站文件夹
-**$RECYCLE.BIN
-
-// 排除 macOS 系统文件
-**.DS_Store
-
-// 排除 Windows 缩略图缓存
-**Thumbs.db
-
-// 递归排除 node_modules
-**/node_modules/*
-
-// 排除临时/下载文件
-**.tmp
-**.crdownload
+SyncthingIgnorePatterns/
+├── .stignore                              # The ignore patterns file
+├── .gitignore                             # Git ignore rules
+├── README.md                              # English documentation
+├── README_CN.md                           # Chinese documentation
+└── SyncthingIgnorePatterns.code-workspace # VS Code workspace config
 ```
 
-### 已包含的忽略模式
+### License
 
-本仓库提供了全面的 `.stignore` 文件，涵盖以下内容：
-
-- **系统文件**: `.DS_Store`、`desktop.ini`、`Thumbs.db`、`pagefile.sys`、`swapfile.sys`
-- **回收站**: `$RECYCLE.BIN`、`@Recycle`、`trashbox*`
-- **临时/缓存文件**: `**.tmp`、`**.cache`、`**.log`、`**.crdownload`
-- **版本控制**: `.git/`、`**.sync/`
-- **应用数据**: 微信文件、QQ、百度网盘、阿里工作台、腾讯文件
-- **媒体应用**: 优酷文件、nplayerdisk、hls*、**.midownloading
-- **构建产物**: `node_modules/*`、`**.stversions`、`**.stfolder/`
-- **云同步**: Dropbox 缓存、Syncthing 内部文件
-
-### 使用方法
-
-1. 将此仓库中的 `.stignore` 文件复制到您的 Syncthing 同步文件夹
-2. 或通过 Syncthing Web 界面手动添加这些模式：设置 → 忽略模式
-3. 模式会实时生效；Syncthing 将重新扫描以强制执行这些规则
+This project is open source and available under the MIT License.
