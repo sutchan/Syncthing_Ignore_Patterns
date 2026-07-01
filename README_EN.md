@@ -1,13 +1,9 @@
 # Syncthing Ignore Patterns
 
-<<<<<<< Updated upstream
-[English](#english) | [中文](README_CN.md)
-=======
 ![Version](https://img.shields.io/badge/version-v1.0.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--07--01-brightgreen)
 
-[中文](#中文说明) | [English](README_EN.md)
->>>>>>> Stashed changes
+[English](#english) | [中文](README.md)
 
 ---
 
@@ -15,7 +11,6 @@
 
 A curated `.stignore` collection to exclude system files, caches, build artifacts, and app data from Syncthing sync.
 
-<<<<<<< Updated upstream
 ### Pattern Syntax
 
 | Pattern | Description |
@@ -26,23 +21,22 @@ A curated `.stignore` collection to exclude system files, caches, build artifact
 | `*` | Single-level wildcard |
 | `**` | Multi-level wildcard |
 | `//` | Comment |
-=======
-### 通配符语法
->>>>>>> Stashed changes
 
 ### Included Categories
 
-The `.stignore` file covers the following categories (see the file for full details):
+The `.stignore` file is organized into the following 11 categories (see the file for full details):
 
-- **System & Temp Files** — OS-generated files, recycle bins, caches, logs
-- **Version Control & Cloud Sync** — `.git/`, `.stfolder/`, `.stversions`, etc.
-- **Dependencies & Caches** — `node_modules/`, `.venv/`, `.cargo/`, `.gradle/`, etc.
-- **Build Outputs** — `bin/`, `dist/`, `target/`, `*.exe`, `*.pyc`, etc.
-- **Framework Caches** — `.next/`, `.nuxt/`, `.vite/`, `.turbo/`, etc.
-- **Testing & Type Checking** — `.pytest_cache/`, `.mypy_cache/`, `.coverage`, etc.
-- **IDE & Tools** — `.idea/`, `.vscode/`, `.terraform/`, `.kube/`, etc.
-- **App Data** — WeChat, QQ, Baidu Netdisk, Tencent Files, etc.
-- **Lock & Logs** — `*.lock`, `*.log.*`
+1. **System & OS Files** — `$RECYCLE.BIN`, `.DS_Store`, `Thumbs.db`, `desktop.ini`, `pagefile.sys`, `Program Files/`, `System Volume Information/`, `LOST.DIR/`, etc.
+2. **Backup & Temporary Files** — `.cache`, `.tmp`, `.delete`, `Temp/`, `Backup_of_*`, etc.
+3. **Application Data & Caches** — `.stfolder/`, `.stversions`, `.dropbox.cache/`, `WeChat Files/`, `Tencent Files/`, `BaiduNetdiskDownload/`, `AliWorkbenchData/`, `Youku Files/`, `SteamLibrary/`, etc.
+4. **Version Control Systems** — `.git/`
+5. **Package Manager Caches & Dependencies** — `node_modules/`, `.npm/`, `.pnpm-store/`, `.venv/`, `__pycache__/`, `.cargo/`, `.gradle/`, `.m2/`, `.nuget/`, `.bun/`, `.deno/`, `.dart_tool/`, `.stack-work/`, etc.
+6. **Frontend Framework Build Caches** — `.next/`, `.nuxt/`, `.svelte-kit/`, `.vite/`, `.turbo/`, `.astro/`, `.docusaurus/`, `.parcel-cache/`, `.vercel/`, `.netlify/`, `.vuepress/dist/`, etc.
+7. **Python & Testing Caches** — `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.coverage`, `.jest-cache/`, `.vitest/`, `.tox/`, `.nox/`, `.ipynb_checkpoints/`, `htmlcov/`, etc.
+8. **C/C++ & Rust Build Caches** — `CMakeCache.txt`, `CMakeFiles/`, `cmake-build-debug/`, `cmake-build-release/`, `compile_commands.json`, `.ccls-cache/`, `.clangd/`, `.rustc_cache/`, etc.
+9. **JVM & Scala Build Caches** — `.ammonite/`, `.bloop/`, `.metals/`, `.kotlintest/`
+10. **IDE & Tool Caches** — `.idea/`, `.history/`, `.terraform/`, `.terraform.lock.hcl`, `.terragrunt-cache/`, `.helm/`, `.kube/`, `.flyway/`, etc.
+11. **Lock & Log Files** — `*.lock`, `*.log.*`, `**.log`
 
 ### Usage
 
