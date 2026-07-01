@@ -1,11 +1,8 @@
 # Syncthing Ignore Patterns
 
-<<<<<<< HEAD
 ![Version](https://img.shields.io/badge/version-v1.0.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--07--01-brightgreen)
 
-=======
->>>>>>> 74a3b29c991900d1363ae7003b07035216fc0c0e
 [English](#english) | [中文](README.md)
 
 ---
@@ -14,11 +11,6 @@
 
 A curated `.stignore` collection to exclude system files, caches, build artifacts, and app data from Syncthing sync.
 
-<<<<<<< HEAD
-=======
-**Current version: v1.0.0** (updated 2026-07-01)
-
->>>>>>> 74a3b29c991900d1363ae7003b07035216fc0c0e
 ### Pattern Syntax
 
 | Pattern | Description |
