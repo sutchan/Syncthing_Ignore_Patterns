@@ -4,6 +4,7 @@
 **.@__thumb
 **.@datasync_temp_*
 **.AppleDB
+**.pnpm-local-store
 **.DS_Store
 **.Recovery
 **.Recycle_bin
