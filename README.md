@@ -2,7 +2,7 @@
 
 > 精心整理的开箱即用 `.stignore` 规则集，自动排除系统文件、缓存、构建产物与应用数据，让 Syncthing 同步更干净高效。
 
-![Version](https://img.shields.io/badge/version-v1.3.0-blue)
+![Version](https://img.shields.io/badge/version-v1.4.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--06-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-16-blueviolet)
@@ -136,7 +136,7 @@ Syncthing 支持 `// #include` 指令，可将模式拆分到多个文件中：
 
 #### 图形界面（推荐）
 
-`SyncthingIgnoreGUI.ps1` 是一个 WinForms 图形界面，集成「扫描」与「应用」两大功能，操作更直观：
+`SyncthingIgnoreGUI.ps1` 是一个 WinForms 图形界面，集成「扫描」与「应用」两大功能，支持**中英文一键切换**（右上角语言下拉框，默认跟随系统区域），操作更直观：
 
 ```powershell
 .\SyncthingIgnoreGUI.ps1
@@ -144,12 +144,15 @@ Syncthing 支持 `// #include` 指令，可将模式拆分到多个文件中：
 
 界面功能：
 
-- **扫描根目录**：留空则扫描所有固定驱动器；或点击 `Browse...` 选择指定目录
+- **语言切换**：右上角下拉框选择 `English` / `中文`，实时切换全部界面文字与日志
+- **扫描根目录**：留空则扫描所有固定驱动器；或点击 `浏览...` 选择指定目录
 - **清单输出路径**：默认 `stignore-paths.json`，可自定义
-- **Preview only**：勾选后仅预览，不写入任何文件（等同于 `-WhatIf`）
-- **Force**：勾选后跳过逐文件确认直接执行
-- **Back up manifest**：勾选后在写回清单前备份原清单
+- **仅预览**：勾选后仅预览，不写入任何文件
+- **强制**：勾选后跳过逐文件确认直接执行
+- **写回清单前备份**：勾选后在写回清单前备份原清单
 - **实时日志**：所有执行输出显示在底部日志框，方便排查
+
+> 说明：界面中文文案以 `\u` 转义内嵌，脚本文件始终为纯 ASCII，不会被编码转换破坏。
 
 ![GUI](https://img.shields.io/badge/GUI-WinForms-blue)
 
