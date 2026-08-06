@@ -1,6 +1,6 @@
 <#
 //File: SyncthingIgnoreGUI.ps1
-//Version: 1.5.0
+//Version: 1.6.0
 //Updated: 2026-08-06
 .SYNOPSIS
     Graphical interface for scanning and applying Syncthing .stignore rules,
@@ -24,7 +24,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 $scriptDir = $PSScriptRoot
-$ScriptVersion = '1.5.0'
+$ScriptVersion = '1.6.0'
 $StandardRuleSource = Join-Path $scriptDir '.stignore'
 
 # ---------- Localization ----------
@@ -57,11 +57,12 @@ $T = @{
         log         = 'Log:'
         lang        = 'Language:'
         enItem      = 'English'
-        zhItem      = '中文'
+        zhItem      = 'Chinese'
         folderTitle = 'Select scan root folder'
         fileTitle   = 'Manifest output'
         jsonFilter  = 'JSON files (*.json)|*.json|All files (*.*)|*.*'
         ready       = 'Tool ready. Scripts dir: '
+        repo        = 'Project: '
     }
     zh = [ordered]@{
         title       = 'Syncthing .stignore \u7ba1\u7406\u5668'
@@ -82,6 +83,7 @@ $T = @{
         fileTitle   = '\u6e05\u5355\u8f93\u51fa'
         jsonFilter  = 'JSON \u6587\u4ef6 (*.json)|*.json|\u6240\u6709\u6587\u4ef6 (*.*)|*.*'
         ready       = '\u5de5\u5177\u5df2\u5c31\u7eea\u3002\u811a\u672c\u76ee\u5f55\uff1a'
+        repo        = '\u9879\u76ee\u5730\u5740\uff1a'
     }
 }
 
@@ -208,6 +210,26 @@ $progress.MarqueeAnimationSpeed = 30
 $progress.Visible = $false
 $form.Controls.Add($progress)
 
+# ---------- Version + project link (status bar) ----------
+$RepoUrl = 'https://github.com/sutchan/Syncthing_Ignore_Patterns'
+
+$lblVersion = New-Object System.Windows.Forms.Label
+$lblVersion.Location = New-Object System.Drawing.Point(16, 526)
+$lblVersion.AutoSize = $true
+$lblVersion.Font = New-Object System.Drawing.Font('Segoe UI', 8.5)
+$lblVersion.ForeColor = [System.Drawing.Color]::FromArgb(120, 120, 120)
+$form.Controls.Add($lblVersion)
+
+$lblRepo = New-Object System.Windows.Forms.LinkLabel
+$lblRepo.Location = New-Object System.Drawing.Point(300, 526)
+$lblRepo.AutoSize = $true
+$lblRepo.Font = New-Object System.Drawing.Font('Segoe UI', 8.5)
+$lblRepo.LinkColor = [System.Drawing.Color]::FromArgb(0, 120, 215)
+$lblRepo.Add_LinkClicked({
+    try { Start-Process $RepoUrl } catch { Add-Log (Lmsg "Cannot open link: $_" "\u65e0\u6cd5\u6253\u5f00\u94fe\u63a5\uff1a$_") 'Red' }
+})
+$form.Controls.Add($lblRepo)
+
 # ---------- Apply language to all controls ----------
 function Apply-Language {
     $d = $T[$lang]
@@ -224,6 +246,13 @@ function Apply-Language {
     $btnApply.Text      = if ($lang -eq 'zh') { Decode-Uni $d.apply } else { $d.apply }
     $btnOpenManifest.Text = if ($lang -eq 'zh') { Decode-Uni $d.open } else { $d.open }
     $lblLog.Text        = if ($lang -eq 'zh') { Decode-Uni $d.log } else { $d.log }
+    if ($lang -eq 'zh') {
+        $lblVersion.Text = "v$ScriptVersion  |  SyncthingIgnorePatterns"
+        $lblRepo.Text    = "$(Decode-Uni $d.repo) $RepoUrl"
+    } else {
+        $lblVersion.Text = "v$ScriptVersion  |  SyncthingIgnorePatterns"
+        $lblRepo.Text    = "$($d.repo) $RepoUrl"
+    }
     $cmbLang.SelectedIndex = if ($lang -eq 'zh') { 1 } else { 0 }
 }
 
@@ -244,39 +273,44 @@ function Add-Log {
     Write-LogLine -Message $Message -Color $Color
 }
 
-# Single-root scanner for use inside a runspace (no UI access there).
-function Find-StignoreFiles {
-    param([string]$Root, [string]$ScriptDir)
-    $local = [System.Collections.ArrayList]::new()
-    try {
-        Get-ChildItem -Path $Root -Filter '.stignore' -Recurse -File -Force -ErrorAction SilentlyContinue |
-            ForEach-Object {
-                $full = $_.FullName
-                if ($full -like '*\.git\*') { return }
-                if ($full -like "$ScriptDir*") { return }
-                [void]$local.Add([pscustomobject]@{
-                    path         = $full
-                    size         = $_.Length
-                    lastWriteUtc = $_.LastWriteTimeUtc.ToString('o')
-                    foundAtUtc   = (Get-Date).ToUniversalTime().ToString('o')
-                })
-            }
-    } catch {
-        # surface error via pseudo-record so caller can log it
-        [void]$local.Add([pscustomobject]@{ __error = "$Root : $($_.Exception.Message)" })
-    }
-    return $local
-}
-
 # Parallel multi-root scanner using a runspace pool.
+# The scanner logic is passed as an inline script block so that the runspace
+# (which has no access to the caller's function definitions) can execute it.
 # Returns an ArrayList of file records (errors surfaced as __error entries).
 function Start-ParallelScan {
     param([string[]]$Roots, [string]$ScriptDir, [int]$MaxThreads = 4)
+
+    $scanScript = {
+        param([string]$Root, [string]$ScriptDir)
+        function Find-StignoreFiles {
+            param([string]$Root, [string]$ScriptDir)
+            $local = [System.Collections.ArrayList]::new()
+            try {
+                Get-ChildItem -Path $Root -Filter '.stignore' -Recurse -File -Force -ErrorAction SilentlyContinue |
+                    ForEach-Object {
+                        $full = $_.FullName
+                        if ($full -like '*\.git\*') { return }
+                        if ($full -like "$ScriptDir*") { return }
+                        [void]$local.Add([pscustomobject]@{
+                            path         = $full
+                            size         = $_.Length
+                            lastWriteUtc = $_.LastWriteTimeUtc.ToString('o')
+                            foundAtUtc   = (Get-Date).ToUniversalTime().ToString('o')
+                        })
+                    }
+            } catch {
+                [void]$local.Add([pscustomobject]@{ __error = "$Root : $($_.Exception.Message)" })
+            }
+            return $local
+        }
+        return (Find-StignoreFiles -Root $Root -ScriptDir $ScriptDir)
+    }
+
     $pool = [runspacefactory]::CreateRunspacePool(1, [Math]::Max(1, $MaxThreads))
     $pool.Open()
     $jobs = @()
     foreach ($r in $Roots) {
-        $ps = [powershell]::Create().AddCommand('Find-StignoreFiles').AddArgument($r).AddArgument($ScriptDir)
+        $ps = [powershell]::Create().AddScript($scanScript).AddArgument($r).AddArgument($ScriptDir)
         $ps.RunspacePool = $pool
         $jobs += [pscustomobject]@{ Root = $r; Handle = $ps.BeginInvoke(); PS = $ps }
     }
