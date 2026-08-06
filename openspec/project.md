@@ -7,8 +7,9 @@
 Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产物与应用数据，
 造成带宽与存储浪费。本项目提供：
 
-1. **规则集** `.stignore` — 开箱即用的 16 类忽略模式，覆盖系统与 OS 文件、
-   数据库、缓存、构建产物、版本控制、包管理器、IDE/编辑器、虚拟化等噪音。
+1. **规则集** `.stignore` — 开箱即用的 17 类忽略模式（系统/OS 文件、数据库、
+   备份临时文件、应用缓存、版本控制、包管理器、前端/Python/C++/JVM 构建缓存、
+   IDE/编辑器、归档与部分下载、虚拟化、媒体、锁与日志等噪音）。
 2. **批量管理 GUI** `SyncthingIgnoreGUI.ps1` — WinForms 图形界面，将标准规则
    批量应用到本机所有 Syncthing 同步目录，无需每次全盘扫描。
 
@@ -25,12 +26,15 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 
 ```
 SyncthingIgnorePatterns/
-├── .stignore                 # 标准规则源文件（Apply 依赖）
+├── .stignore                 # 标准规则源文件（Apply 依赖，版本 v1.8.0）
 ├── SyncthingIgnoreGUI.ps1    # 主工具（GUI + 扫描/应用逻辑，纯 ASCII）
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档
-├── stignore-paths.json       # 扫描清单输出（运行时生成）
+├── .gitignore                # 忽略运行时产物（stignore-paths.json / *.bak.*）
+├── stignore-paths.json       # 扫描清单输出（运行时生成，已被 .gitignore 忽略）
 ├── openspec/                 # 本规范目录
+│   ├── project.md
+│   └── specs/stignore-gui/spec.md
 └── SyncthingIgnorePatterns.code-workspace
 ```
 
@@ -40,7 +44,8 @@ SyncthingIgnorePatterns/
 - 版本号同步位置（必须一致）：
   - `SyncthingIgnoreGUI.ps1` 文件头 `//Version: x.y.z`
   - `SyncthingIgnoreGUI.ps1` 变量 `$ScriptVersion = 'x.y.z'`
-  - `README.md` / `README_EN.md` 版本徽章
+  - `.stignore` 文件头 `//Version: x.y.z`（规则集独立版本，随工具同步）
+  - `README.md` / `README_EN.md` 版本徽章与界面功能版本号引用
 - 每次版本变更需同步更新 CHANGELOG（见第 7 节）与 README 的"版本与项目地址"。
 
 ## 5. GUI 功能规格
@@ -49,10 +54,12 @@ SyncthingIgnorePatterns/
 |------|------|
 | 语言切换 | 右上角下拉框 `English` / `中文`，实时切换全部界面与日志文案 |
 | 扫描根目录 | 留空=扫描所有固定驱动器；或浏览选择指定目录 |
-| 并行扫描 | runspace 线程池（最多 4 线程）+ `-Filter .stignore`，提速 |
+| 并行扫描 | runspace 线程池（最多 4 线程）+ `-Filter .stignore`，排除 `.git` 与脚本目录 |
+| 后台防卡顿 | 扫描在后台 runspace 执行，Timer 轮询 `DoEvents` 保持 UI 响应（v1.7.0） |
 | 仅预览 | 勾选后不写文件，仅预览结果 |
 | 强制 | 跳过逐文件确认直接执行 |
 | 写回前备份 | 写回清单前备份原 `.stignore` 为 `.stignore.bak.<时间戳>` |
+| 备份轮转 | 每种 `.bak.*` 最多保留 3 个，超出自动删最旧（v1.8.0） |
 | 版本/地址 | 底部状态栏显示版本号与可点击项目主页 |
 | 实时日志 | 底部日志框输出全部执行信息 |
 
