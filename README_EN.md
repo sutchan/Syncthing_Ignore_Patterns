@@ -2,7 +2,7 @@
 
 > A curated, ready-to-use `.stignore` rule set that automatically excludes system files, caches, build artifacts, and app data — keeping your Syncthing sync clean and efficient.
 
-![Version](https://img.shields.io/badge/version-v1.11.0-blue)
+![Version](https://img.shields.io/badge/version-v1.13.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--06-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-16-blueviolet)
@@ -151,7 +151,7 @@ flowchart TD
     ROW2 --- ROW3[☑ Preview  ☑ Force  ☑ Back up]
     ROW3 --- BTN[Scan button | Apply button | Open]
     BTN --- LOG[Log box]
-    LOG --- STATUS[Status: v1.11.0 | project link]
+    LOG --- STATUS[Status: v1.13.0 | project link]
 ```
 
 > The diagram above shows the UI regions. UI text switches live between EN/中文; all Chinese text is stored as `\u` escapes so the script stays pure ASCII.

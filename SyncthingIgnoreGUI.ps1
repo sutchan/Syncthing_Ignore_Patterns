@@ -1,6 +1,6 @@
 <#
 //File: SyncthingIgnoreGUI.ps1
-//Version: 1.11.0
+//Version: 1.13.0
 //Updated: 2026-08-06
 .SYNOPSIS
     Graphical interface for scanning and applying Syncthing .stignore rules,
@@ -24,7 +24,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 $scriptDir = $PSScriptRoot
-$ScriptVersion = '1.11.0'
+$ScriptVersion = '1.13.0'
 $StandardRuleSource = Join-Path $scriptDir '.stignore'
 
 # ---------- Localization ----------
@@ -142,9 +142,9 @@ $form = New-Object System.Windows.Forms.Form
 $form.Text = $T[$lang].title
 $form.Size = New-Object System.Drawing.Size(720, 640)
 $form.StartPosition = 'CenterScreen'
-$form.MinimumSize = New-Object System.Drawing.Size(640, 540)
+$form.MinimumSize = New-Object System.Drawing.Size(640, 560)
 $form.Font = New-Object System.Drawing.Font('Segoe UI', 9.5)
-$form.AutoScroll = $true
+$form.AutoScroll = $false
 
 # ---------- Language selector ----------
 $lblLang = New-Object System.Windows.Forms.Label
@@ -153,8 +153,8 @@ $lblLang.AutoSize = $true
 $form.Controls.Add($lblLang)
 
 $cmbLang = New-Object System.Windows.Forms.ComboBox
-$cmbLang.Location = New-Object System.Drawing.Point(490, 10)
-$cmbLang.Size = New-Object System.Drawing.Size(120, 24)
+$cmbLang.Location = New-Object System.Drawing.Point(488, 10)
+$cmbLang.Size = New-Object System.Drawing.Size(116, 24)
 $cmbLang.DropDownStyle = 'DropDownList'
 $cmbLang.Items.Add($T.en.enItem) | Out-Null
 $cmbLang.Items.Add($T.en.zhItem) | Out-Null
@@ -162,13 +162,13 @@ $form.Controls.Add($cmbLang)
 
 # ---------- Theme selector ----------
 $lblTheme = New-Object System.Windows.Forms.Label
-$lblTheme.Location = New-Object System.Drawing.Point(616, 14)
+$lblTheme.Location = New-Object System.Drawing.Point(612, 14)
 $lblTheme.AutoSize = $true
 $form.Controls.Add($lblTheme)
 
 $cmbTheme = New-Object System.Windows.Forms.ComboBox
-$cmbTheme.Location = New-Object System.Drawing.Point(616, 32)
-$cmbTheme.Size = New-Object System.Drawing.Size(88, 24)
+$cmbTheme.Location = New-Object System.Drawing.Point(612, 32)
+$cmbTheme.Size = New-Object System.Drawing.Size(92, 24)
 $cmbTheme.DropDownStyle = 'DropDownList'
 $cmbTheme.Items.Add($T.en.themeLight) | Out-Null
 $cmbTheme.Items.Add($T.en.themeDark) | Out-Null
@@ -230,31 +230,31 @@ $form.Controls.Add($chkBackupList)
 
 # ---------- Action buttons ----------
 $btnScan = New-Object System.Windows.Forms.Button
-$btnScan.Location = New-Object System.Drawing.Point(16, 218)
+$btnScan.Location = New-Object System.Drawing.Point(16, 212)
 $btnScan.Size = New-Object System.Drawing.Size(180, 32)
 $btnScan.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 215)
 $btnScan.ForeColor = [System.Drawing.Color]::White
 $form.Controls.Add($btnScan)
 
 $btnApply = New-Object System.Windows.Forms.Button
-$btnApply.Location = New-Object System.Drawing.Point(210, 218)
+$btnApply.Location = New-Object System.Drawing.Point(200, 212)
 $btnApply.Size = New-Object System.Drawing.Size(180, 32)
 $btnApply.BackColor = [System.Drawing.Color]::FromArgb(46, 138, 87)
 $btnApply.ForeColor = [System.Drawing.Color]::White
 $form.Controls.Add($btnApply)
 
 $btnOpenManifest = New-Object System.Windows.Forms.Button
-$btnOpenManifest.Location = New-Object System.Drawing.Point(404, 218)
+$btnOpenManifest.Location = New-Object System.Drawing.Point(384, 212)
 $btnOpenManifest.Size = New-Object System.Drawing.Size(96, 32)
 $form.Controls.Add($btnOpenManifest)
 
 $btnClearLog = New-Object System.Windows.Forms.Button
-$btnClearLog.Location = New-Object System.Drawing.Point(506, 218)
+$btnClearLog.Location = New-Object System.Drawing.Point(484, 212)
 $btnClearLog.Size = New-Object System.Drawing.Size(88, 32)
 $form.Controls.Add($btnClearLog)
 
 $btnStop = New-Object System.Windows.Forms.Button
-$btnStop.Location = New-Object System.Drawing.Point(600, 218)
+$btnStop.Location = New-Object System.Drawing.Point(576, 212)
 $btnStop.Size = New-Object System.Drawing.Size(60, 32)
 $btnStop.BackColor = [System.Drawing.Color]::FromArgb(192, 80, 77)
 $btnStop.ForeColor = [System.Drawing.Color]::White
@@ -262,13 +262,13 @@ $btnStop.Enabled = $false
 $form.Controls.Add($btnStop)
 
 $btnAbout = New-Object System.Windows.Forms.Button
-$btnAbout.Location = New-Object System.Drawing.Point(664, 218)
+$btnAbout.Location = New-Object System.Drawing.Point(644, 212)
 $btnAbout.Size = New-Object System.Drawing.Size(48, 32)
 $form.Controls.Add($btnAbout)
 
 # ---------- Scan summary ----------
 $lblSummary = New-Object System.Windows.Forms.Label
-$lblSummary.Location = New-Object System.Drawing.Point(16, 256)
+$lblSummary.Location = New-Object System.Drawing.Point(16, 252)
 $lblSummary.AutoSize = $true
 $lblSummary.ForeColor = [System.Drawing.Color]::FromArgb(46, 138, 87)
 $lblSummary.Font = New-Object System.Drawing.Font('Segoe UI', 9, [System.Drawing.FontStyle]::Bold)
@@ -276,13 +276,13 @@ $form.Controls.Add($lblSummary)
 
 # ---------- Results list ----------
 $lblResults = New-Object System.Windows.Forms.Label
-$lblResults.Location = New-Object System.Drawing.Point(16, 280)
+$lblResults.Location = New-Object System.Drawing.Point(16, 276)
 $lblResults.AutoSize = $true
 $form.Controls.Add($lblResults)
 
 $lstResults = New-Object System.Windows.Forms.ListBox
-$lstResults.Location = New-Object System.Drawing.Point(16, 302)
-$lstResults.Size = New-Object System.Drawing.Size(672, 150)
+$lstResults.Location = New-Object System.Drawing.Point(16, 298)
+$lstResults.Size = New-Object System.Drawing.Size(672, 126)
 $lstResults.Anchor = 'Top,Left,Right'
 $lstResults.HorizontalScrollbar = $true
 $lstResults.Font = New-Object System.Drawing.Font('Consolas', 9)
@@ -290,13 +290,13 @@ $form.Controls.Add($lstResults)
 
 # ---------- Log ----------
 $lblLog = New-Object System.Windows.Forms.Label
-$lblLog.Location = New-Object System.Drawing.Point(16, 458)
+$lblLog.Location = New-Object System.Drawing.Point(16, 430)
 $lblLog.AutoSize = $true
 $form.Controls.Add($lblLog)
 
 $txtLog = New-Object System.Windows.Forms.TextBox
-$txtLog.Location = New-Object System.Drawing.Point(16, 480)
-$txtLog.Size = New-Object System.Drawing.Size(672, 132)
+$txtLog.Location = New-Object System.Drawing.Point(16, 452)
+$txtLog.Size = New-Object System.Drawing.Size(672, 104)
 $txtLog.Multiline = $true
 $txtLog.ScrollBars = 'Vertical'
 $txtLog.ReadOnly = $true
@@ -307,7 +307,7 @@ $form.Controls.Add($txtLog)
 
 # Real percentage progress bar (Blocks style for accurate feedback).
 $progress = New-Object System.Windows.Forms.ProgressBar
-$progress.Location = New-Object System.Drawing.Point(16, 616)
+$progress.Location = New-Object System.Drawing.Point(16, 566)
 $progress.Size = New-Object System.Drawing.Size(560, 14)
 $progress.Style = 'Blocks'
 $progress.Minimum = 0
@@ -318,7 +318,7 @@ $form.Controls.Add($progress)
 
 # Percentage text next to the progress bar.
 $lblPct = New-Object System.Windows.Forms.Label
-$lblPct.Location = New-Object System.Drawing.Point(584, 614)
+$lblPct.Location = New-Object System.Drawing.Point(584, 564)
 $lblPct.AutoSize = $true
 $lblPct.Font = New-Object System.Drawing.Font('Segoe UI', 8.5)
 $lblPct.Visible = $false
@@ -328,14 +328,14 @@ $form.Controls.Add($lblPct)
 $RepoUrl = 'https://github.com/sutchan/Syncthing_Ignore_Patterns'
 
 $lblVersion = New-Object System.Windows.Forms.Label
-$lblVersion.Location = New-Object System.Drawing.Point(16, 658)
+$lblVersion.Location = New-Object System.Drawing.Point(16, 600)
 $lblVersion.AutoSize = $true
 $lblVersion.Font = New-Object System.Drawing.Font('Segoe UI', 8.5)
 $lblVersion.ForeColor = [System.Drawing.Color]::FromArgb(120, 120, 120)
 $form.Controls.Add($lblVersion)
 
 $lblRepo = New-Object System.Windows.Forms.LinkLabel
-$lblRepo.Location = New-Object System.Drawing.Point(300, 658)
+$lblRepo.Location = New-Object System.Drawing.Point(300, 600)
 $lblRepo.AutoSize = $true
 $lblRepo.Font = New-Object System.Drawing.Font('Segoe UI', 8.5)
 $lblRepo.LinkColor = [System.Drawing.Color]::FromArgb(0, 120, 215)
@@ -389,6 +389,8 @@ function Apply-Theme {
     $txtLog.BackColor = $logBg
     $lstResults.BackColor = $ctrlBg
     $lstResults.ForeColor = $fg
+    $form.PerformLayout()
+    $form.Refresh()
     [System.Windows.Forms.Application]::DoEvents()
 }
 
