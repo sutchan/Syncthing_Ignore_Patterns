@@ -150,7 +150,7 @@ flowchart TD
     TOP[Language: EN / 中文 ▼   Theme: Light / Dark ▼]
     TITLE --- TOP
     TOP --- ROW1[Scan root: [_____] [Browse...]]
-    ROW1 --- ROW2[Manifest out: [stignore-paths.json] [Browse...]]
+    ROW1 --- ROW2[Manifest out: [config/stignore-paths.json] [Browse...]]
     ROW2 --- ROW3[☑ Preview  ☑ Force  ☑ Back up]
     ROW3 --- BTN[Scan | Apply | Open | Clear Log | Stop | About]
     BTN --- SUM[Scan summary]

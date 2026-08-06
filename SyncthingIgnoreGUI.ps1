@@ -216,7 +216,7 @@ $form.Controls.Add($lblOut)
 $txtOut = New-Object System.Windows.Forms.TextBox
 $txtOut.Location = New-Object System.Drawing.Point(16, 122)
 $txtOut.Size = New-Object System.Drawing.Size(540, 24)
-$txtOut.Text = Join-Path $scriptDir 'stignore-paths.json'
+$txtOut.Text = Join-Path $scriptDir 'config\stignore-paths.json'
 $form.Controls.Add($txtOut)
 
 $btnBrowseOut = New-Object System.Windows.Forms.Button
@@ -786,7 +786,9 @@ $btnScan.Add_Click({
     Set-Busy $true
     Add-Log (Lmsg '--- Starting scan ---' '--- \u5f00\u59cb\u626b\u63cf ---') 'Blue'
     $out = $txtOut.Text.Trim()
-    if (-not $out) { $out = Join-Path $scriptDir 'stignore-paths.json'; $txtOut.Text = $out }
+    if (-not $out) { $out = Join-Path $scriptDir 'config\stignore-paths.json'; $txtOut.Text = $out }
+    # 确保清单输出目录存在（首次运行 config/ 可能尚未创建）
+    try { $dir = Split-Path -Path $out -Parent; if ($dir -and -not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null } } catch {}
     $rootArg = $txtRoot.Text.Trim()
     $whatif = $chkPreview.Checked
     if ($whatif) {

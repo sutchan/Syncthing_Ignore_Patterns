@@ -154,7 +154,7 @@ powershell -STA -NoProfile -File .\SyncthingIgnoreGUI.ps1
 | 主题切换 | 左上角下拉框选择 `浅色` / `深色`，即时换肤，选择同样持久化；深色模式下降级 3D 边框为单线避免亮边 |
 | 扫描根目录 | 留空扫描所有固定驱动器，或点击 `浏览...` 选择指定目录；支持将文件夹/`.stignore` 拖拽到窗口自动填充 |
 | 并行扫描 | runspace 线程池（最多 4 线程）+ `-Filter .stignore`，扫描速度显著提升 |
-| 清单输出路径 | 默认 `stignore-paths.json`，可自定义 |
+| 清单输出路径 | 默认 `config/stignore-paths.json`，可自定义 |
 | 仅预览 | 勾选后仅预览，不写入任何文件 |
 | 强制 | 勾选后跳过逐文件确认直接执行 |
 | 写回清单前备份 | 勾选后在写回清单前备份原清单 |
@@ -200,7 +200,7 @@ flowchart TD
     TOP[语言: EN / 中文 ▼   主题: 浅色 / 深色 ▼]
     TITLE --- TOP
     TOP --- ROW1[扫描根目录: [_____] [浏览...]]
-    ROW1 --- ROW2[清单输出: [stignore-paths.json] [浏览...]]
+    ROW1 --- ROW2[清单输出: [config/stignore-paths.json] [浏览...]]
     ROW2 --- ROW3[☑ 仅预览  ☑ 强制  ☑ 写回前备份]
     ROW3 --- BTN[Scan | Apply | 打开清单 | 清空日志 | 停止 | 关于]
     BTN --- SUM[扫描摘要]
@@ -215,7 +215,7 @@ flowchart TD
 │ 语言:[EN ▼]   主题:[浅色 ▼]   Syncthing .stignore 管理器│
 ├──────────────────────────────────────────────────────┤
 │ 扫描根目录（留空=所有固定驱动器）: [__________][浏览]   │
-│ 清单输出路径: [stignore-paths.json    ][浏览]         │
+│ 清单输出路径: [config/stignore-paths.json    ][浏览]  │
 │ ☑ 仅预览   ☑ 强制   ☑ 写回前备份                      │
 │                                                        │
 │ [Scan] [Apply] [打开清单] [清空日志] [停止] [关于]    │

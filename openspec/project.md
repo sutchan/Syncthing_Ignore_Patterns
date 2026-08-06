@@ -31,8 +31,10 @@ SyncthingIgnorePatterns/
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档
 ├── CHANGELOG.md              # 独立变更日志（Keep a Changelog 风格）
-├── .gitignore                # 忽略运行时产物（stignore-paths.json / *.bak.*）
-├── stignore-paths.json       # 扫描清单输出（运行时生成，已被 .gitignore 忽略）
+├── .gitignore                # 忽略运行时产物（config/stignore-paths.json / *.bak.*）
+├── config/                   # 运行时配置与产物目录
+│   ├── stignore-paths.json   # 扫描清单输出（运行时生成，已被 .gitignore 忽略）
+│   └── *.bak.*               # 清单备份（轮转 ≤3，已被忽略）
 ├── openspec/                 # 本规范目录
 │   ├── project.md
 │   └── specs/stignore-gui/spec.md
