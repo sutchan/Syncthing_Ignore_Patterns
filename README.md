@@ -132,7 +132,28 @@ Syncthing 支持 `// #include` 指令，可将模式拆分到多个文件中：
 
 ### 批量同步工具
 
-仓库附带两个 PowerShell 脚本，可将标准 `.stignore` 规则批量应用到电脑中所有 Syncthing 同步目录，**无需每次全盘扫描**。
+仓库附带的工具可将标准 `.stignore` 规则批量应用到电脑中所有 Syncthing 同步目录，**无需每次全盘扫描**。
+
+#### 图形界面（推荐）
+
+`SyncthingIgnoreGUI.ps1` 是一个 WinForms 图形界面，集成「扫描」与「应用」两大功能，操作更直观：
+
+```powershell
+.\SyncthingIgnoreGUI.ps1
+```
+
+界面功能：
+
+- **扫描根目录**：留空则扫描所有固定驱动器；或点击 `Browse...` 选择指定目录
+- **清单输出路径**：默认 `stignore-paths.json`，可自定义
+- **Preview only**：勾选后仅预览，不写入任何文件（等同于 `-WhatIf`）
+- **Force**：勾选后跳过逐文件确认直接执行
+- **Back up manifest**：勾选后在写回清单前备份原清单
+- **实时日志**：所有执行输出显示在底部日志框，方便排查
+
+![GUI](https://img.shields.io/badge/GUI-WinForms-blue)
+
+#### 命令行脚本
 
 | 脚本 | 作用 |
 |------|------|
@@ -159,7 +180,7 @@ Syncthing 支持 `// #include` 指令，可将模式拆分到多个文件中：
 - `-Path <目录>`（仅扫描）：只扫描指定目录而非全盘
 - 失效路径（文件已删除）会在替换时自动从清单移除
 
-> 说明：清单为 `stignore-paths.json`，记录每条路径的 SHA256、大小与修改时间；规则一致的文件会自动跳过，不会重复备份。
+> 说明：清单为 `stignore-paths.json`，记录每条路径的 SHA256、大小与修改时间；规则一致的文件会自动跳过，不会重复备份。GUI 与命令行共享同一套底层逻辑。
 
 ### 开源许可
 
