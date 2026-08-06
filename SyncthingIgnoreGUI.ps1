@@ -76,7 +76,7 @@ $chkPreview = New-Object System.Windows.Forms.CheckBox
 $chkPreview.Text = 'Preview only (WhatIf - no changes written)'
 $chkPreview.Location = New-Object System.Drawing.Point(16, 130)
 $chkPreview.AutoSize = $true
-$chkPreview.Checked = $true
+$chkPreview.Checked = $false
 $form.Controls.Add($chkPreview)
 
 $chkForce = New-Object System.Windows.Forms.CheckBox
@@ -199,7 +199,7 @@ function Start-ScanJob {
     foreach ($r in $roots) {
         Write-LogLine "Scanning root: $r" 'Cyan'
         try {
-            $files = Get-ChildItem -Path $r -Filter '.stignore' -Recurse -File -Force -ErrorAction SilentlyContinue
+            $files = Get-ChildItem -Path $r -Include '.stignore' -Recurse -File -Force -ErrorAction SilentlyContinue
         } catch {
             Write-LogLine "Cannot access $r : $($_.Exception.Message)" 'DarkOrange'
             continue
@@ -372,6 +372,11 @@ $btnScan.Add_Click({
         Add-Log '--- Starting scan ---' 'Blue'
         $out = $txtOut.Text.Trim()
         if (-not $out) { $out = Join-Path $scriptDir 'stignore-paths.json'; $txtOut.Text = $out }
+        if ($chkPreview.Checked) {
+            Add-Log 'Preview mode ON: no files will be written.' 'Yellow'
+        } else {
+            Add-Log "Writing manifest to: $out" 'Yellow'
+        }
         Start-ScanJob -Root $txtRoot.Text.Trim() -Output $out -WhatIf $chkPreview.Checked
     } catch {
         Add-Log "ERROR: $_" 'Red'
