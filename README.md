@@ -1,7 +1,12 @@
 # Syncthing 忽略模式
 
+> 精心整理的开箱即用 `.stignore` 规则集，自动排除系统文件、缓存、构建产物与应用数据，让 Syncthing 同步更干净高效。
+
 ![Version](https://img.shields.io/badge/version-v1.1.0-blue)
-![Updated](https://img.shields.io/badge/updated-2026--07--01-brightgreen)
+![Updated](https://img.shields.io/badge/updated-2026--08--06-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Categories](https://img.shields.io/badge/categories-12-blueviolet)
+![GitHub Repo](https://img.shields.io/badge/source-GitHub-black)
 
 [中文](#中文说明) | [English](README_EN.md)
 
@@ -9,7 +14,21 @@
 
 ## 中文说明
 
-精心整理的 `.stignore` 集合，可将系统文件、缓存、构建产物和应用数据排除在 Syncthing 同步之外。
+### 目录
+
+- [特性](#特性)
+- [通配符语法](#通配符语法)
+- [已包含的分类](#已包含的分类)
+- [使用方法](#使用方法)
+- [示例](#示例)
+- [开源许可](#开源许可)
+
+### 特性
+
+- ✅ **12 大分类**覆盖系统、缓存、构建产物、数据库等常见噪音文件
+- ✅ **开箱即用** — 直接复制即可生效，无需额外配置
+- ✅ **中英双语文档**，方便团队协作
+- ✅ **持续维护**，随生态更新规则
 
 ### 通配符语法
 
@@ -24,19 +43,20 @@
 
 ### 已包含的分类
 
-`.stignore` 文件按以下 11 个分类组织（完整内容请查看文件本身）：
+`.stignore` 文件按以下 12 个分类组织（完整内容请查看文件本身）：
 
 1. **系统与 OS 文件** — `$RECYCLE.BIN`、`.DS_Store`、`Thumbs.db`、`desktop.ini`、`pagefile.sys`、`Program Files/`、`System Volume Information/`、`LOST.DIR/` 等
-2. **备份与临时文件** — `.cache`、`.tmp`、`.delete`、`Temp/`、`Backup_of_*` 等
-3. **应用数据与缓存** — `.stfolder/`、`.stversions`、`.dropbox.cache/`、`WeChat Files/`、`Tencent Files/`、`BaiduNetdiskDownload/`、`AliWorkbenchData/`、`Youku Files/`、`SteamLibrary/` 等
-4. **版本控制系统** — `.git/`
-5. **包管理器缓存与依赖** — `node_modules/`、`.npm/`、`.pnpm-store/`、`.venv/`、`__pycache__/`、`.cargo/`、`.gradle/`、`.m2/`、`.nuget/`、`.bun/`、`.deno/`、`.dart_tool/`、`.stack-work/` 等
-6. **前端框架构建缓存** — `.next/`、`.nuxt/`、`.svelte-kit/`、`.vite/`、`.turbo/`、`.astro/`、`.docusaurus/`、`.parcel-cache/`、`.vercel/`、`.netlify/`、`.vuepress/dist/` 等
-7. **Python 与测试缓存** — `.pytest_cache/`、`.mypy_cache/`、`.ruff_cache/`、`.coverage`、`.jest-cache/`、`.vitest/`、`.tox/`、`.nox/`、`.ipynb_checkpoints/`、`htmlcov/` 等
-8. **C/C++ 与 Rust 构建缓存** — `CMakeCache.txt`、`CMakeFiles/`、`cmake-build-debug/`、`cmake-build-release/`、`compile_commands.json`、`.ccls-cache/`、`.clangd/`、`.rustc_cache/` 等
-9. **JVM 与 Scala 构建缓存** — `.ammonite/`、`.bloop/`、`.metals/`、`.kotlintest/`
-10. **IDE 与工具缓存** — `.idea/`、`.history/`、`.terraform/`、`.terraform.lock.hcl`、`.terragrunt-cache/`、`.helm/`、`.kube/`、`.flyway/` 等
-11. **锁文件与日志文件** — `*.lock`、`*.log.*`、`**.log`
+2. **数据库文件** — `#innodb_redo`、`#innodb_temp`、`ibdata1`、`*.ibd` 等
+3. **备份与临时文件** — `.cache`、`.tmp`、`.delete`、`Temp/`、`Backup_of_*` 等
+4. **应用数据与缓存** — `.stfolder/`、`.stversions`、`.dropbox.cache/`、`WeChat Files/`、`Tencent Files/`、`BaiduNetdiskDownload/`、`AliWorkbenchData/`、`Youku Files/`、`SteamLibrary/` 等
+5. **版本控制系统** — `.git/`
+6. **包管理器缓存与依赖** — `node_modules/`、`.npm/`、`.pnpm-store/`、`.venv/`、`__pycache__/`、`.cargo/`、`.gradle/`、`.m2/`、`.nuget/`、`.bun/`、`.deno/`、`.dart_tool/`、`.stack-work/` 等
+7. **前端框架构建缓存** — `.next/`、`.nuxt/`、`.svelte-kit/`、`.vite/`、`.turbo/`、`.astro/`、`.docusaurus/`、`.parcel-cache/`、`.vercel/`、`.netlify/`、`.vuepress/dist/` 等
+8. **Python 与测试缓存** — `.pytest_cache/`、`.mypy_cache/`、`.ruff_cache/`、`.coverage`、`.jest-cache/`、`.vitest/`、`.tox/`、`.nox/`、`.ipynb_checkpoints/`、`htmlcov/` 等
+9. **C/C++ 与 Rust 构建缓存** — `CMakeCache.txt`、`CMakeFiles/`、`cmake-build-debug/`、`cmake-build-release/`、`compile_commands.json`、`.ccls-cache/`、`.clangd/`、`.rustc_cache/` 等
+10. **JVM 与 Scala 构建缓存** — `.ammonite/`、`.bloop/`、`.metals/`、`.kotlintest/`
+11. **IDE 与工具缓存** — `.idea/`、`.history/`、`.terraform/`、`.terraform.lock.hcl`、`.terragrunt-cache/`、`.helm/`、`.kube/`、`.flyway/` 等
+12. **锁文件与日志文件** — `*.lock`、`*.log.*`、`**.log`
 
 ### 使用方法
 
@@ -62,7 +82,7 @@
 
 Syncthing 支持 `// #include` 指令，可将模式拆分到多个文件中：
 
-```
+```text
 // 引入本仓库的模式
 #include .stignore-base
 
@@ -89,7 +109,7 @@ Syncthing 支持 `// #include` 指令，可将模式拆分到多个文件中：
 
 ### 示例
 
-```
+```text
 // 递归排除回收站
 **$RECYCLE.BIN
 
@@ -108,4 +128,4 @@ Syncthing 支持 `// #include` 指令，可将模式拆分到多个文件中：
 
 ### 开源许可
 
-MIT
+本项目基于 [MIT 许可证](https://opensource.org/licenses/MIT) 开源。

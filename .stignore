@@ -1,12 +1,6 @@
 //Syncthing Ignore Patterns Lists
 //Version: 1.1.0
-//Updated: 2026-07-01
-
-//Database Files
-**#innodb_redo
-**#innodb_temp
-**ibdata1
-**.ibd
+//Updated: 2026-08-06
 
 //System & OS Files
 **#Recycle
@@ -27,6 +21,32 @@
 **pagefile.sys
 **swapfile.sys
 **~$*
+
+//Database Files
+**#innodb_redo
+**#innodb_temp
+**ibdata1
+**.ibd
+**ib_logfile*
+**mysql.sock
+**/pg_wal/
+**/pg_xlog/
+**.pgpass
+**postmaster.pid
+**/sqlite.db
+***.sqlite
+***.sqlite3
+***.db
+**/master.db
+**/mongod.lock
+**/WiredTiger*
+**/journal/
+**dump.rdb
+**/redis/
+**/elastic/
+**/data/elasticsearch/
+**/leveldb/
+**/rocksdb/
 
 //Backup & Temporary Files
 **.cache
@@ -100,7 +120,6 @@
 **.pnpm-local-store
 **.pnpm-store/
 **.pub-cache/
-**.stack-work/
 **.venv/
 **.venv-*/
 **.yarn/cache/
@@ -109,6 +128,18 @@
 **__pycache__/
 **node_modules/*
 **packages/
+**.go/
+**/go.mod.verify
+**.gocode/
+**.ruby/
+**.gem/
+**.bundle/
+**/vendor/bundle/
+**.composer/
+**/vendor/
+**.cabal/
+**.ghc/
+**.phpunit.result.cache
 
 //Frontend Framework Build Caches
 **.astro/
@@ -164,6 +195,67 @@
 **.terraform/
 **.terraform.lock.hcl
 **.terragrunt-cache/
+
+//Editor & Dev Tool Caches
+**/.vscode/*
+**!/.vscode/settings.json
+**/.vscode-test/
+**/.vim/
+**/.viminfo
+**/.swp
+**/.swo
+**/*~
+**/.emacs.d/auto-save-list/
+**/.session
+**/.sublime-project
+**/.sublime-workspace
+**/.zed/
+**/.cursor/
+
+//Archives & Partial Downloads
+***.part
+***.partial
+***.crdownload
+***.aria2
+***.download
+***.tmp.download
+***.qtemporary
+***.opdownload
+**/downloading/
+
+//Virtualization & Container Files
+**/*.vmdk
+**/*.vdi
+**/*.vhd
+**/*.vhdx
+**/*.qcow2
+**/*.ova
+**/*.ovf
+**/docker-desktop-data/
+**/.docker/
+**/.minikube/
+**/.vagrant/
+
+//Media & Player Caches
+**/.cache/
+**/PotPlayerMini*
+**/Spotify/
+**/iTunes/Album Artwork/
+**/.thumbnails/
+**/Cache/
+**/Caches/
+**/CacheStorage/
+**/GPUCache/
+**/Service Worker/
+**/.Spotlight-V100/
+**/.fseventsd/
+**/.DocumentRevisions-V100/
+**/.VolumeIcon.icns
+**/.com.apple.timemachine.donotpresent
+**/.Trashes/
+**/.apdisk
+**/.PKInstallSandboxManager
+**/.metadata_never_index
 
 //Lock & Log Files
 *.lock
