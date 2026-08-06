@@ -1,6 +1,6 @@
 <#
 //File: SyncthingIgnoreGUI.ps1
-//Version: 1.9.0
+//Version: 1.10.0
 //Updated: 2026-08-06
 .SYNOPSIS
     Graphical interface for scanning and applying Syncthing .stignore rules,
@@ -24,7 +24,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 $scriptDir = $PSScriptRoot
-$ScriptVersion = '1.9.0'
+$ScriptVersion = '1.10.0'
 $StandardRuleSource = Join-Path $scriptDir '.stignore'
 
 # ---------- Localization ----------
@@ -65,6 +65,23 @@ $T = @{
         repo        = 'Project: '
         summary     = 'Found {0} .stignore file(s).'
         clear       = 'Clear log'
+        stop        = 'Stop'
+        results     = 'Results:'
+        dragTip     = 'Tip: drag a folder or .stignore here'
+        theme       = 'Theme:'
+        themeLight  = 'Light'
+        themeDark   = 'Dark'
+        confirmTitle= 'Confirm action'
+        about       = 'About'
+        aboutText   = "Syncthing .stignore Manager`nVersion {0}`nProject: {1}"
+        replaced    = 'Replaced'
+        identical   = 'Identical'
+        cleaned     = 'Cleaned'
+        failed      = 'Failed'
+        scanDone    = 'Scan finished.'
+        applyDone   = 'Apply finished.'
+        stopped     = 'Operation stopped by user.'
+        openFile    = 'Open file'
         applyTitle  = 'Apply standard rules'
         applyConfirm= 'About to write the standard .stignore rules into {0} path(s). Continue?'
         manifestLoaded = 'Existing manifest loaded: {0} file(s).'
@@ -96,6 +113,23 @@ $T = @{
         applyConfirm= '\u5373\u5c06\u628a\u6807\u51c6 .stignore \u89c4\u5219\u5199\u5165 {0} \u4e2a\u8def\u5f84\uff0c\u662f\u5426\u7ee7\u7eed\uff1f'
         manifestLoaded = '\u5df2\u52a0\u8f7d\u73b0\u6709\u6e05\u5355\uff1a{0} \u4e2a\u6587\u4ef6\u3002'
         noManifest  = '\u672a\u627e\u5230\u6e05\u5355\uff0c\u8bf7\u5148\u626b\u63cf\u3002'
+        stop        = '\u505c\u6b62'
+        results     = '\u7ed3\u679c\uff1a'
+        dragTip     = '\u63d0\u793a\uff1a\u53ef\u5c06\u6587\u4ef6\u5939\u6216 .stignore \u62d6\u5165\u6b64\u5904'
+        theme       = '\u4e3b\u9898\uff1a'
+        themeLight  = '\u6d45\u8272'
+        themeDark   = '\u6df1\u8272'
+        confirmTitle= '\u786e\u8ba4\u64cd\u4f5c'
+        about       = '\u5173\u4e8e'
+        aboutText   = 'Syncthing .stignore \u7ba1\u7406\u5668`n\u7248\u672c {0}`n\u9879\u76ee\uff1a{1}'
+        replaced    = '\u5df2\u66ff\u6362'
+        identical   = '\u4e00\u81f4'
+        cleaned     = '\u5df2\u6e05\u7406'
+        failed      = '\u5931\u8d25'
+        scanDone    = '\u626b\u63cf\u5b8c\u6210\u3002'
+        applyDone   = '\u5e94\u7528\u5b8c\u6210\u3002'
+        stopped     = '\u7528\u6237\u5df2\u505c\u6b62\u64cd\u4f5c\u3002'
+        openFile    = '\u6253\u5f00\u6587\u4ef6'
     }
 }
 
@@ -106,9 +140,9 @@ $lang = if ($uiCulture -like 'zh*') { 'zh' } else { 'en' }
 # ---------- Form ----------
 $form = New-Object System.Windows.Forms.Form
 $form.Text = $T[$lang].title
-$form.Size = New-Object System.Drawing.Size(720, 580)
+$form.Size = New-Object System.Drawing.Size(720, 640)
 $form.StartPosition = 'CenterScreen'
-$form.MinimumSize = New-Object System.Drawing.Size(640, 500)
+$form.MinimumSize = New-Object System.Drawing.Size(640, 540)
 $form.Font = New-Object System.Drawing.Font('Segoe UI', 9.5)
 $form.AutoScroll = $true
 
@@ -120,11 +154,26 @@ $form.Controls.Add($lblLang)
 
 $cmbLang = New-Object System.Windows.Forms.ComboBox
 $cmbLang.Location = New-Object System.Drawing.Point(490, 10)
-$cmbLang.Size = New-Object System.Drawing.Size(200, 24)
+$cmbLang.Size = New-Object System.Drawing.Size(120, 24)
 $cmbLang.DropDownStyle = 'DropDownList'
 $cmbLang.Items.Add($T.en.enItem) | Out-Null
 $cmbLang.Items.Add($T.en.zhItem) | Out-Null
 $form.Controls.Add($cmbLang)
+
+# ---------- Theme selector ----------
+$lblTheme = New-Object System.Windows.Forms.Label
+$lblTheme.Location = New-Object System.Drawing.Point(616, 14)
+$lblTheme.AutoSize = $true
+$form.Controls.Add($lblTheme)
+
+$cmbTheme = New-Object System.Windows.Forms.ComboBox
+$cmbTheme.Location = New-Object System.Drawing.Point(616, 32)
+$cmbTheme.Size = New-Object System.Drawing.Size(88, 24)
+$cmbTheme.DropDownStyle = 'DropDownList'
+$cmbTheme.Items.Add($T.en.themeLight) | Out-Null
+$cmbTheme.Items.Add($T.en.themeDark) | Out-Null
+$cmbTheme.SelectedIndex = 0
+$form.Controls.Add($cmbTheme)
 
 # ---------- Inputs: scan root ----------
 $lblRoot = New-Object System.Windows.Forms.Label
@@ -196,13 +245,26 @@ $form.Controls.Add($btnApply)
 
 $btnOpenManifest = New-Object System.Windows.Forms.Button
 $btnOpenManifest.Location = New-Object System.Drawing.Point(404, 218)
-$btnOpenManifest.Size = New-Object System.Drawing.Size(120, 32)
+$btnOpenManifest.Size = New-Object System.Drawing.Size(96, 32)
 $form.Controls.Add($btnOpenManifest)
 
 $btnClearLog = New-Object System.Windows.Forms.Button
-$btnClearLog.Location = New-Object System.Drawing.Point(540, 218)
-$btnClearLog.Size = New-Object System.Drawing.Size(148, 32)
+$btnClearLog.Location = New-Object System.Drawing.Point(506, 218)
+$btnClearLog.Size = New-Object System.Drawing.Size(88, 32)
 $form.Controls.Add($btnClearLog)
+
+$btnStop = New-Object System.Windows.Forms.Button
+$btnStop.Location = New-Object System.Drawing.Point(600, 218)
+$btnStop.Size = New-Object System.Drawing.Size(60, 32)
+$btnStop.BackColor = [System.Drawing.Color]::FromArgb(192, 80, 77)
+$btnStop.ForeColor = [System.Drawing.Color]::White
+$btnStop.Enabled = $false
+$form.Controls.Add($btnStop)
+
+$btnAbout = New-Object System.Windows.Forms.Button
+$btnAbout.Location = New-Object System.Drawing.Point(664, 218)
+$btnAbout.Size = New-Object System.Drawing.Size(48, 32)
+$form.Controls.Add($btnAbout)
 
 # ---------- Scan summary ----------
 $lblSummary = New-Object System.Windows.Forms.Label
@@ -212,15 +274,29 @@ $lblSummary.ForeColor = [System.Drawing.Color]::FromArgb(46, 138, 87)
 $lblSummary.Font = New-Object System.Drawing.Font('Segoe UI', 9, [System.Drawing.FontStyle]::Bold)
 $form.Controls.Add($lblSummary)
 
+# ---------- Results list ----------
+$lblResults = New-Object System.Windows.Forms.Label
+$lblResults.Location = New-Object System.Drawing.Point(16, 280)
+$lblResults.AutoSize = $true
+$form.Controls.Add($lblResults)
+
+$lstResults = New-Object System.Windows.Forms.ListBox
+$lstResults.Location = New-Object System.Drawing.Point(16, 302)
+$lstResults.Size = New-Object System.Drawing.Size(672, 150)
+$lstResults.Anchor = 'Top,Left,Right'
+$lstResults.HorizontalScrollbar = $true
+$lstResults.Font = New-Object System.Drawing.Font('Consolas', 9)
+$form.Controls.Add($lstResults)
+
 # ---------- Log ----------
 $lblLog = New-Object System.Windows.Forms.Label
-$lblLog.Location = New-Object System.Drawing.Point(16, 278)
+$lblLog.Location = New-Object System.Drawing.Point(16, 458)
 $lblLog.AutoSize = $true
 $form.Controls.Add($lblLog)
 
 $txtLog = New-Object System.Windows.Forms.TextBox
-$txtLog.Location = New-Object System.Drawing.Point(16, 300)
-$txtLog.Size = New-Object System.Drawing.Size(672, 212)
+$txtLog.Location = New-Object System.Drawing.Point(16, 480)
+$txtLog.Size = New-Object System.Drawing.Size(672, 132)
 $txtLog.Multiline = $true
 $txtLog.ScrollBars = 'Vertical'
 $txtLog.ReadOnly = $true
@@ -231,8 +307,8 @@ $form.Controls.Add($txtLog)
 
 # Real percentage progress bar (Blocks style for accurate feedback).
 $progress = New-Object System.Windows.Forms.ProgressBar
-$progress.Location = New-Object System.Drawing.Point(16, 524)
-$progress.Size = New-Object System.Drawing.Size(672, 14)
+$progress.Location = New-Object System.Drawing.Point(16, 616)
+$progress.Size = New-Object System.Drawing.Size(560, 14)
 $progress.Style = 'Blocks'
 $progress.Minimum = 0
 $progress.Maximum = 100
@@ -240,18 +316,26 @@ $progress.Value = 0
 $progress.Visible = $false
 $form.Controls.Add($progress)
 
+# Percentage text next to the progress bar.
+$lblPct = New-Object System.Windows.Forms.Label
+$lblPct.Location = New-Object System.Drawing.Point(584, 614)
+$lblPct.AutoSize = $true
+$lblPct.Font = New-Object System.Drawing.Font('Segoe UI', 8.5)
+$lblPct.Visible = $false
+$form.Controls.Add($lblPct)
+
 # ---------- Version + project link (status bar) ----------
 $RepoUrl = 'https://github.com/sutchan/Syncthing_Ignore_Patterns'
 
 $lblVersion = New-Object System.Windows.Forms.Label
-$lblVersion.Location = New-Object System.Drawing.Point(16, 526)
+$lblVersion.Location = New-Object System.Drawing.Point(16, 658)
 $lblVersion.AutoSize = $true
 $lblVersion.Font = New-Object System.Drawing.Font('Segoe UI', 8.5)
 $lblVersion.ForeColor = [System.Drawing.Color]::FromArgb(120, 120, 120)
 $form.Controls.Add($lblVersion)
 
 $lblRepo = New-Object System.Windows.Forms.LinkLabel
-$lblRepo.Location = New-Object System.Drawing.Point(300, 526)
+$lblRepo.Location = New-Object System.Drawing.Point(300, 658)
 $lblRepo.AutoSize = $true
 $lblRepo.Font = New-Object System.Drawing.Font('Segoe UI', 8.5)
 $lblRepo.LinkColor = [System.Drawing.Color]::FromArgb(0, 120, 215)
@@ -259,6 +343,54 @@ $lblRepo.Add_LinkClicked({
     try { Start-Process $RepoUrl } catch { Add-Log (Lmsg "Cannot open link: $_" "\u65e0\u6cd5\u6253\u5f00\u94fe\u63a5\uff1a$_") 'Red' }
 })
 $form.Controls.Add($lblRepo)
+
+# ---------- Config persistence (language + theme) ----------
+$ConfigPath = Join-Path $scriptDir 'config.json'
+function Get-Config {
+    if (Test-Path $ConfigPath) {
+        try { return (Get-Content -Path $ConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json) } catch {}
+    }
+    return $null
+}
+function Save-Config {
+    param([string]$Language, [string]$Theme)
+    try {
+        $obj = [pscustomobject]@{ language = $Language; theme = $Theme; version = $ScriptVersion }
+        Set-Content -Path $ConfigPath -Value ($obj | ConvertTo-Json -Compress) -Encoding UTF8
+    } catch {}
+}
+
+# Theme application: switch light/dark palettes across all controls.
+function Apply-Theme {
+    param([string]$Theme)
+    $dark = ($Theme -eq 'dark')
+    if ($dark) {
+        $bg = [System.Drawing.Color]::FromArgb(40, 40, 40)
+        $fg = [System.Drawing.Color]::FromArgb(228, 228, 228)
+        $ctrlBg = [System.Drawing.Color]::FromArgb(55, 55, 55)
+        $logBg = [System.Drawing.Color]::FromArgb(30, 30, 30)
+    } else {
+        $bg = [System.Drawing.Color]::FromArgb(240, 240, 240)
+        $fg = [System.Drawing.Color]::FromArgb(0, 0, 0)
+        $ctrlBg = [System.Drawing.Color]::White
+        $logBg = [System.Drawing.Color]::FromArgb(245, 245, 245)
+    }
+    $form.BackColor = $bg
+    $form.ForeColor = $fg
+    foreach ($c in $form.Controls) {
+        if ($c -is [System.Windows.Forms.Button] -and ($c.BackColor -ne [System.Drawing.Color]::FromArgb(0,120,215)) -and ($c.BackColor -ne [System.Drawing.Color]::FromArgb(46,138,87)) -and ($c.BackColor -ne [System.Drawing.Color]::FromArgb(192,80,77))) {
+            $c.BackColor = $ctrlBg
+            $c.ForeColor = $fg
+        } elseif ($c -is [System.Windows.Forms.ComboBox] -or $c -is [System.Windows.Forms.TextBox] -or $c -is [System.Windows.Forms.ListBox] -or $c -is [System.Windows.Forms.Label] -or $c -is [System.Windows.Forms.CheckBox] -or $c -is [System.Windows.Forms.LinkLabel]) {
+            $c.BackColor = $bg
+            $c.ForeColor = $fg
+        }
+    }
+    $txtLog.BackColor = $logBg
+    $lstResults.BackColor = $ctrlBg
+    $lstResults.ForeColor = $fg
+    [System.Windows.Forms.Application]::DoEvents()
+}
 
 # ---------- Apply language to all controls ----------
 function Apply-Language {
@@ -276,7 +408,17 @@ function Apply-Language {
     $btnApply.Text      = if ($lang -eq 'zh') { Decode-Uni $d.apply } else { $d.apply }
     $btnOpenManifest.Text = if ($lang -eq 'zh') { Decode-Uni $d.open } else { $d.open }
     $btnClearLog.Text     = if ($lang -eq 'zh') { Decode-Uni $d.clear } else { $d.clear }
-    $lblLog.Text        = if ($lang -eq 'zh') { Decode-Uni $d.log } else { $d.log }
+    $btnStop.Text         = if ($lang -eq 'zh') { Decode-Uni $d.stop } else { $d.stop }
+    $btnAbout.Text        = if ($lang -eq 'zh') { Decode-Uni $d.about } else { $d.about }
+    $lblResults.Text      = if ($lang -eq 'zh') { Decode-Uni $d.results } else { $d.results }
+    $lblTheme.Text        = if ($lang -eq 'zh') { Decode-Uni $d.theme } else { $d.theme }
+    $lblLog.Text          = if ($lang -eq 'zh') { Decode-Uni $d.log } else { $d.log }
+    $txtRoot.Text         = if ([string]::IsNullOrWhiteSpace($txtRoot.Text)) { $txtRoot.Text } else { $txtRoot.Text }
+    # Ensure the theme combo language follows the selected UI language.
+    if ($cmbTheme.Items.Count -ge 2) {
+        $cmbTheme.Items[0] = if ($lang -eq 'zh') { Decode-Uni $d.themeLight } else { $d.themeLight }
+        $cmbTheme.Items[1] = if ($lang -eq 'zh') { Decode-Uni $d.themeDark } else { $d.themeDark }
+    }
     if ($lang -eq 'zh') {
         $lblVersion.Text = "v$ScriptVersion  |  SyncthingIgnorePatterns"
         $lblRepo.Text    = "$(Decode-Uni $d.repo) $RepoUrl"
@@ -621,6 +763,13 @@ function Start-ApplyJob {
 $cmbLang.Add_SelectedIndexChanged({
     $lang = if ($cmbLang.SelectedIndex -eq 1) { 'zh' } else { 'en' }
     Apply-Language
+    Save-Config -Language $lang -Theme $script:currentTheme
+})
+
+$cmbTheme.Add_SelectedIndexChanged({
+    $script:currentTheme = if ($cmbTheme.SelectedIndex -eq 1) { 'dark' } else { 'light' }
+    Apply-Theme -Theme $script:currentTheme
+    Save-Config -Language $lang -Theme $script:currentTheme
 })
 
 $btnBrowseRoot.Add_Click({
@@ -664,11 +813,27 @@ $btnScan.Add_Click({
     # Run the scan off the UI thread so the GUI stays responsive.
     $bg = [powershell]::Create().AddCommand('Invoke-ScanCore').AddArgument($rootArg).AddArgument($scriptDir)
     $bgHandle = $bg.BeginInvoke()
+    $script:cancelFlag = $false
+    $script:scanPct = 0
 
     $timer = New-Object System.Windows.Forms.Timer
     $timer.Interval = 100
     $timer.Add_Tick({
         [System.Windows.Forms.Application]::DoEvents()
+        # Animated progress while the background scan is in flight.
+        if (-not $bgHandle.IsCompleted) {
+            $script:scanPct = [Math]::Min(95, $script:scanPct + 2)
+            $progress.Value = $script:scanPct
+            $lblPct.Visible = $true
+            $lblPct.Text = "$($script:scanPct)%"
+        }
+        if ($script:cancelFlag) {
+            $timer.Stop()
+            Add-Log (Lmsg 'Scan stopped by user (partial results discarded).' '\u7528\u6237\u5df2\u505c\u6b62\u626b\u63cf\uff08\u5c40\u90e8\u7ed3\u679c\u5df2\u4e22\u5f03\uff09\u3002') 'DarkOrange'
+            $progress.Visible = $false; $lblPct.Visible = $false
+            Set-Busy $false
+            return
+        }
         if ($bgHandle.IsCompleted) {
             $timer.Stop()
             try {
@@ -678,6 +843,7 @@ $btnScan.Add_Click({
                 $roots = $core.roots
                 $records = [System.Collections.ArrayList]::new()
                 $errCount = 0
+                $script:lstResults.Items.Clear()
                 foreach ($rec in $raw) {
                     if ($null -ne $rec.__error) {
                         Add-Log (Lmsg "Cannot access $($rec.__error)" "\u65e0\u6cd5\u8bbf\u95ee $($rec.__error)") 'DarkOrange'
@@ -685,6 +851,7 @@ $btnScan.Add_Click({
                         continue
                     }
                     [void]$records.Add($rec)
+                    [void]$script:lstResults.Items.Add($rec.path)
                 }
                 $manifest = [pscustomobject]@{
                     version   = $ScriptVersion
@@ -695,11 +862,14 @@ $btnScan.Add_Click({
                 }
                 $json = $manifest | ConvertTo-Json -Depth 4 -Compress:$false
                 Set-Content -Path $out -Value $json -Encoding UTF8
+                $progress.Value = 100; $lblPct.Text = '100%'
                 Add-Log (Lmsg "Scan complete. Files: $($records.Count) (errors: $errCount). Manifest: $out" "\u626b\u63cf\u5b8c\u6210\u3002\u6587\u4ef6\u6570\uff1a$($records.Count)\uff08\u9519\u8bef\uff1a$errCount\uff09\u3002\u6e05\u5355\uff1a$out") 'Green'
                 $script:lblSummary.Text = (Lmsg ($T[$lang].summary -f $records.Count) (Decode-Uni $T[$lang].summary -f $records.Count))
+                [System.Windows.Forms.MessageBox]::Show((Lmsg $T[$lang].scanDone (Decode-Uni $T[$lang].scanDone)), (Lmsg $T[$lang].confirmTitle (Decode-Uni $T[$lang].confirmTitle)), 'OK', 'Information') | Out-Null
             } catch {
                 Add-Log (Lmsg "ERROR: $_" "\u9519\u8bef\uff1a$_") 'Red'
             } finally {
+                $progress.Visible = $false; $lblPct.Visible = $false
                 Set-Busy $false
             }
         }
@@ -726,6 +896,7 @@ $btnApply.Add_Click({
     }
 
     Set-Busy $true
+    $script:cancelFlag = $false
     Add-Log (Lmsg '--- Starting apply ---' '--- \u5f00\u59cb\u5e94\u7528 ---') 'Blue'
     # Run apply off the UI thread; progress is updated via form.Invoke.
     $bg = [powershell]::Create().AddCommand('Start-ApplyJob').AddArgument($list).AddArgument($StandardRuleSource).AddArgument($chkPreview.Checked).AddArgument($chkForce.Checked).AddArgument($chkBackupList.Checked).AddArgument($form)
@@ -734,22 +905,37 @@ $btnApply.Add_Click({
     $timer.Interval = 100
     $timer.Add_Tick({
         [System.Windows.Forms.Application]::DoEvents()
+        # Mirror the live progress (driven by form.Invoke inside the job).
+        $lblPct.Visible = $true
+        $lblPct.Text = "$($progress.Value)%"
+        if ($script:cancelFlag) {
+            $timer.Stop()
+            Add-Log (Lmsg 'Apply stop requested. Background job may still finish pending files.' '\u5df2\u8bf7\u6c42\u505c\u6b62\u5e94\u7528\uff0c\u540e\u53f0\u4efb\u52a1\u53ef\u80fd\u4ecd\u5728\u5904\u7406\u5269\u4f59\u6587\u4ef6\u3002') 'DarkOrange'
+            $progress.Visible = $false; $lblPct.Visible = $false
+            Set-Busy $false
+            return
+        }
         if ($bgHandle.IsCompleted) {
             $timer.Stop()
             try {
                 $bg.EndInvoke($bgHandle)
                 $bg.Dispose()
+                $progress.Value = 100; $lblPct.Text = '100%'
             } catch {
                 Add-Log (Lmsg "ERROR: $_" "\u9519\u8bef\uff1a$_") 'Red'
             } finally {
                 Set-Busy $false
                 Add-Log (Lmsg 'Apply finished.' '\u5e94\u7528\u5b8c\u6210\u3002') 'Green'
+                [System.Windows.Forms.MessageBox]::Show((Lmsg $T[$lang].applyDone (Decode-Uni $T[$lang].applyDone)), (Lmsg $T[$lang].confirmTitle (Decode-Uni $T[$lang].confirmTitle)), 'OK', 'Information') | Out-Null
                 # Refresh the manifest summary in the GUI from the updated list.
                 if (Test-Path $list) {
                     try {
                         $m = Get-Content -Path $list -Raw -Encoding UTF8 | ConvertFrom-Json
                         $cnt = @($m.files).Count
                         $script:lblSummary.Text = (Lmsg ($T[$lang].summary -f $cnt) (Decode-Uni $T[$lang].summary -f $cnt))
+                        # Populate the results list with manifest paths.
+                        $script:lstResults.Items.Clear()
+                        foreach ($f in $m.files) { [void]$script:lstResults.Items.Add($f.path) }
                     } catch {}
                 }
             }
@@ -763,8 +949,60 @@ $btnClearLog.Add_Click({
     Add-Log (Lmsg 'Log cleared.' '\u65e5\u5fd7\u5df2\u6e05\u7a7a\u3002') 'Gray'
 })
 
+$btnStop.Add_Click({
+    $script:cancelFlag = $true
+    Add-Log (Lmsg 'Stop requested...' '\u5df2\u8bf7\u6c42\u505c\u6b62...') 'DarkOrange'
+})
+
+$btnAbout.Add_Click({
+    $msg = (Lmsg ($T[$lang].aboutText -f $ScriptVersion, $RepoUrl) (Decode-Uni $T[$lang].aboutText -f $ScriptVersion, $RepoUrl))
+    [System.Windows.Forms.MessageBox]::Show($msg, (Lmsg $T[$lang].about (Decode-Uni $T[$lang].about)), 'OK', 'Information') | Out-Null
+})
+
+# Double-click a result item to open its containing folder / file.
+$lstResults.Add_DoubleClick({
+    if ($lstResults.SelectedItem) {
+        $path = ($lstResults.SelectedItem -split '\t')[0].Trim()
+        if (Test-Path $path) {
+            try { Invoke-Item $path } catch {}
+        }
+    }
+})
+
+# Drag-and-drop: folder -> scan root, .stignore/file -> out/manifest path.
+$form.AllowDrop = $true
+$form.Add_DragEnter({
+    if ($_.Data.GetDataPresent([System.Windows.Forms.DataFormats]::FileDrop)) {
+        $_.Effect = [System.Windows.Forms.DragDropEffects]::Copy
+    }
+})
+$form.Add_DragDrop({
+    $paths = $_.Data.GetData([System.Windows.Forms.DataFormats]::FileDrop)
+    if ($paths -and $paths.Count -gt 0) {
+        $p = $paths[0]
+        if (Test-Path $p -PathType Container) {
+            $txtRoot.Text = $p
+        } elseif ($p -like '*.stignore') {
+            $txtOut.Text = $p
+        } elseif ($p -like '*.json') {
+            $txtOut.Text = $p
+        }
+    }
+})
+
 # ---------- Run ----------
+# Restore persisted language/theme from config.json if present.
+$script:currentTheme = 'light'
+$cfg = Get-Config
+if ($cfg -and $cfg.language -and ($cfg.language -eq 'zh' -or $cfg.language -eq 'en')) {
+    $lang = $cfg.language
+}
+if ($cfg -and $cfg.theme -and ($cfg.theme -eq 'dark' -or $cfg.theme -eq 'light')) {
+    $script:currentTheme = $cfg.theme
+}
+$cmbTheme.SelectedIndex = if ($script:currentTheme -eq 'dark') { 1 } else { 0 }
 Apply-Language
+Apply-Theme -Theme $script:currentTheme
 Add-Log (Lmsg "Tool ready. Scripts dir: $scriptDir" "\u5de5\u5177\u5df2\u5c31\u7eea\u3002\u811a\u672c\u76ee\u5f55\uff1a$scriptDir") 'Gray'
 # Auto-load an existing manifest on startup and reflect it in the summary.
 $initList = $txtOut.Text.Trim()

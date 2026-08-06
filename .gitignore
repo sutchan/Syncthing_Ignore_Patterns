@@ -3,3 +3,6 @@ stignore-paths.json
 
 # 替换工具产生的原文件备份
 *.bak.*
+
+# 用户偏好配置（语言/主题，本地持久化，不入库）
+config.json
