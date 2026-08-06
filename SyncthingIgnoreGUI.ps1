@@ -335,8 +335,36 @@ $txtLog.Anchor = 'Top,Left,Right'
 $txtLog.Font = New-Object System.Drawing.Font('Consolas', 9)
 $form.Controls.Add($txtLog)
 
+# ---------- Custom dark-mode borders (avoid bright system 3D edges) ----------
+# Input controls get BorderStyle=None and a custom-drawn 1px border via the
+# form's Paint event, so the edge color is fully controlled (dark gray in
+# dark mode instead of the bright default system border).
+$script:borderedControls = @($txtRoot, $txtOut, $cmbLang, $cmbTheme, $lstResults, $txtLog)
+$script:borderColor = [System.Drawing.Color]::FromArgb(120, 120, 120)
+foreach ($bc in $script:borderedControls) {
+    if ($bc.PSObject.Properties.Name -contains 'BorderStyle') { $bc.BorderStyle = 'None' }
+}
+$form.Add_Paint({
+    param($sender, $e)
+    foreach ($c in $script:borderedControls) {
+        if ($c -and $c.IsHandleCreated) {
+            [System.Windows.Forms.ControlPaint]::DrawBorder(
+                $e.Graphics, $c.Bounds,
+                $script:borderColor,
+                1, [System.Windows.Forms.ButtonBorderStyle]::Solid,
+                $script:borderColor,
+                1, [System.Windows.Forms.ButtonBorderStyle]::Solid,
+                $script:borderColor,
+                1, [System.Windows.Forms.ButtonBorderStyle]::Solid,
+                $script:borderColor,
+                1, [System.Windows.Forms.ButtonBorderStyle]::Solid)
+        }
+    }
+})
+
 # Real percentage progress bar (Blocks style for accurate feedback).
 $progress = New-Object System.Windows.Forms.ProgressBar
+$progress.Name = 'progress'
 $progress.Location = New-Object System.Drawing.Point(16, 566)
 $progress.Size = New-Object System.Drawing.Size(560, 14)
 $progress.Style = 'Blocks'
@@ -348,6 +376,7 @@ $form.Controls.Add($progress)
 
 # Percentage text next to the progress bar.
 $lblPct = New-Object System.Windows.Forms.Label
+$lblPct.Name = 'lblPct'
 $lblPct.Location = New-Object System.Drawing.Point(584, 564)
 $lblPct.AutoSize = $true
 $lblPct.Font = New-Object System.Drawing.Font('Segoe UI', 8.5)
@@ -407,7 +436,9 @@ function Apply-Theme {
     }
     $form.BackColor = $bg
     $form.ForeColor = $fg
-    $border = if ($dark) { 'FixedSingle' } else { 'Fixed3D' }
+    # Custom border color: dark gray in dark mode (no bright system edge),
+    # medium gray in light mode. Applied via form.Paint on bordered controls.
+    $script:borderColor = if ($dark) { [System.Drawing.Color]::FromArgb(85, 85, 85) } else { [System.Drawing.Color]::FromArgb(120, 120, 120) }
     $allControls = New-Object System.Collections.ArrayList
     $stack = New-Object System.Collections.Stack
     $stack.Push($form)
@@ -418,24 +449,32 @@ function Apply-Theme {
             if ($child.Controls.Count -gt 0) { $stack.Push($child) }
         }
     }
+    # Button border color: dark gray in dark mode so the edge doesn't glare,
+    # medium gray in light mode. Applied via FlatStyle instead of the default
+    # bright 3D bevel.
+    $btnBorder = if ($dark) { [System.Drawing.Color]::FromArgb(70, 70, 70) } else { [System.Drawing.Color]::FromArgb(150, 150, 150) }
     foreach ($c in $allControls) {
-        if ($c -is [System.Windows.Forms.Button] -and ($c.BackColor -ne [System.Drawing.Color]::FromArgb(0,120,215)) -and ($c.BackColor -ne [System.Drawing.Color]::FromArgb(46,138,87)) -and ($c.BackColor -ne [System.Drawing.Color]::FromArgb(192,80,77))) {
-            $c.BackColor = $ctrlBg
-            $c.ForeColor = $fg
+        if ($c -is [System.Windows.Forms.Button]) {
+            # Replace the bright default 3D bevel with a flat, controlled edge.
+            $c.FlatStyle = 'Flat'
+            $c.FlatAppearance.BorderColor = $btnBorder
+            $c.FlatAppearance.BorderSize = 1
+            $isAccent = ($c.BackColor -eq [System.Drawing.Color]::FromArgb(0,120,215)) -or ($c.BackColor -eq [System.Drawing.Color]::FromArgb(46,138,87)) -or ($c.BackColor -eq [System.Drawing.Color]::FromArgb(192,80,77))
+            if (-not $isAccent) {
+                $c.BackColor = $ctrlBg
+                $c.ForeColor = $fg
+            }
         } elseif ($c -is [System.Windows.Forms.ComboBox] -or $c -is [System.Windows.Forms.TextBox] -or $c -is [System.Windows.Forms.ListBox] -or $c -is [System.Windows.Forms.Label] -or $c -is [System.Windows.Forms.CheckBox] -or $c -is [System.Windows.Forms.LinkLabel]) {
             $c.BackColor = $bg
             $c.ForeColor = $fg
         }
-        if (($c -is [System.Windows.Forms.ComboBox] -or $c -is [System.Windows.Forms.TextBox] -or $c -is [System.Windows.Forms.ListBox]) -and ($c.PSObject.Properties.Name -contains 'BorderStyle')) {
-            $c.BorderStyle = $border
-        }
     }
     $txtLog.BackColor = $logBg
-    $txtLog.BorderStyle = $border
     $lstResults.BackColor = $ctrlBg
     $lstResults.ForeColor = $fg
     $form.PerformLayout()
     $form.Refresh()
+    $form.Invalidate()
     [System.Windows.Forms.Application]::DoEvents()
 }
 
@@ -571,8 +610,10 @@ function Start-ParallelScan {
             $pct = [int](($done / [Math]::Max(1, $total)) * 100)
             $FormObj.Invoke([Action[int]] {
                 param([int]$p)
-                $script:progress.Value = [Math]::Max(0, [Math]::Min(100, $p))
-                $script:lblPct.Text = "$p%"
+                $pb = $FormObj.Controls.Find('progress', $true)
+                $pc = $FormObj.Controls.Find('lblPct', $true)
+                if ($pb.Count -gt 0) { $pb[0].Value = [Math]::Max(0, [Math]::Min(100, $p)) }
+                if ($pc.Count -gt 0) { $pc[0].Text = "$p%" }
                 [System.Windows.Forms.Application]::DoEvents()
             }, $pct)
         }
@@ -731,7 +772,8 @@ function Start-ApplyJob {
             $pct = [int](($done / [Math]::Max(1, $total)) * 100)
             $FormObj.Invoke([Action[int]] {
                 param([int]$p)
-                $script:progress.Value = [Math]::Max(0, [Math]::Min(100, $p))
+                $pb = $FormObj.Controls.Find('progress', $true)
+                if ($pb.Count -gt 0) { $pb[0].Value = [Math]::Max(0, [Math]::Min(100, $p)) }
                 [System.Windows.Forms.Application]::DoEvents()
             }, $pct)
         }
