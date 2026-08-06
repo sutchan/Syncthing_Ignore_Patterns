@@ -34,9 +34,9 @@
 **.pgpass
 **postmaster.pid
 **/sqlite.db
-*.sqlite
-*.sqlite3
-*.db
+**/*.sqlite
+**/*.sqlite3
+**/*.db
 **/master.db
 **/mongod.lock
 **/WiredTiger*
@@ -75,13 +75,11 @@
 **.streams/
 **.stversions
 **.sync/
-**.thumb
-**.thumbnails
 **.tmfs
 **.trashBin/
 **.webaxs
-**/config/index-v1/*
-**/config/index-v2/*
+**/config/index-v1/**
+**/config/index-v2/**
 **AliWorkbenchData/
 **BaiduNetdiskDownload/
 **Cache*
@@ -126,9 +124,7 @@
 **.venv-*/
 **.yarn/cache/
 **.yarn/install-state.gz
-**/node_modules/*
-**__pycache__/
-**node_modules/*
+**/node_modules/**
 **packages/
 **.go/
 **/go.mod.verify
@@ -159,6 +155,7 @@
 
 //Python & Testing Caches
 **.coverage
+**__pycache__/
 **.eggs/
 **.ipynb_checkpoints/
 **.jest-cache/
@@ -243,7 +240,7 @@
 **/PotPlayerMini*
 **/Spotify/
 **/iTunes/Album Artwork/
-**/.thumbnails/
+**/.thumbnails/**
 **/Cache/
 **/Caches/
 **/CacheStorage/
