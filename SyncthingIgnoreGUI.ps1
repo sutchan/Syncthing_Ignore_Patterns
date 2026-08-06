@@ -524,8 +524,11 @@ function Set-Busy {
     $btnApply.Enabled = -not $Busy
     $btnOpenManifest.Enabled = -not $Busy
     $btnClearLog.Enabled = -not $Busy
+    # Stop button is only active while a background job is running.
+    $btnStop.Enabled = $Busy
     $progress.Visible = $Busy
-    if ($Busy) { $progress.Value = 0 } else { $progress.Value = 100 }
+    $lblPct.Visible = $Busy
+    if ($Busy) { $progress.Value = 0; $lblPct.Text = '0%' } else { $progress.Value = 100; $lblPct.Text = '100%' }
     [System.Windows.Forms.Application]::DoEvents()
 }
 
