@@ -195,32 +195,28 @@ function Start-ScanJob {
         return
     }
 
-    $records = @()
+    $records = [System.Collections.ArrayList]::new()
     foreach ($r in $roots) {
         Write-LogLine "Scanning root: $r" 'Cyan'
         try {
-            $files = Get-ChildItem -Path $r -Include '.stignore' -Recurse -File -Force -ErrorAction SilentlyContinue
+            # Hash computation is deferred to Apply (on-demand), so scanning only
+            # enumerates files and reads light metadata - much faster on large trees.
+            Get-ChildItem -Path $r -Include '.stignore' -Recurse -File -Force -ErrorAction SilentlyContinue |
+                ForEach-Object {
+                    $full = $_.FullName
+                    if ($full -like '*\.git\*') { return }
+                    if ($full -like "$scriptDir*") { return }
+                    [void]$records.Add([pscustomobject]@{
+                        path         = $full
+                        size         = $_.Length
+                        lastWriteUtc = $_.LastWriteTimeUtc.ToString('o')
+                        foundAtUtc   = (Get-Date).ToUniversalTime().ToString('o')
+                    })
+                    Write-LogLine "  recorded: $full" 'Green'
+                }
         } catch {
             Write-LogLine "Cannot access $r : $($_.Exception.Message)" 'DarkOrange'
             continue
-        }
-        foreach ($file in $files) {
-            $full = $file.FullName
-            if ($full -like '*\.git\*') { continue }
-            if ($full -like "$scriptDir*") { continue }
-            try {
-                $hash = (Get-FileHash -Path $full -Algorithm SHA256).Hash
-                $records += [pscustomobject]@{
-                    path         = $full
-                    sha256       = $hash
-                    size         = $file.Length
-                    lastWriteUtc = $file.LastWriteTimeUtc.ToString('o')
-                    foundAtUtc   = (Get-Date).ToUniversalTime().ToString('o')
-                }
-                Write-LogLine "  recorded: $full" 'Green'
-            } catch {
-                Write-LogLine "  read failed $full : $($_.Exception.Message)" 'DarkOrange'
-            }
         }
     }
     $manifest = [pscustomobject]@{
