@@ -139,6 +139,23 @@ The tool is a **single self-contained script**, `SyncthingIgnoreGUI.ps1`, which 
 .\SyncthingIgnoreGUI.ps1
 ```
 
+**Layout**
+
+```mermaid
+flowchart TD
+    TITLE[Title: Syncthing .stignore Manager]
+    LANG[Language: EN / 中文 ▼]
+    TITLE --- LANG
+    LANG --- ROW1[Scan root: [_____] [Browse...]]
+    ROW1 --- ROW2[Manifest out: [stignore-paths.json] [Browse...]]
+    ROW2 --- ROW3[☑ Preview  ☑ Force  ☑ Back up]
+    ROW3 --- BTN[Scan button | Apply button | Open]
+    BTN --- LOG[Log box]
+    LOG --- STATUS[Status: v1.8.0 | project link]
+```
+
+> The diagram above shows the UI regions. UI text switches live between EN/中文; all Chinese text is stored as `\u` escapes so the script stays pure ASCII.
+
 **Workflow**
 
 ```mermaid
