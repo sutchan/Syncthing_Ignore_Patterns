@@ -413,7 +413,6 @@ function Apply-Language {
     $lblResults.Text      = if ($lang -eq 'zh') { Decode-Uni $d.results } else { $d.results }
     $lblTheme.Text        = if ($lang -eq 'zh') { Decode-Uni $d.theme } else { $d.theme }
     $lblLog.Text          = if ($lang -eq 'zh') { Decode-Uni $d.log } else { $d.log }
-    $txtRoot.Text         = if ([string]::IsNullOrWhiteSpace($txtRoot.Text)) { $txtRoot.Text } else { $txtRoot.Text }
     # Ensure the theme combo language follows the selected UI language.
     if ($cmbTheme.Items.Count -ge 2) {
         $cmbTheme.Items[0] = if ($lang -eq 'zh') { Decode-Uni $d.themeLight } else { $d.themeLight }
@@ -471,7 +470,7 @@ function Limit-Backups {
 # (which has no access to the caller's function definitions) can execute it.
 # Returns an ArrayList of file records (errors surfaced as __error entries).
 function Start-ParallelScan {
-    param([string[]]$Roots, [string]$ScriptDir, [int]$MaxThreads = 4)
+    param([string[]]$Roots, [string]$ScriptDir, [int]$MaxThreads = 4, $FormObj)
 
     $scanScript = {
         param([string]$Root, [string]$ScriptDir)
@@ -508,10 +507,23 @@ function Start-ParallelScan {
         $jobs += [pscustomobject]@{ Root = $r; Handle = $ps.BeginInvoke(); PS = $ps }
     }
     $all = [System.Collections.ArrayList]::new()
+    $done = 0
+    $total = $jobs.Count
     foreach ($j in $jobs) {
         $res = $j.PS.EndInvoke($j.Handle)
         foreach ($rec in $res) { [void]$all.Add($rec) }
         $j.PS.Dispose()
+        $done++
+        # Report real progress (one root processed) to the GUI thread.
+        if ($null -ne $FormObj) {
+            $pct = [int](($done / [Math]::Max(1, $total)) * 100)
+            $FormObj.Invoke([Action[int]] {
+                param([int]$p)
+                $script:progress.Value = [Math]::Max(0, [Math]::Min(100, $p))
+                $script:lblPct.Text = "$p%"
+                [System.Windows.Forms.Application]::DoEvents()
+            }, $pct)
+        }
     }
     $pool.Close()
     $pool.Dispose()
@@ -562,7 +574,8 @@ function Pick-File {
 function Invoke-ScanCore {
     param(
         [string]$Root,
-        [string]$ScriptDir
+        [string]$ScriptDir,
+        $FormObj
     )
     $roots = @()
     if ([string]::IsNullOrWhiteSpace($Root)) {
@@ -573,7 +586,7 @@ function Invoke-ScanCore {
         if (-not (Test-Path $Root)) { throw "Scan root does not exist: $Root" }
         $roots = @($Root)
     }
-    $raw = Start-ParallelScan -Roots $roots -ScriptDir $ScriptDir -MaxThreads 4
+    $raw = Start-ParallelScan -Roots $roots -ScriptDir $ScriptDir -MaxThreads 4 -FormObj $FormObj
     return [pscustomobject]@{ roots = $roots; raw = $raw }
 }
 
@@ -802,37 +815,24 @@ $btnScan.Add_Click({
     $rootArg = $txtRoot.Text.Trim()
     $whatif = $chkPreview.Checked
     if ($whatif) {
-        try {
-            Start-ScanJob -Root $rootArg -Output $out -WhatIf $true
-        } catch {
-            Add-Log (Lmsg "ERROR: $_" "\u9519\u8bef\uff1a$_") 'Red'
-        } finally {
-            Set-Busy $false
-        }
-        return
+        Add-Log (Lmsg 'Preview mode: listing results only, no manifest written.' '\u9884\u89c8\u6a21\u5f0f\uff1a\u4ec5\u5217\u51fa\u7ed3\u679c\uff0c\u4e0d\u5199\u5165\u6e05\u5355\u3002') 'Yellow'
+    } else {
+        Add-Log (Lmsg "Writing manifest to: $out" "\u6b63\u5728\u5199\u5165\u6e05\u5355\uff1a$out") 'Yellow'
     }
-    Add-Log (Lmsg "Writing manifest to: $out" "\u6b63\u5728\u5199\u5165\u6e05\u5355\uff1a$out") 'Yellow'
 
     # Run the scan off the UI thread so the GUI stays responsive.
-    $bg = [powershell]::Create().AddCommand('Invoke-ScanCore').AddArgument($rootArg).AddArgument($scriptDir)
+    # Pass $form so the scanner can push real per-root progress.
+    $bg = [powershell]::Create().AddCommand('Invoke-ScanCore').AddArgument($rootArg).AddArgument($scriptDir).AddArgument($form)
     $bgHandle = $bg.BeginInvoke()
     $script:cancelFlag = $false
-    $script:scanPct = 0
 
     $timer = New-Object System.Windows.Forms.Timer
     $timer.Interval = 100
     $timer.Add_Tick({
         [System.Windows.Forms.Application]::DoEvents()
-        # Animated progress while the background scan is in flight.
-        if (-not $bgHandle.IsCompleted) {
-            $script:scanPct = [Math]::Min(95, $script:scanPct + 2)
-            $progress.Value = $script:scanPct
-            $lblPct.Visible = $true
-            $lblPct.Text = "$($script:scanPct)%"
-        }
         if ($script:cancelFlag) {
             $timer.Stop()
-            Add-Log (Lmsg 'Scan stopped by user (partial results discarded).' '\u7528\u6237\u5df2\u505c\u6b62\u626b\u63cf\uff08\u5c40\u90e8\u7ed3\u679c\u5df2\u4e22\u5f03\uff09\u3002') 'DarkOrange'
+            Add-Log (Lmsg 'Scan stopped by user. Results discarded (manifest not written).' '\u7528\u6237\u5df2\u505c\u6b62\u626b\u63cf\u3002\u7ed3\u679c\u5df2\u4e22\u5f03\uff08\u672a\u5199\u5165\u6e05\u5355\uff09\u3002') 'DarkOrange'
             $progress.Visible = $false; $lblPct.Visible = $false
             Set-Busy $false
             return
@@ -856,19 +856,23 @@ $btnScan.Add_Click({
                     [void]$records.Add($rec)
                     [void]$script:lstResults.Items.Add($rec.path)
                 }
-                $manifest = [pscustomobject]@{
-                    version   = $ScriptVersion
-                    scannedAt = (Get-Date).ToUniversalTime().ToString('o')
-                    count     = $records.Count
-                    roots     = $roots
-                    files     = $records
-                }
-                $json = $manifest | ConvertTo-Json -Depth 4 -Compress:$false
-                Set-Content -Path $out -Value $json -Encoding UTF8
                 $progress.Value = 100; $lblPct.Text = '100%'
-                Add-Log (Lmsg "Scan complete. Files: $($records.Count) (errors: $errCount). Manifest: $out" "\u626b\u63cf\u5b8c\u6210\u3002\u6587\u4ef6\u6570\uff1a$($records.Count)\uff08\u9519\u8bef\uff1a$errCount\uff09\u3002\u6e05\u5355\uff1a$out") 'Green'
+                if ($whatif) {
+                    Add-Log (Lmsg "Preview complete. Files: $($records.Count) (errors: $errCount). Manifest NOT written." "\u9884\u89c8\u5b8c\u6210\u3002\u6587\u4ef6\u6570\uff1a$($records.Count)\uff08\u9519\u8bef\uff1a$errCount\uff09\u3002\u672a\u5199\u5165\u6e05\u5355\u3002") 'Green'
+                } else {
+                    $manifest = [pscustomobject]@{
+                        version   = $ScriptVersion
+                        scannedAt = (Get-Date).ToUniversalTime().ToString('o')
+                        count     = $records.Count
+                        roots     = $roots
+                        files     = $records
+                    }
+                    $json = $manifest | ConvertTo-Json -Depth 4 -Compress:$false
+                    Set-Content -Path $out -Value $json -Encoding UTF8
+                    Add-Log (Lmsg "Scan complete. Files: $($records.Count) (errors: $errCount). Manifest: $out" "\u626b\u63cf\u5b8c\u6210\u3002\u6587\u4ef6\u6570\uff1a$($records.Count)\uff08\u9519\u8bef\uff1a$errCount\uff09\u3002\u6e05\u5355\uff1a$out") 'Green'
+                    [System.Windows.Forms.MessageBox]::Show((Lmsg $T[$lang].scanDone (Decode-Uni $T[$lang].scanDone)), (Lmsg $T[$lang].confirmTitle (Decode-Uni $T[$lang].confirmTitle)), 'OK', 'Information') | Out-Null
+                }
                 $script:lblSummary.Text = (Lmsg ($T[$lang].summary -f $records.Count) (Decode-Uni $T[$lang].summary -f $records.Count))
-                [System.Windows.Forms.MessageBox]::Show((Lmsg $T[$lang].scanDone (Decode-Uni $T[$lang].scanDone)), (Lmsg $T[$lang].confirmTitle (Decode-Uni $T[$lang].confirmTitle)), 'OK', 'Information') | Out-Null
             } catch {
                 Add-Log (Lmsg "ERROR: $_" "\u9519\u8bef\uff1a$_") 'Red'
             } finally {
