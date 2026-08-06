@@ -507,14 +507,21 @@ function Start-ApplyJob {
             continue
         }
         try {
-            $bak = "$full.bak.$timestamp"
-            Copy-Item -Path $full -Destination $bak -Force
-            [System.IO.File]::WriteAllBytes($full, $sourceBytes)
-            $removed = Limit-Backups -Base $full -Keep 3
-            if ($removed -gt 0) {
-                Write-LogLine (Lmsg "  cleaned $removed old backup(s) for: $full" "  \u5df2\u6e05\u7406 $removed \u4e2a\u65e7\u5907\u4efd\uff1a$full") 'DarkGray'
+            # Do not back up the target when it IS the standard .stignore source
+            # itself (e.g. applying rules into the project's own .stignore dir).
+            $isSourceFile = ($full -eq $Source)
+            if (-not $isSourceFile) {
+                $bak = "$full.bak.$timestamp"
+                Copy-Item -Path $full -Destination $bak -Force
+                $removed = Limit-Backups -Base $full -Keep 3
+                if ($removed -gt 0) {
+                    Write-LogLine (Lmsg "  cleaned $removed old backup(s) for: $full" "  \u5df2\u6e05\u7406 $removed \u4e2a\u65e7\u5907\u4efd\uff1a$full") 'DarkGray'
+                }
+                Write-LogLine (Lmsg "  replaced (backup: $bak): $full" "  \u5df2\u66ff\u6362\uff08\u5907\u4efd\uff1a$bak\uff09\uff1a$full") 'Green'
+            } else {
+                Write-LogLine (Lmsg "  replaced (no backup, source .stignore): $full" "  \u5df2\u66ff\u6362\uff08\u4e0d\u5907\u4efd\uff0c\u6e90 .stignore\uff09\uff1a$full") 'Green'
             }
-            Write-LogLine (Lmsg "  replaced (backup: $bak): $full" "  \u5df2\u66ff\u6362\uff08\u5907\u4efd\uff1a$bak\uff09\uff1a$full") 'Green'
+            [System.IO.File]::WriteAllBytes($full, $sourceBytes)
             $replaced++
             [void]$records.Add($item)
         } catch {
