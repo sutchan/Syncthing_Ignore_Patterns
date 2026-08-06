@@ -2,7 +2,7 @@
 
 > A curated, ready-to-use `.stignore` rule set that automatically excludes system files, caches, build artifacts, and app data — keeping your Syncthing sync clean and efficient.
 
-![Version](https://img.shields.io/badge/version-v1.6.0-blue)
+![Version](https://img.shields.io/badge/version-v1.7.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--06-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-16-blueviolet)
@@ -132,7 +132,7 @@ After applying the patterns:
 
 ### Batch Sync Tool
 
-The tool is a **single self-contained script**, `SyncthingIgnoreGUI.ps1`, which applies the standard `.stignore` rules to every Syncthing folder on your machine — **without scanning the whole disk every time**. Scan and apply logic is inlined; no external script dependencies. The GUI supports **English/Chinese switching** via the language box at the top-right (defaults to system locale). Scanning uses a runspace thread pool (up to 4 threads) with a fast `-Filter .stignore` instead of `-Include`, greatly improving scan speed on multi-drive setups. The GUI supports **English/Chinese switching** (all UI text stored as `\u` escapes in pure ASCII to avoid GBK re-encoding mojibake). A status bar shows the **current version** and a clickable **project homepage** link.
+The tool is a **single self-contained script**, `SyncthingIgnoreGUI.ps1`, which applies the standard `.stignore` rules to every Syncthing folder on your machine — **without scanning the whole disk every time**. Scan and apply logic is inlined; no external script dependencies. The GUI supports **English/Chinese switching** via the language box at the top-right (defaults to system locale); all UI text is stored as `\u` escapes in pure ASCII to avoid GBK re-encoding mojibake. Scanning uses a runspace thread pool (up to 4 threads) with a fast `-Filter .stignore` instead of `-Include`, greatly improving scan speed on multi-drive setups. A status bar shows the **current version** and a clickable **project homepage** link.
 
 ```powershell
 # Launch the graphical tool
@@ -141,9 +141,8 @@ The tool is a **single self-contained script**, `SyncthingIgnoreGUI.ps1`, which 
 
 **Workflow**
 
-1. Check `Preview only`, then click **Scan** to preview the roots that would be scanned (no manifest written).
-2. Uncheck `Preview only` and click **Scan** again to generate `stignore-paths.json`.
-3. Whenever `.stignore` is updated, check `Force` and click **Apply** to sync all recorded paths (originals are auto-backed up as `.stignore.bak.<timestamp>`).
+1. By default, simply click **Scan** to scan all drives and generate `stignore-paths.json`. To see results before writing, check `Preview only` first.
+2. Whenever `.stignore` is updated, check `Force` and click **Apply** to sync all recorded paths (originals are auto-backed up as `.stignore.bak.<timestamp>`).
 
 **Options**
 
@@ -151,7 +150,7 @@ The tool is a **single self-contained script**, `SyncthingIgnoreGUI.ps1`, which 
 - `Force`: Skip per-file confirmation and execute directly.
 - `Back up manifest`: Back up the manifest before writing it back.
 
-> Note: the manifest `stignore-paths.json` records each path's SHA256, size, and modification time; files already matching the rules are skipped to avoid duplicate backups. Stale paths (deleted files) are cleaned from the manifest only when `Force` is checked.
+> Note: the manifest `stignore-paths.json` records each `.stignore` path's size and modification time; files already matching the rules are skipped to avoid duplicate backups. Stale paths (deleted files) are cleaned from the manifest only when `Force` is checked.
 
 ### License
 

@@ -1,6 +1,6 @@
 <#
 //File: SyncthingIgnoreGUI.ps1
-//Version: 1.6.0
+//Version: 1.7.0
 //Updated: 2026-08-06
 .SYNOPSIS
     Graphical interface for scanning and applying Syncthing .stignore rules,
@@ -24,7 +24,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 $scriptDir = $PSScriptRoot
-$ScriptVersion = '1.6.0'
+$ScriptVersion = '1.7.0'
 $StandardRuleSource = Join-Path $scriptDir '.stignore'
 
 # ---------- Localization ----------
@@ -352,6 +352,26 @@ function Pick-File {
     return $null
 }
 
+# Pure data core: compute roots and run the parallel scan off the UI thread.
+# Returns a hashtable { roots, raw, error }. No UI access here.
+function Invoke-ScanCore {
+    param(
+        [string]$Root,
+        [string]$ScriptDir
+    )
+    $roots = @()
+    if ([string]::IsNullOrWhiteSpace($Root)) {
+        $roots = @(Get-PSDrive -PSProvider FileSystem -ErrorAction SilentlyContinue |
+            Where-Object { $_.Free -ne $null } | Select-Object -ExpandProperty Root)
+        if ($roots.Count -eq 0) { throw 'No filesystem drives found.' }
+    } else {
+        if (-not (Test-Path $Root)) { throw "Scan root does not exist: $Root" }
+        $roots = @($Root)
+    }
+    $raw = Start-ParallelScan -Roots $roots -ScriptDir $ScriptDir -MaxThreads 4
+    return [pscustomobject]@{ roots = $roots; raw = $raw }
+}
+
 function Start-ScanJob {
     param(
         [string]$Root,
@@ -528,21 +548,66 @@ $btnOpenManifest.Add_Click({
 
 $btnScan.Add_Click({
     Set-Busy $true
-    try {
-        Add-Log (Lmsg '--- Starting scan ---' '--- \u5f00\u59cb\u626b\u63cf ---') 'Blue'
-        $out = $txtOut.Text.Trim()
-        if (-not $out) { $out = Join-Path $scriptDir 'stignore-paths.json'; $txtOut.Text = $out }
-        if ($chkPreview.Checked) {
-            Add-Log (Lmsg 'Preview mode ON: no files will be written.' '\u9884\u89c8\u6a21\u5f0f\uff1a\u4e0d\u4f1a\u5199\u5165\u4efb\u4f55\u6587\u4ef6\u3002') 'Yellow'
-        } else {
-            Add-Log (Lmsg "Writing manifest to: $out" "\u6b63\u5728\u5199\u5165\u6e05\u5355\uff1a$out") 'Yellow'
+    Add-Log (Lmsg '--- Starting scan ---' '--- \u5f00\u59cb\u626b\u63cf ---') 'Blue'
+    $out = $txtOut.Text.Trim()
+    if (-not $out) { $out = Join-Path $scriptDir 'stignore-paths.json'; $txtOut.Text = $out }
+    $rootArg = $txtRoot.Text.Trim()
+    $whatif = $chkPreview.Checked
+    if ($whatif) {
+        try {
+            Start-ScanJob -Root $rootArg -Output $out -WhatIf $true
+        } catch {
+            Add-Log (Lmsg "ERROR: $_" "\u9519\u8bef\uff1a$_") 'Red'
+        } finally {
+            Set-Busy $false
         }
-        Start-ScanJob -Root $txtRoot.Text.Trim() -Output $out -WhatIf $chkPreview.Checked
-    } catch {
-        Add-Log (Lmsg "ERROR: $_" "\u9519\u8bef\uff1a$_") 'Red'
-    } finally {
-        Set-Busy $false
+        return
     }
+    Add-Log (Lmsg "Writing manifest to: $out" "\u6b63\u5728\u5199\u5165\u6e05\u5355\uff1a$out") 'Yellow'
+
+    # Run the scan off the UI thread so the GUI stays responsive.
+    $bg = [powershell]::Create().AddCommand('Invoke-ScanCore').AddArgument($rootArg).AddArgument($scriptDir)
+    $bgHandle = $bg.BeginInvoke()
+
+    $timer = New-Object System.Windows.Forms.Timer
+    $timer.Interval = 100
+    $timer.Add_Tick({
+        [System.Windows.Forms.Application]::DoEvents()
+        if ($bgHandle.IsCompleted) {
+            $timer.Stop()
+            try {
+                $core = $bg.EndInvoke($bgHandle)
+                $bg.Dispose()
+                $raw = $core.raw
+                $roots = $core.roots
+                $records = [System.Collections.ArrayList]::new()
+                $errCount = 0
+                foreach ($rec in $raw) {
+                    if ($null -ne $rec.__error) {
+                        Add-Log (Lmsg "Cannot access $($rec.__error)" "\u65e0\u6cd5\u8bbf\u95ee $($rec.__error)") 'DarkOrange'
+                        $errCount++
+                        continue
+                    }
+                    [void]$records.Add($rec)
+                }
+                $manifest = [pscustomobject]@{
+                    version   = $ScriptVersion
+                    scannedAt = (Get-Date).ToUniversalTime().ToString('o')
+                    count     = $records.Count
+                    roots     = $roots
+                    files     = $records
+                }
+                $json = $manifest | ConvertTo-Json -Depth 4 -Compress:$false
+                Set-Content -Path $out -Value $json -Encoding UTF8
+                Add-Log (Lmsg "Scan complete. Files: $($records.Count) (errors: $errCount). Manifest: $out" "\u626b\u63cf\u5b8c\u6210\u3002\u6587\u4ef6\u6570\uff1a$($records.Count)\uff08\u9519\u8bef\uff1a$errCount\uff09\u3002\u6e05\u5355\uff1a$out") 'Green'
+            } catch {
+                Add-Log (Lmsg "ERROR: $_" "\u9519\u8bef\uff1a$_") 'Red'
+            } finally {
+                Set-Busy $false
+            }
+        }
+    })
+    $timer.Start()
 })
 
 $btnApply.Add_Click({
