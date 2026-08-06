@@ -81,6 +81,13 @@ SyncthingIgnorePatterns/
 
 ## 7. CHANGELOG
 
+### v1.11.0 (2026-08-07)
+- 修复取消竞态：扫描/应用点击「停止」后强制中止后台 job，确保不再写入清单/文件（#3 #4）
+- 修复版本栏本地化偏差，中文模式正确显示中文项目链接文案（#1）
+- 删除恒等死代码 `txtRoot` 赋值（#2）
+- 删除死代码 `Start-ScanJob`、`Update-Progress`（#5 #6）
+- 完成/异常分支统一清零 `cancelFlag`，避免 Scan/Apply 间状态串扰（#9）
+
 ### v1.10.0 (2026-08-06)
 - feat(gui): 新增浅色/深色主题切换，并持久化到 `config.json`
 - feat(gui): 语言选择持久化到 `config.json`，下次启动自动恢复

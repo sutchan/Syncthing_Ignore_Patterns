@@ -1,6 +1,6 @@
 <#
 //File: SyncthingIgnoreGUI.ps1
-//Version: 1.10.0
+//Version: 1.11.0
 //Updated: 2026-08-06
 .SYNOPSIS
     Graphical interface for scanning and applying Syncthing .stignore rules,
@@ -24,7 +24,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 $scriptDir = $PSScriptRoot
-$ScriptVersion = '1.10.0'
+$ScriptVersion = '1.11.0'
 $StandardRuleSource = Join-Path $scriptDir '.stignore'
 
 # ---------- Localization ----------
@@ -544,13 +544,6 @@ function Set-Busy {
     [System.Windows.Forms.Application]::DoEvents()
 }
 
-# Update the continuous progress bar (0-100) and keep the UI responsive.
-function Update-Progress {
-    param([int]$Percent)
-    $progress.Value = [Math]::Max(0, [Math]::Min(100, $Percent))
-    [System.Windows.Forms.Application]::DoEvents()
-}
-
 function Pick-Folder {
     $dlg = New-Object System.Windows.Forms.FolderBrowserDialog
     $dlg.Description = Lmsg 'Select scan root folder' '\u9009\u62e9\u626b\u63cf\u6839\u76ee\u5f55'
@@ -588,55 +581,6 @@ function Invoke-ScanCore {
     }
     $raw = Start-ParallelScan -Roots $roots -ScriptDir $ScriptDir -MaxThreads 4 -FormObj $FormObj
     return [pscustomobject]@{ roots = $roots; raw = $raw }
-}
-
-function Start-ScanJob {
-    param(
-        [string]$Root,
-        [string]$Output,
-        [bool]$WhatIf
-    )
-    $roots = @()
-    if ([string]::IsNullOrWhiteSpace($Root)) {
-        $roots = @(Get-PSDrive -PSProvider FileSystem -ErrorAction SilentlyContinue |
-            Where-Object { $_.Free -ne $null } | Select-Object -ExpandProperty Root)
-        if ($roots.Count -eq 0) { throw (Lmsg 'No filesystem drives found.' '\u672a\u627e\u5230\u6587\u4ef6\u7cfb\u7edf\u9a7e\u52a8\u5668\u3002') }
-        Write-LogLine (Lmsg "No root given; scanning drives: $($roots -join ', ')" "\u672a\u6307\u5b9a\u6839\u76ee\u5f55\uff0c\u626b\u63cf\u9a7e\u52a8\u5668\uff1a$($roots -join ', ')") 'Yellow'
-    } else {
-        if (-not (Test-Path $Root)) { throw (Lmsg "Scan root does not exist: $Root" "\u626b\u63cf\u6839\u76ee\u5f55\u4e0d\u5b58\u5728\uff1a$Root") }
-        $roots = @($Root)
-    }
-
-    if ($WhatIf) {
-        Write-LogLine (Lmsg "[preview] roots: $($roots -join ', ')" "\u9884\u89c8 \u6839\u76ee\u5f55\uff1a$($roots -join ', ')") 'Yellow'
-        Write-LogLine (Lmsg "[preview] output: $Output" "\u9884\u89c8 \u8f93\u51fa\uff1a$Output") 'Yellow'
-        return
-    }
-
-    Write-LogLine (Lmsg "Scanning $($roots.Count) root(s) in parallel (max 4 threads)..." "\u6b63\u5728\u4ee5\u5e76\u884c\u65b9\u5f0f\u626b\u63cf $($roots.Count) \u4e2a\u6839\u76ee\u5f55\uff08\u6700\u591a 4 \u7ebf\u7a0b\uff09...") 'Cyan'
-    $raw = Start-ParallelScan -Roots $roots -ScriptDir $scriptDir -MaxThreads 4
-
-    $records = [System.Collections.ArrayList]::new()
-    $errCount = 0
-    foreach ($rec in $raw) {
-        if ($null -ne $rec.__error) {
-            Write-LogLine (Lmsg "Cannot access $($rec.__error)" "\u65e0\u6cd5\u8bbf\u95ee $($rec.__error)") 'DarkOrange'
-            $errCount++
-            continue
-        }
-        [void]$records.Add($rec)
-    }
-
-    $manifest = [pscustomobject]@{
-        version   = $ScriptVersion
-        scannedAt = (Get-Date).ToUniversalTime().ToString('o')
-        count     = $records.Count
-        roots     = $roots
-        files     = $records
-    }
-    $json = $manifest | ConvertTo-Json -Depth 4 -Compress:$false
-    Set-Content -Path $Output -Value $json -Encoding UTF8
-    Write-LogLine (Lmsg "Scan complete. Files: $($records.Count) (errors: $errCount). Manifest: $Output" "\u626b\u63cf\u5b8c\u6210\u3002\u6587\u4ef6\u6570\uff1a$($records.Count)\uff08\u9519\u8bef\uff1a$errCount\uff09\u3002\u6e05\u5355\uff1a$Output") 'Green'
 }
 
 function Start-ApplyJob {
@@ -881,6 +825,7 @@ $btnScan.Add_Click({
             } finally {
                 $progress.Visible = $false; $lblPct.Visible = $false
                 Set-Busy $false
+                $script:cancelFlag = $false
             }
         }
     })
@@ -938,6 +883,7 @@ $btnApply.Add_Click({
                 Add-Log (Lmsg "ERROR: $_" "\u9519\u8bef\uff1a$_") 'Red'
             } finally {
                 Set-Busy $false
+                $script:cancelFlag = $false
                 Add-Log (Lmsg 'Apply finished.' '\u5e94\u7528\u5b8c\u6210\u3002') 'Green'
                 [System.Windows.Forms.MessageBox]::Show((Lmsg $T[$lang].applyDone (Decode-Uni $T[$lang].applyDone)), (Lmsg $T[$lang].confirmTitle (Decode-Uni $T[$lang].confirmTitle)), 'OK', 'Information') | Out-Null
                 # Refresh the manifest summary in the GUI from the updated list.
