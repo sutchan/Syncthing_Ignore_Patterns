@@ -2,7 +2,7 @@
 
 > 精心整理的开箱即用 `.stignore` 规则集，自动排除系统文件、缓存、构建产物与应用数据，让 Syncthing 同步更干净高效。
 
-![Version](https://img.shields.io/badge/version-v1.4.0-blue)
+![Version](https://img.shields.io/badge/version-v1.5.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--06-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-16-blueviolet)
@@ -146,6 +146,7 @@ Syncthing 支持 `// #include` 指令，可将模式拆分到多个文件中：
 
 - **语言切换**：右上角下拉框选择 `English` / `中文`，实时切换全部界面文字与日志
 - **扫描根目录**：留空则扫描所有固定驱动器；或点击 `浏览...` 选择指定目录
+- **并行扫描**：多驱动器/目录使用 runspace 线程池（最多 4 线程）并行检索，并以文件过滤器（`-Filter .stignore`）替代慢速 `-Include`，扫描速度显著提升
 - **清单输出路径**：默认 `stignore-paths.json`，可自定义
 - **仅预览**：勾选后仅预览，不写入任何文件
 - **强制**：勾选后跳过逐文件确认直接执行

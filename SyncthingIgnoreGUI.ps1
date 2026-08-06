@@ -1,6 +1,6 @@
 <#
 //File: SyncthingIgnoreGUI.ps1
-//Version: 1.4.0
+//Version: 1.5.0
 //Updated: 2026-08-06
 .SYNOPSIS
     Graphical interface for scanning and applying Syncthing .stignore rules,
@@ -24,7 +24,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 $scriptDir = $PSScriptRoot
-$ScriptVersion = '1.4.0'
+$ScriptVersion = '1.5.0'
 $StandardRuleSource = Join-Path $scriptDir '.stignore'
 
 # ---------- Localization ----------
@@ -228,13 +228,67 @@ function Apply-Language {
 }
 
 # ---------- Helpers ----------
-function Add-Log {
+# Unified logging entry used by both Scan and Apply jobs.
+function Write-LogLine {
     param([string]$Message, [string]$Color = 'Black')
     $ts = (Get-Date).ToString('HH:mm:ss')
     $txtLog.SelectionStart = $txtLog.Text.Length
     $txtLog.AppendText("[$ts] $Message`r`n")
     $txtLog.ScrollToCaret()
     [System.Windows.Forms.Application]::DoEvents()
+}
+
+# Backwards-compatible alias for older call sites.
+function Add-Log {
+    param([string]$Message, [string]$Color = 'Black')
+    Write-LogLine -Message $Message -Color $Color
+}
+
+# Single-root scanner for use inside a runspace (no UI access there).
+function Find-StignoreFiles {
+    param([string]$Root, [string]$ScriptDir)
+    $local = [System.Collections.ArrayList]::new()
+    try {
+        Get-ChildItem -Path $Root -Filter '.stignore' -Recurse -File -Force -ErrorAction SilentlyContinue |
+            ForEach-Object {
+                $full = $_.FullName
+                if ($full -like '*\.git\*') { return }
+                if ($full -like "$ScriptDir*") { return }
+                [void]$local.Add([pscustomobject]@{
+                    path         = $full
+                    size         = $_.Length
+                    lastWriteUtc = $_.LastWriteTimeUtc.ToString('o')
+                    foundAtUtc   = (Get-Date).ToUniversalTime().ToString('o')
+                })
+            }
+    } catch {
+        # surface error via pseudo-record so caller can log it
+        [void]$local.Add([pscustomobject]@{ __error = "$Root : $($_.Exception.Message)" })
+    }
+    return $local
+}
+
+# Parallel multi-root scanner using a runspace pool.
+# Returns an ArrayList of file records (errors surfaced as __error entries).
+function Start-ParallelScan {
+    param([string[]]$Roots, [string]$ScriptDir, [int]$MaxThreads = 4)
+    $pool = [runspacefactory]::CreateRunspacePool(1, [Math]::Max(1, $MaxThreads))
+    $pool.Open()
+    $jobs = @()
+    foreach ($r in $Roots) {
+        $ps = [powershell]::Create().AddCommand('Find-StignoreFiles').AddArgument($r).AddArgument($ScriptDir)
+        $ps.RunspacePool = $pool
+        $jobs += [pscustomobject]@{ Root = $r; Handle = $ps.BeginInvoke(); PS = $ps }
+    }
+    $all = [System.Collections.ArrayList]::new()
+    foreach ($j in $jobs) {
+        $res = $j.PS.EndInvoke($j.Handle)
+        foreach ($rec in $res) { [void]$all.Add($rec) }
+        $j.PS.Dispose()
+    }
+    $pool.Close()
+    $pool.Dispose()
+    return $all
 }
 
 function Set-Busy {
@@ -287,28 +341,20 @@ function Start-ScanJob {
         return
     }
 
+    Write-LogLine (Lmsg "Scanning $($roots.Count) root(s) in parallel (max 4 threads)..." "\u6b63\u5728\u4ee5\u5e76\u884c\u65b9\u5f0f\u626b\u63cf $($roots.Count) \u4e2a\u6839\u76ee\u5f55\uff08\u6700\u591a 4 \u7ebf\u7a0b\uff09...") 'Cyan'
+    $raw = Start-ParallelScan -Roots $roots -ScriptDir $scriptDir -MaxThreads 4
+
     $records = [System.Collections.ArrayList]::new()
-    foreach ($r in $roots) {
-        Write-LogLine (Lmsg "Scanning root: $r" "\u6b63\u5728\u626b\u63cf\uff1a$r") 'Cyan'
-        try {
-            Get-ChildItem -Path $r -Include '.stignore' -Recurse -File -Force -ErrorAction SilentlyContinue |
-                ForEach-Object {
-                    $full = $_.FullName
-                    if ($full -like '*\.git\*') { return }
-                    if ($full -like "$scriptDir*") { return }
-                    [void]$records.Add([pscustomobject]@{
-                        path         = $full
-                        size         = $_.Length
-                        lastWriteUtc = $_.LastWriteTimeUtc.ToString('o')
-                        foundAtUtc   = (Get-Date).ToUniversalTime().ToString('o')
-                    })
-                    Write-LogLine (Lmsg "  recorded: $full" "  \u5df2\u8bb0\u5f55\uff1a$full") 'Green'
-                }
-        } catch {
-            Write-LogLine (Lmsg "Cannot access $r : $($_.Exception.Message)" "\u65e0\u6cd5\u8bbf\u95ee $r \uff1a$($_.Exception.Message)") 'DarkOrange'
+    $errCount = 0
+    foreach ($rec in $raw) {
+        if ($null -ne $rec.__error) {
+            Write-LogLine (Lmsg "Cannot access $($rec.__error)" "\u65e0\u6cd5\u8bbf\u95ee $($rec.__error)") 'DarkOrange'
+            $errCount++
             continue
         }
+        [void]$records.Add($rec)
     }
+
     $manifest = [pscustomobject]@{
         version   = $ScriptVersion
         scannedAt = (Get-Date).ToUniversalTime().ToString('o')
@@ -318,7 +364,7 @@ function Start-ScanJob {
     }
     $json = $manifest | ConvertTo-Json -Depth 4 -Compress:$false
     Set-Content -Path $Output -Value $json -Encoding UTF8
-    Write-LogLine (Lmsg "Scan complete. Files: $($records.Count). Manifest: $Output" "\u626b\u63cf\u5b8c\u6210\u3002\u6587\u4ef6\u6570\uff1a$($records.Count)\u3002\u6e05\u5355\uff1a$Output") 'Green'
+    Write-LogLine (Lmsg "Scan complete. Files: $($records.Count) (errors: $errCount). Manifest: $Output" "\u626b\u63cf\u5b8c\u6210\u3002\u6587\u4ef6\u6570\uff1a$($records.Count)\uff08\u9519\u8bef\uff1a$errCount\uff09\u3002\u6e05\u5355\uff1a$Output") 'Green'
 }
 
 function Start-ApplyJob {
