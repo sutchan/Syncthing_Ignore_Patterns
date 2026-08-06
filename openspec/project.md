@@ -56,7 +56,7 @@ SyncthingIgnorePatterns/
 | 功能 | 说明 |
 |------|------|
 | 语言切换 | 左上角下拉框 `English` / `中文`（与主题选择器同行），实时切换全部界面与日志文案，选择记忆到 `config.json`（v1.10.0，v1.12.0 改左上角同行对齐） |
-| 主题切换 | 左上角下拉框 `浅色` / `深色`，即时换肤，选择同样持久化；深色模式下降级 3D 边框为单线避免亮边（v1.10.0 / v1.13.0） |
+| 主题切换 | 左上角下拉框 `浅色` / `深色`，即时换肤，选择同样持久化（v1.10.0）；深色模式下输入控件改为自定义暗灰自绘边框（取代系统亮色 3D 边），按钮改为 Flat 风格 + 暗灰边框消除亮轮廓，清单输出路径框用中灰边框（v1.13.0 / v1.14.0） |
 | 扫描根目录 | 留空=扫描所有固定驱动器；或浏览选择指定目录；支持文件夹/`.stignore` 拖拽自动填充（v1.10.0） |
 | 并行扫描 | runspace 线程池（最多 4 线程）+ `-Filter .stignore`，排除 `.git` 与脚本目录 |
 | 后台防卡顿 | 扫描/应用均在后台 runspace 执行，Timer 轮询 `DoEvents` 保持 UI 响应，进度条显示真实百分比与数字（v1.7.0 / v1.9.0） |
@@ -85,9 +85,14 @@ SyncthingIgnorePatterns/
 ## 7. CHANGELOG
 
 ### v1.14.0 (2026-08-07)
-- 修复 GUI 无法打开（致命）：PowerShell `-Command` 默认 MTA 线程，WinForms 要求 STA。脚本开头检测非 STA 时自动以 `powershell -STA -File` 重启自身（exit 透传退出码）
+- 修复 GUI 无法打开（致命）：PowerShell `-Command` 默认 MTA 线程，WinForms 要求 STA。脚本开头检测非 STA 时自动以 `powershell -STA -File` 重启自身（exit 透传退出码）；STA 重启块加异常兜底，失败弹错误框而非静默退出
 - EnableVisualStyles 移至程序集加载后、控件创建前，确保视觉样式生效
 - 修复 Apply-Language 设 SelectedIndex 触发 SelectedIndexChanged 事件递归调用（加 `$script:applyingLang` 防重入标志），语言/主题切换事件均受保护
+- 消息循环 `Application::Run` 外包全局异常兜底，未捕获异常弹明细框而非闪退
+- 修复 Apply-Theme 对无 BorderStyle 属性控件赋值崩溃；改为递归遍历所有控件
+- 修复扫描/应用 runspace 中 `form.Invoke` 进度回调引用 `$script:progress`/`$script:lblPct` 为 null 崩溃（改为按 Name 查找控件）
+- 深色模式视觉优化：输入控件自定义暗灰自绘边框，按钮 Flat 风格 + 暗灰边框，清单输出路径框中灰边框
+- 清单默认路径迁移至 `config/stignore-paths.json`，运行前确保 config/ 目录存在
 
 ### v1.13.0 (2026-08-07)
 - 修复主题切换错位 bug：关闭窗体 AutoScroll（原因切换主题时重绘触发滚动条并把控件推出可视区）

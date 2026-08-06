@@ -348,15 +348,17 @@ $form.Add_Paint({
     param($sender, $e)
     foreach ($c in $script:borderedControls) {
         if ($c -and $c.IsHandleCreated) {
+            # 恢复路径框（txtOut）使用更醒目的中灰色边框，区别于其它控件
+            $edge = if ($c -eq $script:txtOut) { [System.Drawing.Color]::FromArgb(140, 140, 140) } else { $script:borderColor }
             [System.Windows.Forms.ControlPaint]::DrawBorder(
                 $e.Graphics, $c.Bounds,
-                $script:borderColor,
+                $edge,
                 1, [System.Windows.Forms.ButtonBorderStyle]::Solid,
-                $script:borderColor,
+                $edge,
                 1, [System.Windows.Forms.ButtonBorderStyle]::Solid,
-                $script:borderColor,
+                $edge,
                 1, [System.Windows.Forms.ButtonBorderStyle]::Solid,
-                $script:borderColor,
+                $edge,
                 1, [System.Windows.Forms.ButtonBorderStyle]::Solid)
         }
     }

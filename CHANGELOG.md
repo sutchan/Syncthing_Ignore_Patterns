@@ -8,9 +8,14 @@
 ## [v1.14.0] - 2026-08-07
 
 ### 修复
-- 修复 GUI 无法打开（致命）：PowerShell `-Command` 默认 MTA 线程，而 WinForms 要求 STA。脚本开头检测非 STA 时自动以 `powershell -STA -File` 重启自身（并透传退出码）。
+- 修复 GUI 无法打开（致命）：PowerShell `-Command` 默认 MTA 线程，而 WinForms 要求 STA。脚本开头检测非 STA 时自动以 `powershell -STA -File` 重启自身（并透传退出码）；STA 重启块加异常兜底，失败时弹错误框而非静默退出。
 - `EnableVisualStyles` 移至程序集加载后、控件创建前，确保视觉样式生效。
 - 修复 `Apply-Language` 设 `SelectedIndex` 触发 `SelectedIndexChanged` 事件递归调用（加 `$script:applyingLang` 防重入标志），语言/主题切换事件均受保护。
+- 给消息循环 `Application::Run` 外包全局异常兜底，未捕获异常弹出明细框而非静默闪退。
+- 修复 `Apply-Theme` 对无 `BorderStyle` 属性的控件赋值导致的 `PropertyAssignmentException`；改为递归遍历所有控件（含嵌套容器）。
+- 修复扫描/应用任务在独立 runspace 中通过 `form.Invoke` 进度回调引用 `$script:progress`/`$script:lblPct` 为 `$null` 引发的崩溃（改为按 `Name` 查找控件）。
+- 深色模式视觉优化：输入控件改用自定义暗灰自绘边框（取代系统亮色 3D 边），按钮改为 Flat 风格 + 暗灰边框消除亮轮廓；清单输出路径框使用更醒目的中灰边框。
+- 清单输出默认路径迁移至 `config/stignore-paths.json`，运行前确保 `config/` 目录存在；`.gitignore` 与文档同步更新。
 
 ## [v1.13.0] - 2026-08-07
 
