@@ -2,7 +2,7 @@
 
 > 精心整理的开箱即用 `.stignore` 规则集，自动排除系统文件、缓存、构建产物与应用数据，让 Syncthing 同步更干净高效。
 
-![Version](https://img.shields.io/badge/version-v1.8.0-blue)
+![Version](https://img.shields.io/badge/version-v1.9.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--06-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-16-blueviolet)
@@ -149,12 +149,16 @@ Syncthing 支持 `// #include` 指令，可将模式拆分到多个文件中：
 | 语言切换 | 右上角下拉框选择 `English` / `中文`，实时切换全部界面文字与日志；中文文案以 `\u` 转义内嵌，脚本保持纯 ASCII |
 | 扫描根目录 | 留空扫描所有固定驱动器，或点击 `浏览...` 选择指定目录 |
 | 并行扫描 | runspace 线程池（最多 4 线程）+ `-Filter .stignore`，扫描速度显著提升 |
-| 版本与项目地址 | 窗口底部显示当前版本号（v1.8.0）与可点击项目主页链接 |
+| 版本与项目地址 | 窗口底部显示当前版本号（v1.9.0）与可点击项目主页链接 |
 | 清单输出路径 | 默认 `stignore-paths.json`，可自定义 |
 | 仅预览 | 勾选后仅预览，不写入任何文件 |
 | 强制 | 勾选后跳过逐文件确认直接执行 |
 | 写回清单前备份 | 勾选后在写回清单前备份原清单 |
-| 实时日志 | 底部日志框输出全部执行信息 |
+| 实时日志 | 底部日志框输出全部执行信息，附「清空日志」按钮 |
+| 后台应用 | Apply 同样在后台 runspace 执行，GUI 不卡顿，进度条显示真实百分比 |
+| 扫描摘要 | 窗体显示「已找到 N 个 .stignore 文件」；启动时自动加载已有清单数量 |
+| 安全防护 | 非预览且非强制时，Apply 前弹出确认框，避免误写大量路径 |
+| 版本与项目地址 | 窗口底部显示当前版本号（v1.9.0）与可点击项目主页链接 |
 
 **工作流**
 
@@ -189,7 +193,7 @@ flowchart TD
     ROW2 --- ROW3[☑ 仅预览  ☑ 强制  ☑ 写回前备份]
     ROW3 --- BTN[Scan 按钮  |  Apply 按钮  |  打开清单]
     BTN --- LOG[日志框]
-    LOG --- STATUS[状态栏: v1.8.0 | 项目主页链接]
+    LOG --- STATUS[状态栏: v1.9.0 | 项目主页链接]
 ```
 
 ```
@@ -205,7 +209,7 @@ flowchart TD
 │  日志:                                                 │
 │  [_________________ 实时日志输出 _________________]    │
 ├──────────────────────────────────────────────────────┤
-│  v1.8.0  |  SyncthingIgnorePatterns   🔗 项目地址      │
+│  v1.9.0  |  SyncthingIgnorePatterns   🔗 项目地址      │
 └──────────────────────────────────────────────────────┘
 ```
 

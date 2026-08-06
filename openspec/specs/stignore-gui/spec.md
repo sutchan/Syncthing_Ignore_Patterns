@@ -16,6 +16,8 @@
   - 排除 `.git` 目录与脚本自身所在目录
   - 扫描阶段不做逐文件 UI 刷新（结束统一汇总），不做哈希计算
   - 后台 runspace 执行 + Timer 轮询 `DoEvents`，GUI 线程不阻塞（v1.7.0）
+  - 扫描完成后窗体显示「已找到 N 个 .stignore 文件」摘要
+  - 启动时若已存在清单，自动加载并显示「已加载现有清单：N 个文件」
 - 输出：`stignore-paths.json`（UTF-8，含 version/scannedAt/count/roots/files）
   - 每条记录：path / size / lastWriteUtc / foundAtUtc
   - 清单备份 `stignore-paths.json.bak.<时间戳>` 同样适用"最多保留 3 个"轮转
@@ -24,9 +26,11 @@
 - 输入：扫描清单 `stignore-paths.json` + 标准规则源 `.stignore`
 - 行为：
   - 对每个清单路径，用标准 `.stignore` 替换其现有内容
-  - 替换前自动备份为 `.stignore.bak.<时间戳>`
+  - 替换前自动备份为 `.stignore.bak.<时间戳>`（被替换目标恰为标准源 `.stignore` 自身时跳过备份）
   - 规则一致的文件跳过，不重复备份
   - 源文件已删除的路径为失效路径，仅 `强制` 时清理
+  - 应用同样在后台 runspace 执行，进度条显示真实百分比，GUI 不卡顿
+  - 非预览且非强制时，应用前弹出确认框，避免误写大量路径
 - 选项：仅预览（不写文件）、强制（跳过确认）、写回前备份
 - 备份轮转（v1.8.0）：每种备份 `<Base>.bak.*`（含 `.stignore.bak.*` 与清单 `stignore-paths.json.bak.*`）**最多保留 3 个**，超出自动删除最旧的（按 LastWriteTimeUtc 排序）
 

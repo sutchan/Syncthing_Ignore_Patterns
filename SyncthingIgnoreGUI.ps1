@@ -1,6 +1,6 @@
 <#
 //File: SyncthingIgnoreGUI.ps1
-//Version: 1.8.0
+//Version: 1.9.0
 //Updated: 2026-08-06
 .SYNOPSIS
     Graphical interface for scanning and applying Syncthing .stignore rules,
@@ -24,7 +24,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 $scriptDir = $PSScriptRoot
-$ScriptVersion = '1.8.0'
+$ScriptVersion = '1.9.0'
 $StandardRuleSource = Join-Path $scriptDir '.stignore'
 
 # ---------- Localization ----------
@@ -63,6 +63,12 @@ $T = @{
         jsonFilter  = 'JSON files (*.json)|*.json|All files (*.*)|*.*'
         ready       = 'Tool ready. Scripts dir: '
         repo        = 'Project: '
+        summary     = 'Found {0} .stignore file(s).'
+        clear       = 'Clear log'
+        applyTitle  = 'Apply standard rules'
+        applyConfirm= 'About to write the standard .stignore rules into {0} path(s). Continue?'
+        manifestLoaded = 'Existing manifest loaded: {0} file(s).'
+        noManifest  = 'No manifest found. Run Scan first.'
     }
     zh = [ordered]@{
         title       = 'Syncthing .stignore \u7ba1\u7406\u5668'
@@ -84,6 +90,12 @@ $T = @{
         jsonFilter  = 'JSON \u6587\u4ef6 (*.json)|*.json|\u6240\u6709\u6587\u4ef6 (*.*)|*.*'
         ready       = '\u5de5\u5177\u5df2\u5c31\u7eea\u3002\u811a\u672c\u76ee\u5f55\uff1a'
         repo        = '\u9879\u76ee\u5730\u5740\uff1a'
+        summary     = '\u5df2\u627e\u5230 {0} \u4e2a .stignore \u6587\u4ef6\u3002'
+        clear       = '\u6e05\u7a7a\u65e5\u5fd7'
+        applyTitle  = '\u5e94\u7528\u6807\u51c6\u89c4\u5219'
+        applyConfirm= '\u5373\u5c06\u628a\u6807\u51c6 .stignore \u89c4\u5219\u5199\u5165 {0} \u4e2a\u8def\u5f84\uff0c\u662f\u5426\u7ee7\u7eed\uff1f'
+        manifestLoaded = '\u5df2\u52a0\u8f7d\u73b0\u6709\u6e05\u5355\uff1a{0} \u4e2a\u6587\u4ef6\u3002'
+        noManifest  = '\u672a\u627e\u5230\u6e05\u5355\uff0c\u8bf7\u5148\u626b\u63cf\u3002'
     }
 }
 
@@ -94,10 +106,11 @@ $lang = if ($uiCulture -like 'zh*') { 'zh' } else { 'en' }
 # ---------- Form ----------
 $form = New-Object System.Windows.Forms.Form
 $form.Text = $T[$lang].title
-$form.Size = New-Object System.Drawing.Size(720, 560)
+$form.Size = New-Object System.Drawing.Size(720, 580)
 $form.StartPosition = 'CenterScreen'
-$form.MinimumSize = New-Object System.Drawing.Size(640, 480)
+$form.MinimumSize = New-Object System.Drawing.Size(640, 500)
 $form.Font = New-Object System.Drawing.Font('Segoe UI', 9.5)
+$form.AutoScroll = $true
 
 # ---------- Language selector ----------
 $lblLang = New-Object System.Windows.Forms.Label
@@ -186,27 +199,44 @@ $btnOpenManifest.Location = New-Object System.Drawing.Point(404, 218)
 $btnOpenManifest.Size = New-Object System.Drawing.Size(120, 32)
 $form.Controls.Add($btnOpenManifest)
 
+$btnClearLog = New-Object System.Windows.Forms.Button
+$btnClearLog.Location = New-Object System.Drawing.Point(540, 218)
+$btnClearLog.Size = New-Object System.Drawing.Size(148, 32)
+$form.Controls.Add($btnClearLog)
+
+# ---------- Scan summary ----------
+$lblSummary = New-Object System.Windows.Forms.Label
+$lblSummary.Location = New-Object System.Drawing.Point(16, 256)
+$lblSummary.AutoSize = $true
+$lblSummary.ForeColor = [System.Drawing.Color]::FromArgb(46, 138, 87)
+$lblSummary.Font = New-Object System.Drawing.Font('Segoe UI', 9, [System.Drawing.FontStyle]::Bold)
+$form.Controls.Add($lblSummary)
+
 # ---------- Log ----------
 $lblLog = New-Object System.Windows.Forms.Label
-$lblLog.Location = New-Object System.Drawing.Point(16, 262)
+$lblLog.Location = New-Object System.Drawing.Point(16, 278)
 $lblLog.AutoSize = $true
 $form.Controls.Add($lblLog)
 
 $txtLog = New-Object System.Windows.Forms.TextBox
-$txtLog.Location = New-Object System.Drawing.Point(16, 284)
+$txtLog.Location = New-Object System.Drawing.Point(16, 300)
 $txtLog.Size = New-Object System.Drawing.Size(672, 212)
 $txtLog.Multiline = $true
 $txtLog.ScrollBars = 'Vertical'
 $txtLog.ReadOnly = $true
 $txtLog.BackColor = [System.Drawing.Color]::FromArgb(245, 245, 245)
+$txtLog.Anchor = 'Top,Left,Right'
 $txtLog.Font = New-Object System.Drawing.Font('Consolas', 9)
 $form.Controls.Add($txtLog)
 
+# Real percentage progress bar (Blocks style for accurate feedback).
 $progress = New-Object System.Windows.Forms.ProgressBar
-$progress.Location = New-Object System.Drawing.Point(16, 504)
+$progress.Location = New-Object System.Drawing.Point(16, 524)
 $progress.Size = New-Object System.Drawing.Size(672, 14)
-$progress.Style = 'Marquee'
-$progress.MarqueeAnimationSpeed = 30
+$progress.Style = 'Blocks'
+$progress.Minimum = 0
+$progress.Maximum = 100
+$progress.Value = 0
 $progress.Visible = $false
 $form.Controls.Add($progress)
 
@@ -245,6 +275,7 @@ function Apply-Language {
     $btnScan.Text       = if ($lang -eq 'zh') { Decode-Uni $d.scan } else { $d.scan }
     $btnApply.Text      = if ($lang -eq 'zh') { Decode-Uni $d.apply } else { $d.apply }
     $btnOpenManifest.Text = if ($lang -eq 'zh') { Decode-Uni $d.open } else { $d.open }
+    $btnClearLog.Text     = if ($lang -eq 'zh') { Decode-Uni $d.clear } else { $d.clear }
     $lblLog.Text        = if ($lang -eq 'zh') { Decode-Uni $d.log } else { $d.log }
     if ($lang -eq 'zh') {
         $lblVersion.Text = "v$ScriptVersion  |  SyncthingIgnorePatterns"
@@ -349,8 +380,17 @@ function Set-Busy {
     param([bool]$Busy)
     $btnScan.Enabled = -not $Busy
     $btnApply.Enabled = -not $Busy
+    $btnOpenManifest.Enabled = -not $Busy
+    $btnClearLog.Enabled = -not $Busy
     $progress.Visible = $Busy
     if ($Busy) { $progress.Value = 0 } else { $progress.Value = 100 }
+    [System.Windows.Forms.Application]::DoEvents()
+}
+
+# Update the continuous progress bar (0-100) and keep the UI responsive.
+function Update-Progress {
+    param([int]$Percent)
+    $progress.Value = [Math]::Max(0, [Math]::Min(100, $Percent))
     [System.Windows.Forms.Application]::DoEvents()
 }
 
@@ -447,7 +487,8 @@ function Start-ApplyJob {
         [string]$Source,
         [bool]$WhatIf,
         [bool]$Force,
-        [bool]$BackupList
+        [bool]$BackupList,
+        $FormObj
     )
     if (-not (Test-Path $Source -PathType Leaf)) { throw (Lmsg "Standard rule source not found: $Source" "\u672a\u627e\u5230\u6807\u51c6\u89c4\u5219\u6e90\u6587\u4ef6\uff1a$Source") }
     if (-not (Test-Path $List -PathType Leaf)) { throw (Lmsg "Manifest not found: $List (run Scan first)" "\u672a\u627e\u5230\u6e05\u5355\uff1a$List\uff08\u8bf7\u5148\u626b\u63cf\uff09") }
@@ -467,6 +508,8 @@ function Start-ApplyJob {
     $records = [System.Collections.ArrayList]::new()
     $kept = 0; $replaced = 0; $skippedSame = 0; $cleaned = 0; $errors = 0
     $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+    $total = $manifest.files.Count
+    $done = 0
 
     foreach ($item in $manifest.files) {
         $full = $item.path
@@ -529,6 +572,15 @@ function Start-ApplyJob {
             $errors++
             [void]$records.Add($item)
         }
+        $done++
+        if ($null -ne $FormObj) {
+            $pct = [int](($done / [Math]::Max(1, $total)) * 100)
+            $FormObj.Invoke([Action[int]] {
+                param([int]$p)
+                $script:progress.Value = [Math]::Max(0, [Math]::Min(100, $p))
+                [System.Windows.Forms.Application]::DoEvents()
+            }, $pct)
+        }
     }
 
     if (-not $WhatIf) {
@@ -554,6 +606,15 @@ function Start-ApplyJob {
     }
 
     Write-LogLine (Lmsg "Summary: valid=$kept identical=$skippedSame replaced=$replaced cleaned=$cleaned errors=$errors" "\u6458\u8981\uff1a\u6709\u6548=$kept \u4e00\u81f4=$skippedSame \u66ff\u6362=$replaced \u6e05\u7406=$cleaned \u9519\u8bef=$errors") 'Cyan'
+
+    # Surface a short status for the GUI summary label via a cross-thread-safe call.
+    if ($null -ne $FormObj) {
+        $summaryMsg = (Lmsg ($T[$lang].summary -f $total) (Decode-Uni $T[$lang].summary -f $total))
+        $FormObj.Invoke([Action[string]] {
+            param([string]$m)
+            $script:lblSummary.Text = $m
+        }, $summaryMsg)
+    }
 }
 
 # ---------- Event handlers ----------
@@ -635,6 +696,7 @@ $btnScan.Add_Click({
                 $json = $manifest | ConvertTo-Json -Depth 4 -Compress:$false
                 Set-Content -Path $out -Value $json -Encoding UTF8
                 Add-Log (Lmsg "Scan complete. Files: $($records.Count) (errors: $errCount). Manifest: $out" "\u626b\u63cf\u5b8c\u6210\u3002\u6587\u4ef6\u6570\uff1a$($records.Count)\uff08\u9519\u8bef\uff1a$errCount\uff09\u3002\u6e05\u5355\uff1a$out") 'Green'
+                $script:lblSummary.Text = (Lmsg ($T[$lang].summary -f $records.Count) (Decode-Uni $T[$lang].summary -f $records.Count))
             } catch {
                 Add-Log (Lmsg "ERROR: $_" "\u9519\u8bef\uff1a$_") 'Red'
             } finally {
@@ -646,21 +708,76 @@ $btnScan.Add_Click({
 })
 
 $btnApply.Add_Click({
-    Set-Busy $true
-    try {
-        Add-Log (Lmsg '--- Starting apply ---' '--- \u5f00\u59cb\u5e94\u7528 ---') 'Blue'
-        $list = $txtOut.Text.Trim()
-        Start-ApplyJob -List $list -Source $StandardRuleSource -WhatIf $chkPreview.Checked -Force $chkForce.Checked -BackupList $chkBackupList.Checked
-        Add-Log (Lmsg 'Apply finished.' '\u5e94\u7528\u5b8c\u6210\u3002') 'Green'
-    } catch {
-        Add-Log (Lmsg "ERROR: $_" "\u9519\u8bef\uff1a$_") 'Red'
-    } finally {
-        Set-Busy $false
+    $list = $txtOut.Text.Trim()
+    if (-not (Test-Path $list -PathType Leaf)) {
+        Add-Log (Lmsg "Manifest not found: $list (run Scan first)" "\u672a\u627e\u5230\u6e05\u5355\uff1a$list\uff08\u8bf7\u5148\u626b\u63cf\uff09") 'DarkOrange'
+        return
     }
+    # Safety confirmation before writing standard rules into target paths.
+    if (-not $chkPreview.Checked -and -not $chkForce.Checked) {
+        $count = 0
+        try { $count = @((Get-Content -Path $list -Raw -Encoding UTF8 | ConvertFrom-Json).files).Count } catch {}
+        $msg = (Lmsg ($T[$lang].applyConfirm -f $count) (Decode-Uni $T[$lang].applyConfirm -f $count))
+        $ans = [System.Windows.Forms.MessageBox]::Show($msg, (Lmsg $T[$lang].applyTitle (Decode-Uni $T[$lang].applyTitle)), 'YesNo', 'Warning')
+        if ($ans -ne 'Yes') {
+            Add-Log (Lmsg 'Apply cancelled by user.' '\u5e94\u7528\u5df2\u88ab\u7528\u6237\u53d6\u6d88\u3002') 'Gray'
+            return
+        }
+    }
+
+    Set-Busy $true
+    Add-Log (Lmsg '--- Starting apply ---' '--- \u5f00\u59cb\u5e94\u7528 ---') 'Blue'
+    # Run apply off the UI thread; progress is updated via form.Invoke.
+    $bg = [powershell]::Create().AddCommand('Start-ApplyJob').AddArgument($list).AddArgument($StandardRuleSource).AddArgument($chkPreview.Checked).AddArgument($chkForce.Checked).AddArgument($chkBackupList.Checked).AddArgument($form)
+    $bgHandle = $bg.BeginInvoke()
+    $timer = New-Object System.Windows.Forms.Timer
+    $timer.Interval = 100
+    $timer.Add_Tick({
+        [System.Windows.Forms.Application]::DoEvents()
+        if ($bgHandle.IsCompleted) {
+            $timer.Stop()
+            try {
+                $bg.EndInvoke($bgHandle)
+                $bg.Dispose()
+            } catch {
+                Add-Log (Lmsg "ERROR: $_" "\u9519\u8bef\uff1a$_") 'Red'
+            } finally {
+                Set-Busy $false
+                Add-Log (Lmsg 'Apply finished.' '\u5e94\u7528\u5b8c\u6210\u3002') 'Green'
+                # Refresh the manifest summary in the GUI from the updated list.
+                if (Test-Path $list) {
+                    try {
+                        $m = Get-Content -Path $list -Raw -Encoding UTF8 | ConvertFrom-Json
+                        $cnt = @($m.files).Count
+                        $script:lblSummary.Text = (Lmsg ($T[$lang].summary -f $cnt) (Decode-Uni $T[$lang].summary -f $cnt))
+                    } catch {}
+                }
+            }
+        }
+    })
+    $timer.Start()
+})
+
+$btnClearLog.Add_Click({
+    $txtLog.Clear()
+    Add-Log (Lmsg 'Log cleared.' '\u65e5\u5fd7\u5df2\u6e05\u7a7a\u3002') 'Gray'
 })
 
 # ---------- Run ----------
 Apply-Language
 Add-Log (Lmsg "Tool ready. Scripts dir: $scriptDir" "\u5de5\u5177\u5df2\u5c31\u7eea\u3002\u811a\u672c\u76ee\u5f55\uff1a$scriptDir") 'Gray'
+# Auto-load an existing manifest on startup and reflect it in the summary.
+$initList = $txtOut.Text.Trim()
+if (Test-Path $initList -PathType Leaf) {
+    try {
+        $m = Get-Content -Path $initList -Raw -Encoding UTF8 | ConvertFrom-Json
+        $cnt = @($m.files).Count
+        $lblSummary.Text = (Lmsg ($T[$lang].manifestLoaded -f $cnt) (Decode-Uni $T[$lang].manifestLoaded -f $cnt))
+    } catch {
+        $lblSummary.Text = (Lmsg $T[$lang].noManifest (Decode-Uni $T[$lang].noManifest))
+    }
+} else {
+    $lblSummary.Text = (Lmsg $T[$lang].noManifest (Decode-Uni $T[$lang].noManifest))
+}
 [System.Windows.Forms.Application]::EnableVisualStyles() | Out-Null
 [System.Windows.Forms.Application]::Run($form)
