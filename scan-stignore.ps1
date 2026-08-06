@@ -28,13 +28,15 @@
     .\scan-stignore.ps1 -Path "D:\Sync" -Output "D:\Sync\list.json"
     仅扫描 D:\Sync 并输出到指定清单文件。
 #>
-[CmdletBinding(SupportsShouldProcess = $true)]
+[CmdletBinding()]
 param(
     [string]$Path = '',
-    [string]$Output = (Join-Path $PSScriptRoot 'stignore-paths.json')
+    [string]$Output = (Join-Path $PSScriptRoot 'stignore-paths.json'),
+    [switch]$WhatIf
 )
 
 $ErrorActionPreference = 'Stop'
+$ScriptVersion = '1.1.0'
 
 # 确定扫描根目录
 if ([string]::IsNullOrWhiteSpace($Path)) {
@@ -61,7 +63,7 @@ $scanned = 0
 foreach ($root in $roots) {
     Write-Host "`n扫描根目录: $root" -ForegroundColor Cyan
     try {
-        $files = Get-ChildItem -Path $root -Filter '.stignore' -Recurse -File -Force -ErrorAction SilentlyContinue
+        $files = Get-ChildItem -Path $root -Filter '.stignore' -Recurse -File -Force -Attributes !ReparsePoint -ErrorAction SilentlyContinue
     } catch {
         Write-Warning "无法访问 $root : $($_.Exception.Message)"
         continue
@@ -93,7 +95,7 @@ foreach ($root in $roots) {
 }
 
 $manifest = [pscustomobject]@{
-    version   = '1.0.0'
+    version   = $ScriptVersion
     scannedAt = (Get-Date).ToUniversalTime().ToString('o')
     count     = $records.Count
     roots     = $roots

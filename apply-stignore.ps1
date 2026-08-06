@@ -19,7 +19,7 @@
     扫描清单路径。默认位于脚本所在目录的 stignore-paths.json。
 
 .PARAMETER WhatIf
-    仅列出将要替换/清理的项，不实际写入或删除。
+    借助 PowerShell 的 WhatIf 机制，仅列出将要替换/清理的项，不实际写入或删除。
 
 .PARAMETER Force
     无需逐文件确认，直接替换并清理失效项。
@@ -39,7 +39,6 @@
 param(
     [string]$Source = (Join-Path $PSScriptRoot '.stignore'),
     [string]$List = (Join-Path $PSScriptRoot 'stignore-paths.json'),
-    [switch]$WhatIf,
     [switch]$Force,
     [switch]$BackupList
 )
@@ -61,6 +60,10 @@ Write-Host "标准规则源 : $Source" -ForegroundColor Cyan
 Write-Host "源 SHA256  : $sourceHash" -ForegroundColor DarkGray
 
 $manifest = Get-Content -Path $List -Raw -Encoding UTF8 | ConvertFrom-Json
+if ($null -eq $manifest -or $null -eq $manifest.files) {
+    Write-Error "清单文件格式无效或缺少 files 字段: $List"
+    exit 1
+}
 $records = [System.Collections.ArrayList]::new()
 $kept = 0
 $replaced = 0
@@ -71,21 +74,21 @@ $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 
 foreach ($item in $manifest.files) {
     $full = $item.path
+    if ([string]::IsNullOrWhiteSpace($full)) { continue }
 
     if (-not (Test-Path $full -PathType Leaf)) {
-        # 路径失效，从清单移除
-        if ($WhatIf) {
-            Write-Host "  [预览] 将清理失效路径: $full" -ForegroundColor Yellow
-            $cleaned++
-            [void]$records.Add($item)
-            continue
-        }
+        # 路径失效：从清单中移除（清理动作本身也需要确认/受 WhatIf 约束）
         $doClean = $Force -or $PSCmdlet.ShouldProcess($full, '清理失效路径(从清单移除)')
         if ($doClean) {
-            Write-Host "  已清理失效路径: $full" -ForegroundColor DarkGray
+            if (-not $WhatIf) {
+                Write-Host "  已清理失效路径: $full" -ForegroundColor DarkGray
+            } else {
+                Write-Host "  [预览] 将清理失效路径: $full" -ForegroundColor Yellow
+            }
             $cleaned++
             continue
         }
+        # 用户取消确认，则保留该项
         [void]$records.Add($item)
         continue
     }
@@ -95,13 +98,6 @@ foreach ($item in $manifest.files) {
     if ($fileHash -eq $sourceHash) {
         Write-Host "  跳过(已一致): $full" -ForegroundColor DarkGray
         $skippedSame++
-        [void]$records.Add($item)
-        continue
-    }
-
-    if ($WhatIf) {
-        Write-Host "  [预览] 将替换: $full" -ForegroundColor Yellow
-        $replaced++
         [void]$records.Add($item)
         continue
     }
@@ -152,4 +148,4 @@ Write-Host "已一致跳过   : $skippedSame"
 Write-Host "已替换/将替换: $replaced"
 Write-Host "已清理失效   : $cleaned"
 Write-Host "处理错误     : $errors"
-if ($WhatIf) { Write-Host "（预览模式，未做实际修改）" -ForegroundColor Yellow }
+if ($WhatIfPreference) { Write-Host "（预览模式，未做实际修改）" -ForegroundColor Yellow }
