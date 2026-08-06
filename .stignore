@@ -1,5 +1,5 @@
 //Syncthing Ignore Patterns Lists
-//Version: 1.1.0
+//Version: 1.8.0
 //Updated: 2026-08-06
 
 //System & OS Files
@@ -34,9 +34,9 @@
 **.pgpass
 **postmaster.pid
 **/sqlite.db
-***.sqlite
-***.sqlite3
-***.db
+*.sqlite
+*.sqlite3
+*.db
 **/master.db
 **/mongod.lock
 **/WiredTiger*
@@ -58,7 +58,6 @@
 
 //Application Data & Caches
 **.baiduyun.uploading.cfg
-**.crdownload
 **.dropbox.cache/
 **.egstore/
 **.gs/
@@ -69,6 +68,9 @@
 **.midownloading
 **.resona
 **.secretAlbum/
+// NOTE: .stfolder (SyncTrayzor marker) and .stversions (Syncthing versioning)
+// are Syncthing's own directories. Ignoring them disables versioning/marks.
+// Keep only if you intentionally don't use Syncthing versioning.
 **.stfolder/
 **.streams/
 **.stversions
@@ -213,14 +215,14 @@
 **/.cursor/
 
 //Archives & Partial Downloads
-***.part
-***.partial
-***.crdownload
-***.aria2
-***.download
-***.tmp.download
-***.qtemporary
-***.opdownload
+*.part
+*.partial
+*.crdownload
+*.aria2
+*.download
+*.tmp.download
+*.qtemporary
+*.opdownload
 **/downloading/
 
 //Virtualization & Container Files
