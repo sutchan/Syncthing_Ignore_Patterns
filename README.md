@@ -1,6 +1,6 @@
 # Syncthing 忽略模式
 
-![Version](https://img.shields.io/badge/version-v1.0.0-blue)
+![Version](https://img.shields.io/badge/version-v1.1.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--07--01-brightgreen)
 
 [中文](#中文说明) | [English](README_EN.md)

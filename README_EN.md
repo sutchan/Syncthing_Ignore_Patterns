@@ -1,6 +1,6 @@
 # Syncthing Ignore Patterns
 
-![Version](https://img.shields.io/badge/version-v1.0.0-blue)
+![Version](https://img.shields.io/badge/version-v1.1.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--07--01-brightgreen)
 
 [English](#english) | [中文](README.md)

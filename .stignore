@@ -1,6 +1,12 @@
 //Syncthing Ignore Patterns Lists
-//Version: 1.0.0
+//Version: 1.1.0
 //Updated: 2026-07-01
+
+//Database Files
+**#innodb_redo
+**#innodb_temp
+**ibdata1
+**.ibd
 
 //System & OS Files
 **#Recycle
