@@ -2,7 +2,7 @@
 
 > A curated, ready-to-use `.stignore` rule set that automatically excludes system files, caches, build artifacts, and app data — keeping your Syncthing sync clean and efficient.
 
-![Version](https://img.shields.io/badge/version-v1.7.0-blue)
+![Version](https://img.shields.io/badge/version-v1.8.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--06-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-16-blueviolet)
@@ -141,6 +141,12 @@ The tool is a **single self-contained script**, `SyncthingIgnoreGUI.ps1`, which 
 
 **Workflow**
 
+```mermaid
+flowchart LR
+    A[Scan<br/>parallel multi-drive] --> B[Manifest stignore-paths.json<br/>backup rotate ≤3]
+    B --> C[Apply<br/>write rules, per-file backup ≤3]
+```
+
 1. By default, simply click **Scan** to scan all drives and generate `stignore-paths.json`. To see results before writing, check `Preview only` first.
 2. Whenever `.stignore` is updated, check `Force` and click **Apply** to sync all recorded paths (originals are auto-backed up as `.stignore.bak.<timestamp>`).
 
@@ -151,6 +157,8 @@ The tool is a **single self-contained script**, `SyncthingIgnoreGUI.ps1`, which 
 - `Back up manifest`: Back up the manifest before writing it back.
 
 > Note: the manifest `stignore-paths.json` records each `.stignore` path's size and modification time; files already matching the rules are skipped to avoid duplicate backups. Stale paths (deleted files) are cleaned from the manifest only when `Force` is checked.
+
+**Backup rotation**: each replace produces a `.stignore.bak.<timestamp>`, and the manifest backup is `stignore-paths.json.bak.<timestamp>`. Both keep **at most 3** backups — older ones are deleted automatically to avoid unlimited growth.
 
 ### License
 

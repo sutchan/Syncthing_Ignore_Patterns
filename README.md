@@ -2,7 +2,7 @@
 
 > 精心整理的开箱即用 `.stignore` 规则集，自动排除系统文件、缓存、构建产物与应用数据，让 Syncthing 同步更干净高效。
 
-![Version](https://img.shields.io/badge/version-v1.7.0-blue)
+![Version](https://img.shields.io/badge/version-v1.8.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--06-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-16-blueviolet)
@@ -144,17 +144,30 @@ Syncthing 支持 `// #include` 指令，可将模式拆分到多个文件中：
 
 界面功能：
 
-- **语言切换**：右上角下拉框选择 `English` / `中文`，实时切换全部界面文字与日志；所有中文文案以 `\u` 转义内嵌，脚本文件始终为纯 ASCII，不会被编码转换破坏
-- **扫描根目录**：留空则扫描所有固定驱动器；或点击 `浏览...` 选择指定目录
-- **并行扫描**：多驱动器/目录使用 runspace 线程池（最多 4 线程）并行检索，并以文件过滤器（`-Filter .stignore`）替代慢速 `-Include`，扫描速度显著提升
-- **版本与项目地址**：窗口底部显示当前版本号（v1.6.0）与可点击的项目主页链接
-- **清单输出路径**：默认 `stignore-paths.json`，可自定义
-- **仅预览**：勾选后仅预览，不写入任何文件
-- **强制**：勾选后跳过逐文件确认直接执行
-- **写回清单前备份**：勾选后在写回清单前备份原清单
-- **实时日志**：所有执行输出显示在底部日志框，方便排查
+| 功能 | 说明 |
+|------|------|
+| 语言切换 | 右上角下拉框选择 `English` / `中文`，实时切换全部界面文字与日志；中文文案以 `\u` 转义内嵌，脚本保持纯 ASCII |
+| 扫描根目录 | 留空扫描所有固定驱动器，或点击 `浏览...` 选择指定目录 |
+| 并行扫描 | runspace 线程池（最多 4 线程）+ `-Filter .stignore`，扫描速度显著提升 |
+| 版本与项目地址 | 窗口底部显示当前版本号（v1.8.0）与可点击项目主页链接 |
+| 清单输出路径 | 默认 `stignore-paths.json`，可自定义 |
+| 仅预览 | 勾选后仅预览，不写入任何文件 |
+| 强制 | 勾选后跳过逐文件确认直接执行 |
+| 写回清单前备份 | 勾选后在写回清单前备份原清单 |
+| 实时日志 | 底部日志框输出全部执行信息 |
 
-![GUI](https://img.shields.io/badge/GUI-WinForms-blue)
+**工作流**
+
+```mermaid
+flowchart LR
+    A[扫描 Scan<br/>并行多驱动器] --> B[清单 stignore-paths.json<br/>备份轮转≤3]
+    B --> C[应用 Apply<br/>写入标准规则<br/>逐文件备份≤3]
+```
+
+1. 默认直接点 **Scan** 即可扫描所有驱动器并生成 `stignore-paths.json`（如需先看结果再写文件，可勾选 `仅预览`）
+2. 规则有更新时，勾选 `强制` 点 **Apply** 即可同步所有历史路径
+
+> 说明：清单 `stignore-paths.json` 记录每条 `.stignore` 的路径、大小与修改时间；规则一致的文件自动跳过，不会重复备份。失效路径（文件已删除）需勾选 `强制` 才会从清单清理。
 
 #### 使用方式
 
@@ -170,6 +183,8 @@ Syncthing 支持 `// #include` 指令，可将模式拆分到多个文件中：
 2. 规则有更新时，勾选 `强制` 点 **Apply** 即可同步所有历史路径（替换前自动备份为 `.stignore.bak.<时间戳>`）
 
 > 说明：清单 `stignore-paths.json` 记录每条 `.stignore` 的路径、大小与修改时间；规则一致的文件自动跳过，不会重复备份。失效路径（文件已删除）需勾选 `强制` 才会从清单清理。
+
+**备份轮转**：每次替换 `.stignore` 产生的 `*.bak.<时间戳>` 与清单备份 `stignore-paths.json.bak.<时间戳>`，均**最多保留 3 个**，超出的自动删除最旧的备份，避免备份文件无限堆积。
 
 ### 开源许可
 

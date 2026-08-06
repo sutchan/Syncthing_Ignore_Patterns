@@ -66,6 +66,9 @@ SyncthingIgnorePatterns/
 
 ## 7. CHANGELOG
 
+### v1.8.0 (2026-08-06)
+- feat(gui): 备份轮转，`.stignore.bak.*` 与清单备份均最多保留 3 个，超出自动删除最旧
+
 ### v1.7.0 (2026-08-06)
 - fix(gui): 扫描改为后台 runspace + Timer 轮询，消除 GUI 线程阻塞导致的进度卡顿
 

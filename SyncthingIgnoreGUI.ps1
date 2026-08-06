@@ -1,6 +1,6 @@
 <#
 //File: SyncthingIgnoreGUI.ps1
-//Version: 1.7.0
+//Version: 1.8.0
 //Updated: 2026-08-06
 .SYNOPSIS
     Graphical interface for scanning and applying Syncthing .stignore rules,
@@ -24,7 +24,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 $scriptDir = $PSScriptRoot
-$ScriptVersion = '1.7.0'
+$ScriptVersion = '1.8.0'
 $StandardRuleSource = Join-Path $scriptDir '.stignore'
 
 # ---------- Localization ----------
@@ -273,6 +273,26 @@ function Add-Log {
     Write-LogLine -Message $Message -Color $Color
 }
 
+# Keep at most $Keep newest backups matching "<Base>.bak.*" (by last-write time).
+# Any older extras are deleted. Returns count of removed files.
+function Limit-Backups {
+    param([string]$Base, [int]$Keep = 3)
+    try {
+        $backups = @(Get-ChildItem -Path "$Base.bak.*" -File -Force -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTimeUtc)
+        if ($backups.Count -le $Keep) { return 0 }
+        $remove = $backups[0..($backups.Count - $Keep - 1)]
+        $n = 0
+        foreach ($b in $remove) {
+            Remove-Item -Path $b.FullName -Force -ErrorAction SilentlyContinue
+            $n++
+        }
+        return $n
+    } catch {
+        return 0
+    }
+}
+
 # Parallel multi-root scanner using a runspace pool.
 # The scanner logic is passed as an inline script block so that the runspace
 # (which has no access to the caller's function definitions) can execute it.
@@ -490,6 +510,10 @@ function Start-ApplyJob {
             $bak = "$full.bak.$timestamp"
             Copy-Item -Path $full -Destination $bak -Force
             [System.IO.File]::WriteAllBytes($full, $sourceBytes)
+            $removed = Limit-Backups -Base $full -Keep 3
+            if ($removed -gt 0) {
+                Write-LogLine (Lmsg "  cleaned $removed old backup(s) for: $full" "  \u5df2\u6e05\u7406 $removed \u4e2a\u65e7\u5907\u4efd\uff1a$full") 'DarkGray'
+            }
             Write-LogLine (Lmsg "  replaced (backup: $bak): $full" "  \u5df2\u66ff\u6362\uff08\u5907\u4efd\uff1a$bak\uff09\uff1a$full") 'Green'
             $replaced++
             [void]$records.Add($item)
@@ -504,6 +528,10 @@ function Start-ApplyJob {
         if ($BackupList) {
             $listBak = "$List.bak.$timestamp"
             Copy-Item -Path $List -Destination $listBak -Force
+            $removed = Limit-Backups -Base $List -Keep 3
+            if ($removed -gt 0) {
+                Write-LogLine (Lmsg "Cleaned $removed old manifest backup(s)" "\u5df2\u6e05\u7406 $removed \u4e2a\u65e7\u6e05\u5355\u5907\u4efd") 'DarkGray'
+            }
             Write-LogLine (Lmsg "Manifest backed up: $listBak" "\u6e05\u5355\u5df2\u5907\u4efd\uff1a$listBak") 'DarkGray'
         }
         $newManifest = [pscustomobject]@{
