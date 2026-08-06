@@ -3,30 +3,29 @@
 //Version: 1.1.0
 //Updated: 2026-08-06
 .SYNOPSIS
-    扫描电脑中所有 .stignore 文件，并将结果保存到路径清单文件。
+    Scan the computer for all .stignore files and save the results to a path manifest.
 
 .DESCRIPTION
-    递归扫描指定根目录（默认所有固定驱动器）下的 .stignore 文件，
-    记录每个文件的完整路径、SHA256、大小与最后修改时间，
-    输出为 JSON 清单（默认 stignore-paths.json）。
-    扫描会跳过 .git 目录与本仓库自身目录。
+    Recursively scan the given root (default: all fixed drives) for .stignore files,
+    recording each file's full path, SHA256, size and last-write time, and output a
+    JSON manifest (default stignore-paths.json). Skips .git directories and this repo.
 
 .PARAMETER Path
-    扫描根目录。默认扫描所有固定驱动器（C:, D:, E: ...）。
+    Scan root. Defaults to all fixed drives (C:, D:, E: ...).
 
 .PARAMETER Output
-    清单输出路径。默认位于脚本所在目录的 stignore-paths.json。
+    Manifest output path. Defaults to stignore-paths.json in the script directory.
 
 .PARAMETER WhatIf
-    仅显示将要扫描的根目录，不实际写入清单。
+    Only show the root directories that would be scanned; do not write the manifest.
 
 .EXAMPLE
     .\scan-stignore.ps1
-    全盘扫描并生成 stignore-paths.json。
+    Full-disk scan and generate stignore-paths.json.
 
 .EXAMPLE
     .\scan-stignore.ps1 -Path "D:\Sync" -Output "D:\Sync\list.json"
-    仅扫描 D:\Sync 并输出到指定清单文件。
+    Scan only D:\Sync and output to the specified manifest file.
 #>
 [CmdletBinding()]
 param(
@@ -38,21 +37,43 @@ param(
 $ErrorActionPreference = 'Stop'
 $ScriptVersion = '1.1.0'
 
-# 确定扫描根目录
+trap {
+    Write-Host "`n[FATAL] Script terminated: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host $_.ScriptStackTrace -ForegroundColor DarkGray
+    Safe-Pause
+    exit 1
+}
+
+function Safe-Pause {
+    try {
+        Write-Host "`nPress Enter to exit..." -ForegroundColor DarkGray
+        $null = Read-Host
+    } catch {
+        Start-Sleep -Seconds 3
+    }
+}
+
+# Determine scan roots
 if ([string]::IsNullOrWhiteSpace($Path)) {
-    $roots = (Get-PSDrive -PSProvider FileSystem | Where-Object { $_.Free -ne $null }).Root
-    Write-Host "未指定 -Path，将扫描以下驱动器根目录: $($roots -join ', ')" -ForegroundColor Yellow
+    $roots = @(Get-PSDrive -PSProvider FileSystem -ErrorAction SilentlyContinue |
+        Where-Object { $_.Free -ne $null } | Select-Object -ExpandProperty Root)
+    if ($roots.Count -eq 0) {
+        Write-Error "No filesystem drives enumerated. Use -Path to specify a directory."
+        Safe-Pause
+        exit 1
+    }
+    Write-Host "No -Path given; scanning drive roots: $($roots -join ', ')" -ForegroundColor Yellow
 } else {
     if (-not (Test-Path $Path)) {
-        Write-Error "扫描根目录不存在: $Path"
+        Write-Error "Scan root does not exist: $Path"
         exit 1
     }
     $roots = @($Path)
 }
 
 if ($WhatIf) {
-    Write-Host "[预览] 将扫描根目录: $($roots -join ', ')" -ForegroundColor Yellow
-    Write-Host "[预览] 清单输出: $Output" -ForegroundColor Yellow
+    Write-Host "[preview] roots to scan: $($roots -join ', ')" -ForegroundColor Yellow
+    Write-Host "[preview] manifest output: $Output" -ForegroundColor Yellow
     return
 }
 
@@ -61,20 +82,20 @@ $records = @()
 $scanned = 0
 
 foreach ($root in $roots) {
-    Write-Host "`n扫描根目录: $root" -ForegroundColor Cyan
+    Write-Host "`nScanning root: $root" -ForegroundColor Cyan
     try {
         $files = Get-ChildItem -Path $root -Filter '.stignore' -Recurse -File -Force -Attributes !ReparsePoint -ErrorAction SilentlyContinue
     } catch {
-        Write-Warning "无法访问 $root : $($_.Exception.Message)"
+        Write-Warning "Cannot access $root : $($_.Exception.Message)"
         continue
     }
 
     foreach ($file in $files) {
         $full = $file.FullName
 
-        # 跳过 .git 目录
+        # Skip .git directories
         if ($full -like '*\.git\*') { continue }
-        # 跳过本仓库目录内的 .stignore（即扫描工具自身所在仓库）
+        # Skip .stignore inside this repo (the scanner itself)
         if ($full -like "$repoRoot*") { continue }
 
         $scanned++
@@ -87,9 +108,9 @@ foreach ($root in $roots) {
                 lastWriteUtc = $file.LastWriteTimeUtc.ToString('o')
                 foundAtUtc   = (Get-Date).ToUniversalTime().ToString('o')
             }
-            Write-Host "  已记录: $full" -ForegroundColor Green
+            Write-Host "  recorded: $full" -ForegroundColor Green
         } catch {
-            Write-Warning "  读取失败 $full : $($_.Exception.Message)"
+            Write-Warning "  read failed $full : $($_.Exception.Message)"
         }
     }
 }
@@ -104,6 +125,7 @@ $manifest = [pscustomobject]@{
 
 $json = $manifest | ConvertTo-Json -Depth 4 -Compress:$false
 Set-Content -Path $Output -Value $json -Encoding UTF8
-Write-Host "`n==== 扫描完成 ====" -ForegroundColor Cyan
-Write-Host "扫描到文件数 : $($records.Count)"
-Write-Host "清单已保存   : $Output"
+Write-Host "`n==== Scan complete ====" -ForegroundColor Cyan
+Write-Host "Files found   : $($records.Count)"
+Write-Host "Manifest saved: $Output"
+Safe-Pause
