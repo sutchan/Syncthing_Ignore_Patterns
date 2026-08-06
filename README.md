@@ -5,7 +5,7 @@
 ![Version](https://img.shields.io/badge/version-v1.1.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--06-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Categories](https://img.shields.io/badge/categories-12-blueviolet)
+![Categories](https://img.shields.io/badge/categories-16-blueviolet)
 ![GitHub Repo](https://img.shields.io/badge/source-GitHub-black)
 
 [中文](#中文说明) | [English](README_EN.md)
@@ -43,20 +43,24 @@
 
 ### 已包含的分类
 
-`.stignore` 文件按以下 12 个分类组织（完整内容请查看文件本身）：
+`.stignore` 文件按以下 16 个分类组织（完整内容请查看文件本身）：
 
 1. **系统与 OS 文件** — `$RECYCLE.BIN`、`.DS_Store`、`Thumbs.db`、`desktop.ini`、`pagefile.sys`、`Program Files/`、`System Volume Information/`、`LOST.DIR/` 等
-2. **数据库文件** — `#innodb_redo`、`#innodb_temp`、`ibdata1`、`*.ibd` 等
+2. **数据库文件** — `#innodb_redo`、`#innodb_temp`、`ibdata1`、`*.ibd`、`pg_wal/`、`*.sqlite3`、`mongod.lock`、`dump.rdb` 等
 3. **备份与临时文件** — `.cache`、`.tmp`、`.delete`、`Temp/`、`Backup_of_*` 等
 4. **应用数据与缓存** — `.stfolder/`、`.stversions`、`.dropbox.cache/`、`WeChat Files/`、`Tencent Files/`、`BaiduNetdiskDownload/`、`AliWorkbenchData/`、`Youku Files/`、`SteamLibrary/` 等
 5. **版本控制系统** — `.git/`
-6. **包管理器缓存与依赖** — `node_modules/`、`.npm/`、`.pnpm-store/`、`.venv/`、`__pycache__/`、`.cargo/`、`.gradle/`、`.m2/`、`.nuget/`、`.bun/`、`.deno/`、`.dart_tool/`、`.stack-work/` 等
+6. **包管理器缓存与依赖** — `node_modules/`、`.npm/`、`.pnpm-store/`、`.venv/`、`__pycache__/`、`.cargo/`、`.gradle/`、`.m2/`、`.nuget/`、`.bun/`、`.deno/`、`.dart_tool/`、`vendor/` 等
 7. **前端框架构建缓存** — `.next/`、`.nuxt/`、`.svelte-kit/`、`.vite/`、`.turbo/`、`.astro/`、`.docusaurus/`、`.parcel-cache/`、`.vercel/`、`.netlify/`、`.vuepress/dist/` 等
 8. **Python 与测试缓存** — `.pytest_cache/`、`.mypy_cache/`、`.ruff_cache/`、`.coverage`、`.jest-cache/`、`.vitest/`、`.tox/`、`.nox/`、`.ipynb_checkpoints/`、`htmlcov/` 等
 9. **C/C++ 与 Rust 构建缓存** — `CMakeCache.txt`、`CMakeFiles/`、`cmake-build-debug/`、`cmake-build-release/`、`compile_commands.json`、`.ccls-cache/`、`.clangd/`、`.rustc_cache/` 等
 10. **JVM 与 Scala 构建缓存** — `.ammonite/`、`.bloop/`、`.metals/`、`.kotlintest/`
 11. **IDE 与工具缓存** — `.idea/`、`.history/`、`.terraform/`、`.terraform.lock.hcl`、`.terragrunt-cache/`、`.helm/`、`.kube/`、`.flyway/` 等
-12. **锁文件与日志文件** — `*.lock`、`*.log.*`、`**.log`
+12. **编辑器与开发工具缓存** — `.vscode/`（保留 `settings.json`）、`.vim/`、`.swp`、`*~`、`.emacs.d/`、`.sublime-*`、`.zed/`、`.cursor/` 等
+13. **压缩包与分卷下载** — `*.part`、`*.aria2`、`*.crdownload`、`/downloading/` 等
+14. **虚拟化与容器文件** — `*.vmdk`、`*.qcow2`、`*.ova`、`.docker/`、`.minikube/`、`.vagrant/` 等
+15. **媒体与播放器缓存** — `.cache/`、`Spotify/`、`GPUCache/`、`Service Worker/`、`Spotlight-V100/`、`.Trashes/` 等
+16. **锁文件与日志文件** — `*.lock`、`*.log.*`、`**.log`
 
 ### 使用方法
 
@@ -125,6 +129,37 @@ Syncthing 支持 `// #include` 指令，可将模式拆分到多个文件中：
 // 白名单 .git 文件夹
 !**/.git/
 ```
+
+### 批量同步工具
+
+仓库附带两个 PowerShell 脚本，可将标准 `.stignore` 规则批量应用到电脑中所有 Syncthing 同步目录，**无需每次全盘扫描**。
+
+| 脚本 | 作用 |
+|------|------|
+| `scan-stignore.ps1` | 扫描全盘 `.stignore`，生成路径清单 `stignore-paths.json` |
+| `apply-stignore.ps1` | 读取清单，将标准规则写入所有已记录路径（自动备份原文件） |
+
+**工作流**
+
+```powershell
+# 1. 首次：全盘扫描，生成路径清单（只需一次）
+.\scan-stignore.ps1
+
+# 2. 应用标准规则（替换前自动备份为 .stignore.bak.<时间戳>）
+.\apply-stignore.ps1 -Force
+
+# 3. 以后 .stignore 规则有更新时，直接重跑即可同步所有历史路径
+.\apply-stignore.ps1 -Force
+```
+
+**常用参数**
+
+- `-WhatIf`：仅预览将要替换/清理的项，不做任何修改（建议先跑）
+- `-Force`：跳过逐文件确认，直接执行
+- `-Path <目录>`（仅扫描）：只扫描指定目录而非全盘
+- 失效路径（文件已删除）会在替换时自动从清单移除
+
+> 说明：清单为 `stignore-paths.json`，记录每条路径的 SHA256、大小与修改时间；规则一致的文件会自动跳过，不会重复备份。
 
 ### 开源许可
 

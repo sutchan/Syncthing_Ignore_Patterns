@@ -5,7 +5,7 @@
 ![Version](https://img.shields.io/badge/version-v1.1.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--06-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Categories](https://img.shields.io/badge/categories-12-blueviolet)
+![Categories](https://img.shields.io/badge/categories-16-blueviolet)
 ![GitHub Repo](https://img.shields.io/badge/source-GitHub-black)
 
 [English](#english) | [中文](README.md)
@@ -43,20 +43,24 @@
 
 ### Included Categories
 
-The `.stignore` file is organized into the following 12 categories (see the file for full details):
+The `.stignore` file is organized into the following 16 categories (see the file for full details):
 
 1. **System & OS Files** — `$RECYCLE.BIN`, `.DS_Store`, `Thumbs.db`, `desktop.ini`, `pagefile.sys`, `Program Files/`, `System Volume Information/`, `LOST.DIR/`, etc.
-2. **Database Files** — `#innodb_redo`, `#innodb_temp`, `ibdata1`, `*.ibd`, etc.
+2. **Database Files** — `#innodb_redo`, `#innodb_temp`, `ibdata1`, `*.ibd`, `pg_wal/`, `*.sqlite3`, `mongod.lock`, `dump.rdb`, etc.
 3. **Backup & Temporary Files** — `.cache`, `.tmp`, `.delete`, `Temp/`, `Backup_of_*`, etc.
 4. **Application Data & Caches** — `.stfolder/`, `.stversions`, `.dropbox.cache/`, `WeChat Files/`, `Tencent Files/`, `BaiduNetdiskDownload/`, `AliWorkbenchData/`, `Youku Files/`, `SteamLibrary/`, etc.
 5. **Version Control Systems** — `.git/`
-6. **Package Manager Caches & Dependencies** — `node_modules/`, `.npm/`, `.pnpm-store/`, `.venv/`, `__pycache__/`, `.cargo/`, `.gradle/`, `.m2/`, `.nuget/`, `.bun/`, `.deno/`, `.dart_tool/`, `.stack-work/`, etc.
+6. **Package Manager Caches & Dependencies** — `node_modules/`, `.npm/`, `.pnpm-store/`, `.venv/`, `__pycache__/`, `.cargo/`, `.gradle/`, `.m2/`, `.nuget/`, `.bun/`, `.deno/`, `.dart_tool/`, `vendor/`, etc.
 7. **Frontend Framework Build Caches** — `.next/`, `.nuxt/`, `.svelte-kit/`, `.vite/`, `.turbo/`, `.astro/`, `.docusaurus/`, `.parcel-cache/`, `.vercel/`, `.netlify/`, `.vuepress/dist/`, etc.
 8. **Python & Testing Caches** — `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.coverage`, `.jest-cache/`, `.vitest/`, `.tox/`, `.nox/`, `.ipynb_checkpoints/`, `htmlcov/`, etc.
 9. **C/C++ & Rust Build Caches** — `CMakeCache.txt`, `CMakeFiles/`, `cmake-build-debug/`, `cmake-build-release/`, `compile_commands.json`, `.ccls-cache/`, `.clangd/`, `.rustc_cache/`, etc.
 10. **JVM & Scala Build Caches** — `.ammonite/`, `.bloop/`, `.metals/`, `.kotlintest/`
 11. **IDE & Tool Caches** — `.idea/`, `.history/`, `.terraform/`, `.terraform.lock.hcl`, `.terragrunt-cache/`, `.helm/`, `.kube/`, `.flyway/`, etc.
-12. **Lock & Log Files** — `*.lock`, `*.log.*`, `**.log`
+12. **Editor & Dev Tool Caches** — `.vscode/` (keeps `settings.json`), `.vim/`, `.swp`, `*~`, `.emacs.d/`, `.sublime-*`, `.zed/`, `.cursor/`, etc.
+13. **Archives & Partial Downloads** — `*.part`, `*.aria2`, `*.crdownload`, `/downloading/`, etc.
+14. **Virtualization & Container Files** — `*.vmdk`, `*.qcow2`, `*.ova`, `.docker/`, `.minikube/`, `.vagrant/`, etc.
+15. **Media & Player Caches** — `.cache/`, `Spotify/`, `GPUCache/`, `Service Worker/`, `Spotlight-V100/`, `.Trashes/`, etc.
+16. **Lock & Log Files** — `*.lock`, `*.log.*`, `**.log`
 
 ### Usage
 
@@ -125,6 +129,37 @@ After applying the patterns:
 // Whitelist .git folders
 !**/.git/
 ```
+
+### Batch Sync Tool
+
+The repo ships two PowerShell scripts to apply the standard `.stignore` rules to every Syncthing folder on your machine — **without scanning the whole disk every time**.
+
+| Script | Purpose |
+|--------|---------|
+| `scan-stignore.ps1` | Scan all `.stignore` files and generate the path manifest `stignore-paths.json` |
+| `apply-stignore.ps1` | Read the manifest and write the standard rules to every recorded path (auto-backups originals) |
+
+**Workflow**
+
+```powershell
+# 1. First time: full-disk scan to build the path manifest (once only)
+.\scan-stignore.ps1
+
+# 2. Apply the standard rules (originals are auto-backed up as .stignore.bak.<timestamp>)
+.\apply-stignore.ps1 -Force
+
+# 3. Whenever .stignore is updated, just re-run to sync all recorded paths
+.\apply-stignore.ps1 -Force
+```
+
+**Common parameters**
+
+- `-WhatIf`: Preview what would be replaced/cleaned, without making changes (recommended first)
+- `-Force`: Skip per-file confirmation and execute directly
+- `-Path <dir>` (scan only): Scan a specific directory instead of the whole disk
+- Stale paths (deleted files) are automatically removed from the manifest during apply
+
+> Note: the manifest `stignore-paths.json` records each path's SHA256, size, and modification time; files already matching the rules are skipped to avoid duplicate backups.
 
 ### License
 
