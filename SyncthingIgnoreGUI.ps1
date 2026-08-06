@@ -420,10 +420,10 @@ function Apply-Language {
     }
     if ($lang -eq 'zh') {
         $lblVersion.Text = "v$ScriptVersion  |  SyncthingIgnorePatterns"
-        $lblRepo.Text    = "$(Decode-Uni $d.repo) $RepoUrl"
+        $lblRepo.Text    = "$(Decode-Uni $d.repo)$RepoUrl"
     } else {
         $lblVersion.Text = "v$ScriptVersion  |  SyncthingIgnorePatterns"
-        $lblRepo.Text    = "$($d.repo) $RepoUrl"
+        $lblRepo.Text    = "$($d.repo)$RepoUrl"
     }
     $cmbLang.SelectedIndex = if ($lang -eq 'zh') { 1 } else { 0 }
 }
@@ -832,7 +832,10 @@ $btnScan.Add_Click({
         [System.Windows.Forms.Application]::DoEvents()
         if ($script:cancelFlag) {
             $timer.Stop()
-            Add-Log (Lmsg 'Scan stopped by user. Results discarded (manifest not written).' '\u7528\u6237\u5df2\u505c\u6b62\u626b\u63cf\u3002\u7ed3\u679c\u5df2\u4e22\u5f03\uff08\u672a\u5199\u5165\u6e05\u5355\uff09\u3002') 'DarkOrange'
+            # Hard-abort the background job so it cannot write the manifest.
+            try { $bg.Stop() } catch {}
+            try { $bg.Dispose() } catch {}
+            Add-Log (Lmsg 'Scan stopped by user. Background job aborted; manifest NOT written.' '\u7528\u6237\u5df2\u505c\u6b62\u626b\u63cf\u3002\u540e\u53f0\u4efb\u52a1\u5df2\u4e2d\u65ad\uff1b\u672a\u5199\u5165\u6e05\u5355\u3002') 'DarkOrange'
             $progress.Visible = $false; $lblPct.Visible = $false
             Set-Busy $false
             return
@@ -917,7 +920,10 @@ $btnApply.Add_Click({
         $lblPct.Text = "$($progress.Value)%"
         if ($script:cancelFlag) {
             $timer.Stop()
-            Add-Log (Lmsg 'Apply stop requested. Background job may still finish pending files.' '\u5df2\u8bf7\u6c42\u505c\u6b62\u5e94\u7528\uff0c\u540e\u53f0\u4efb\u52a1\u53ef\u80fd\u4ecd\u5728\u5904\u7406\u5269\u4f59\u6587\u4ef6\u3002') 'DarkOrange'
+            # Hard-abort the background job so no further files are written.
+            try { $bg.Stop() } catch {}
+            try { $bg.Dispose() } catch {}
+            Add-Log (Lmsg 'Apply stopped by user. Background job aborted; no further files written.' '\u7528\u6237\u5df2\u505c\u6b62\u5e94\u7528\u3002\u540e\u53f0\u4efb\u52a1\u5df2\u4e2d\u65ad\uff1c\u4e0d\u518d\u5199\u5165\u6587\u4ef6\u3002') 'DarkOrange'
             $progress.Visible = $false; $lblPct.Visible = $false
             Set-Busy $false
             return
