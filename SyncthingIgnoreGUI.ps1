@@ -148,12 +148,12 @@ $form.AutoScroll = $false
 
 # ---------- Language selector ----------
 $lblLang = New-Object System.Windows.Forms.Label
-$lblLang.Location = New-Object System.Drawing.Point(420, 14)
+$lblLang.Location = New-Object System.Drawing.Point(16, 14)
 $lblLang.AutoSize = $true
 $form.Controls.Add($lblLang)
 
 $cmbLang = New-Object System.Windows.Forms.ComboBox
-$cmbLang.Location = New-Object System.Drawing.Point(488, 10)
+$cmbLang.Location = New-Object System.Drawing.Point(78, 10)
 $cmbLang.Size = New-Object System.Drawing.Size(116, 24)
 $cmbLang.DropDownStyle = 'DropDownList'
 $cmbLang.Items.Add($T.en.enItem) | Out-Null
@@ -162,12 +162,12 @@ $form.Controls.Add($cmbLang)
 
 # ---------- Theme selector ----------
 $lblTheme = New-Object System.Windows.Forms.Label
-$lblTheme.Location = New-Object System.Drawing.Point(612, 14)
+$lblTheme.Location = New-Object System.Drawing.Point(210, 14)
 $lblTheme.AutoSize = $true
 $form.Controls.Add($lblTheme)
 
 $cmbTheme = New-Object System.Windows.Forms.ComboBox
-$cmbTheme.Location = New-Object System.Drawing.Point(612, 32)
+$cmbTheme.Location = New-Object System.Drawing.Point(280, 10)
 $cmbTheme.Size = New-Object System.Drawing.Size(92, 24)
 $cmbTheme.DropDownStyle = 'DropDownList'
 $cmbTheme.Items.Add($T.en.themeLight) | Out-Null
