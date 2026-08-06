@@ -23,14 +23,29 @@ $ErrorActionPreference = 'Stop'
 # WinForms requires an STA thread. When launched via "powershell -Command",
 # the default apartment is MTA and the form silently fails to open. Restart
 # the script in STA mode if needed.
+# 预先加载程序集，便于在重启失败时用 MessageBox 给出清晰提示而非静默退出。
+try { Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop } catch {}
 if ([System.Threading.Thread]::CurrentThread.ApartmentState -ne 'STA') {
-    $psi = New-Object System.Diagnostics.ProcessStartInfo
-    $psi.FileName = (Get-Process -Id $PID).Path
-    $psi.Arguments = "-STA -NoProfile -File `"$PSCommandPath`""
-    $psi.WorkingDirectory = $PWD.ProviderPath
-    $proc = [System.Diagnostics.Process]::Start($psi)
-    $proc.WaitForExit()
-    exit $proc.ExitCode
+    try {
+        $exe = (Get-Process -Id $PID).Path
+        if (-not $exe) { $exe = 'powershell.exe' }
+        $psi = New-Object System.Diagnostics.ProcessStartInfo
+        $psi.FileName = $exe
+        $psi.Arguments = "-STA -NoProfile -File `"$PSCommandPath`""
+        $psi.WorkingDirectory = $PWD.ProviderPath
+        $proc = [System.Diagnostics.Process]::Start($psi)
+        $proc.WaitForExit()
+        exit $proc.ExitCode
+    } catch {
+        if (('System.Windows.Forms.MessageBox' -as [type])) {
+            [System.Windows.Forms.MessageBox]::Show(
+                "无法以 STA 模式启动 GUI，请使用以下命令运行：`n`npowershell -STA -NoProfile -File `"$PSCommandPath`"`n`n错误：$_",
+                '启动失败', 'OK', 'Error') | Out-Null
+        } else {
+            Write-Error "无法以 STA 模式启动 GUI：$_"
+        }
+        exit 1
+    }
 }
 
 Add-Type -AssemblyName System.Windows.Forms
@@ -392,10 +407,18 @@ function Apply-Theme {
     }
     $form.BackColor = $bg
     $form.ForeColor = $fg
-    # Dark mode: downgrade 3D borders to single-line so the bright system
-    # edge doesn't glare against the dark background.
     $border = if ($dark) { 'FixedSingle' } else { 'Fixed3D' }
-    foreach ($c in $form.Controls) {
+    $allControls = New-Object System.Collections.ArrayList
+    $stack = New-Object System.Collections.Stack
+    $stack.Push($form)
+    while ($stack.Count -gt 0) {
+        $cur = $stack.Pop()
+        foreach ($child in $cur.Controls) {
+            $allControls.Add($child) | Out-Null
+            if ($child.Controls.Count -gt 0) { $stack.Push($child) }
+        }
+    }
+    foreach ($c in $allControls) {
         if ($c -is [System.Windows.Forms.Button] -and ($c.BackColor -ne [System.Drawing.Color]::FromArgb(0,120,215)) -and ($c.BackColor -ne [System.Drawing.Color]::FromArgb(46,138,87)) -and ($c.BackColor -ne [System.Drawing.Color]::FromArgb(192,80,77))) {
             $c.BackColor = $ctrlBg
             $c.ForeColor = $fg
@@ -403,7 +426,7 @@ function Apply-Theme {
             $c.BackColor = $bg
             $c.ForeColor = $fg
         }
-        if ($c -is [System.Windows.Forms.ComboBox] -or $c -is [System.Windows.Forms.TextBox] -or $c -is [System.Windows.Forms.ListBox]) {
+        if (($c -is [System.Windows.Forms.ComboBox] -or $c -is [System.Windows.Forms.TextBox] -or $c -is [System.Windows.Forms.ListBox]) -and ($c.PSObject.Properties.Name -contains 'BorderStyle')) {
             $c.BorderStyle = $border
         }
     }
@@ -1009,4 +1032,16 @@ if (Test-Path $initList -PathType Leaf) {
 } else {
     $lblSummary.Text = (Lmsg $T[$lang].noManifest (Decode-Uni $T[$lang].noManifest))
 }
-[System.Windows.Forms.Application]::Run($form)
+try {
+    [System.Windows.Forms.Application]::Run($form)
+} catch {
+    # 全局兜底：事件处理或消息循环中未捕获的异常不再静默终止（闪退），
+    # 而是弹出错误明细，便于定位问题。
+    $detail = $_.Exception.ToString()
+    try {
+        [System.Windows.Forms.MessageBox]::Show(
+            "GUI 运行时发生未捕获异常，已退出：`n`n$detail",
+            '运行错误', 'OK', 'Error') | Out-Null
+    } catch {}
+    throw
+}
