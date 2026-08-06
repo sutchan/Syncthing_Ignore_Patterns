@@ -1,14 +1,15 @@
 <#
 //File: SyncthingIgnoreGUI.ps1
-//Version: 1.2.0
+//Version: 1.3.0
 //Updated: 2026-08-06
 .SYNOPSIS
     Graphical interface for scanning and applying Syncthing .stignore rules.
 
 .DESCRIPTION
-    A WinForms-based GUI that wraps scan-stignore.ps1 and apply-stignore.ps1.
-    Provides scan root / output path selection, a live log panel, and
-    preview/force options. No external dependencies beyond .NET WinForms.
+    Self-contained WinForms GUI. Scan locates all .stignore files across the
+    chosen roots and writes a JSON manifest; Apply writes the standard rules
+    from .stignore into every recorded path (with auto-backup). No external
+    script dependencies - all logic runs in-process.
 
 .EXAMPLE
     .\SyncthingIgnoreGUI.ps1
@@ -21,8 +22,8 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 $scriptDir = $PSScriptRoot
-$scanScript  = Join-Path $scriptDir 'scan-stignore.ps1'
-$applyScript = Join-Path $scriptDir 'apply-stignore.ps1'
+$ScriptVersion = '1.3.0'
+$StandardRuleSource = Join-Path $scriptDir '.stignore'
 
 # ---------- Form ----------
 $form = New-Object System.Windows.Forms.Form
@@ -166,6 +167,174 @@ function Pick-Folder {
     return $null
 }
 
+function Write-LogLine {
+    param([string]$Message, [string]$Color = 'Black')
+    Add-Log $Message $Color
+}
+
+function Start-ScanJob {
+    param(
+        [string]$Root,
+        [string]$Output,
+        [bool]$WhatIf
+    )
+    $roots = @()
+    if ([string]::IsNullOrWhiteSpace($Root)) {
+        $roots = @(Get-PSDrive -PSProvider FileSystem -ErrorAction SilentlyContinue |
+            Where-Object { $_.Free -ne $null } | Select-Object -ExpandProperty Root)
+        if ($roots.Count -eq 0) { throw 'No filesystem drives found.' }
+        Write-LogLine "No root given; scanning drives: $($roots -join ', ')" 'Yellow'
+    } else {
+        if (-not (Test-Path $Root)) { throw "Scan root does not exist: $Root" }
+        $roots = @($Root)
+    }
+
+    if ($WhatIf) {
+        Write-LogLine "[preview] roots: $($roots -join ', ')" 'Yellow'
+        Write-LogLine "[preview] output: $Output" 'Yellow'
+        return
+    }
+
+    $records = @()
+    foreach ($r in $roots) {
+        Write-LogLine "Scanning root: $r" 'Cyan'
+        try {
+            $files = Get-ChildItem -Path $r -Filter '.stignore' -Recurse -File -Force -ErrorAction SilentlyContinue
+        } catch {
+            Write-LogLine "Cannot access $r : $($_.Exception.Message)" 'DarkOrange'
+            continue
+        }
+        foreach ($file in $files) {
+            $full = $file.FullName
+            if ($full -like '*\.git\*') { continue }
+            if ($full -like "$scriptDir*") { continue }
+            try {
+                $hash = (Get-FileHash -Path $full -Algorithm SHA256).Hash
+                $records += [pscustomobject]@{
+                    path         = $full
+                    sha256       = $hash
+                    size         = $file.Length
+                    lastWriteUtc = $file.LastWriteTimeUtc.ToString('o')
+                    foundAtUtc   = (Get-Date).ToUniversalTime().ToString('o')
+                }
+                Write-LogLine "  recorded: $full" 'Green'
+            } catch {
+                Write-LogLine "  read failed $full : $($_.Exception.Message)" 'DarkOrange'
+            }
+        }
+    }
+    $manifest = [pscustomobject]@{
+        version   = $ScriptVersion
+        scannedAt = (Get-Date).ToUniversalTime().ToString('o')
+        count     = $records.Count
+        roots     = $roots
+        files     = $records
+    }
+    $json = $manifest | ConvertTo-Json -Depth 4 -Compress:$false
+    Set-Content -Path $Output -Value $json -Encoding UTF8
+    Write-LogLine "Scan complete. Files: $($records.Count). Manifest: $Output" 'Green'
+}
+
+function Start-ApplyJob {
+    param(
+        [string]$List,
+        [string]$Source,
+        [bool]$WhatIf,
+        [bool]$Force,
+        [bool]$BackupList
+    )
+    if (-not (Test-Path $Source -PathType Leaf)) { throw "Standard rule source not found: $Source" }
+    if (-not (Test-Path $List -PathType Leaf)) { throw "Manifest not found: $List (run Scan first)" }
+
+    $sourceBytes = [System.IO.File]::ReadAllBytes($Source)
+    if ($sourceBytes.Length -eq 0) { throw "Standard rule source is empty: $Source" }
+    $sourceHash = (Get-FileHash -Path $Source -Algorithm SHA256).Hash
+    Write-LogLine "Source: $Source  SHA256: $sourceHash" 'DarkGray'
+
+    try {
+        $manifest = Get-Content -Path $List -Raw -Encoding UTF8 | ConvertFrom-Json
+    } catch {
+        throw "Manifest parse failed (may be corrupted): $List - $($_.Exception.Message)"
+    }
+    if ($null -eq $manifest -or $null -eq $manifest.files) { throw "Manifest invalid or missing 'files': $List" }
+
+    $records = [System.Collections.ArrayList]::new()
+    $kept = 0; $replaced = 0; $skippedSame = 0; $cleaned = 0; $errors = 0
+    $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+
+    foreach ($item in $manifest.files) {
+        $full = $item.path
+        if ([string]::IsNullOrWhiteSpace($full)) { continue }
+        if (-not (Test-Path $full -PathType Leaf)) {
+            $doClean = $Force
+            if (-not $doClean) {
+                Write-LogLine "  stale path (skipped, use Force to clean): $full" 'DarkOrange'
+                [void]$records.Add($item)
+                continue
+            }
+            if ($WhatIf) {
+                Write-LogLine "  [preview] will clean: $full" 'Yellow'
+                $cleaned++
+                continue
+            }
+            Write-LogLine "  cleaned stale path: $full" 'DarkGray'
+            $cleaned++
+            continue
+        }
+        $kept++
+        $fileHash = (Get-FileHash -Path $full -Algorithm SHA256).Hash
+        if ($fileHash -eq $sourceHash) {
+            Write-LogLine "  skipped (identical): $full" 'DarkGray'
+            $skippedSame++
+            [void]$records.Add($item)
+            continue
+        }
+        if ($WhatIf) {
+            Write-LogLine "  [preview] will replace: $full" 'Yellow'
+            $replaced++
+            [void]$records.Add($item)
+            continue
+        }
+        if (-not $Force) {
+            Write-LogLine "  skipped (use Force to replace): $full" 'DarkOrange'
+            [void]$records.Add($item)
+            continue
+        }
+        try {
+            $bak = "$full.bak.$timestamp"
+            Copy-Item -Path $full -Destination $bak -Force
+            [System.IO.File]::WriteAllBytes($full, $sourceBytes)
+            Write-LogLine "  replaced (backup: $bak): $full" 'Green'
+            $replaced++
+            [void]$records.Add($item)
+        } catch {
+            Write-LogLine "  failed $full : $($_.Exception.Message)" 'Red'
+            $errors++
+            [void]$records.Add($item)
+        }
+    }
+
+    if (-not $WhatIf) {
+        if ($BackupList) {
+            $listBak = "$List.bak.$timestamp"
+            Copy-Item -Path $List -Destination $listBak -Force
+            Write-LogLine "Manifest backed up: $listBak" 'DarkGray'
+        }
+        $newManifest = [pscustomobject]@{
+            version   = $manifest.version
+            scannedAt = $manifest.scannedAt
+            updatedAt = (Get-Date).ToUniversalTime().ToString('o')
+            count     = $records.Count
+            roots     = $manifest.roots
+            files     = $records
+        }
+        $json = $newManifest | ConvertTo-Json -Depth 4
+        Set-Content -Path $List -Value $json -Encoding UTF8
+    }
+
+    Write-LogLine "Summary: valid=$kept identical=$skippedSame replaced=$replaced cleaned=$cleaned errors=$errors" 'Cyan'
+}
+
 function Pick-File {
     param([string]$Title, [string]$Filter)
     $dlg = New-Object System.Windows.Forms.SaveFileDialog
@@ -201,23 +370,9 @@ $btnScan.Add_Click({
     Set-Busy $true
     try {
         Add-Log '--- Starting scan ---' 'Blue'
-        if (-not (Test-Path $scanScript)) { throw "Scan script missing: $scanScript" }
         $out = $txtOut.Text.Trim()
         if (-not $out) { $out = Join-Path $scriptDir 'stignore-paths.json'; $txtOut.Text = $out }
-        $argsList = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $scanScript, '-Output', $out)
-        $root = $txtRoot.Text.Trim()
-        if ($root) {
-            if (-not (Test-Path $root)) { throw "Scan root does not exist: $root" }
-            $argsList += '-Path'; $argsList += $root
-        }
-        if ($chkPreview.Checked) { $argsList += '-WhatIf' }
-        Add-Log "Command: powershell $($argsList -join ' ')"
-        & powershell.exe @argsList
-        if ($chkPreview.Checked) {
-            Add-Log 'Preview finished (no manifest written).' 'Blue'
-        } else {
-            Add-Log "Scan complete. Manifest: $out" 'Green'
-        }
+        Start-ScanJob -Root $txtRoot.Text.Trim() -Output $out -WhatIf $chkPreview.Checked
     } catch {
         Add-Log "ERROR: $_" 'Red'
     } finally {
@@ -229,15 +384,8 @@ $btnApply.Add_Click({
     Set-Busy $true
     try {
         Add-Log '--- Starting apply ---' 'Blue'
-        if (-not (Test-Path $applyScript)) { throw "Apply script missing: $applyScript" }
         $list = $txtOut.Text.Trim()
-        if (-not (Test-Path $list)) { throw "Manifest not found: $list (run Scan first)" }
-        $argsList = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $applyScript, '-List', $list)
-        if ($chkPreview.Checked) { $argsList += '-WhatIf' }
-        if ($chkForce.Checked) { $argsList += '-Force' }
-        if ($chkBackupList.Checked -and -not $chkPreview.Checked) { $argsList += '-BackupList' }
-        Add-Log "Command: powershell $($argsList -join ' ')"
-        & powershell.exe @argsList
+        Start-ApplyJob -List $list -Source $StandardRuleSource -WhatIf $chkPreview.Checked -Force $chkForce.Checked -BackupList $chkBackupList.Checked
         Add-Log 'Apply finished.' 'Green'
     } catch {
         Add-Log "ERROR: $_" 'Red'

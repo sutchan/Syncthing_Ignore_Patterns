@@ -2,7 +2,7 @@
 
 > A curated, ready-to-use `.stignore` rule set that automatically excludes system files, caches, build artifacts, and app data — keeping your Syncthing sync clean and efficient.
 
-![Version](https://img.shields.io/badge/version-v1.1.0-blue)
+![Version](https://img.shields.io/badge/version-v1.3.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--06-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-16-blueviolet)
@@ -132,34 +132,26 @@ After applying the patterns:
 
 ### Batch Sync Tool
 
-The repo ships two PowerShell scripts to apply the standard `.stignore` rules to every Syncthing folder on your machine — **without scanning the whole disk every time**.
+The tool is a **single self-contained script**, `SyncthingIgnoreGUI.ps1`, which applies the standard `.stignore` rules to every Syncthing folder on your machine — **without scanning the whole disk every time**. Scan and apply logic is inlined; no external script dependencies.
 
-| Script | Purpose |
-|--------|---------|
-| `scan-stignore.ps1` | Scan all `.stignore` files and generate the path manifest `stignore-paths.json` |
-| `apply-stignore.ps1` | Read the manifest and write the standard rules to every recorded path (auto-backups originals) |
+```powershell
+# Launch the graphical tool
+.\SyncthingIgnoreGUI.ps1
+```
 
 **Workflow**
 
-```powershell
-# 1. First time: full-disk scan to build the path manifest (once only)
-.\scan-stignore.ps1
+1. Check `Preview only`, then click **Scan** to preview the roots that would be scanned (no manifest written).
+2. Uncheck `Preview only` and click **Scan** again to generate `stignore-paths.json`.
+3. Whenever `.stignore` is updated, check `Force` and click **Apply** to sync all recorded paths (originals are auto-backed up as `.stignore.bak.<timestamp>`).
 
-# 2. Apply the standard rules (originals are auto-backed up as .stignore.bak.<timestamp>)
-.\apply-stignore.ps1 -Force
+**Options**
 
-# 3. Whenever .stignore is updated, just re-run to sync all recorded paths
-.\apply-stignore.ps1 -Force
-```
+- `Preview only`: WhatIf mode — preview only, nothing written.
+- `Force`: Skip per-file confirmation and execute directly.
+- `Back up manifest`: Back up the manifest before writing it back.
 
-**Common parameters**
-
-- `-WhatIf`: Preview what would be replaced/cleaned, without making changes (recommended first)
-- `-Force`: Skip per-file confirmation and execute directly
-- `-Path <dir>` (scan only): Scan a specific directory instead of the whole disk
-- Stale paths (deleted files) are automatically removed from the manifest during apply
-
-> Note: the manifest `stignore-paths.json` records each path's SHA256, size, and modification time; files already matching the rules are skipped to avoid duplicate backups.
+> Note: the manifest `stignore-paths.json` records each path's SHA256, size, and modification time; files already matching the rules are skipped to avoid duplicate backups. Stale paths (deleted files) are cleaned from the manifest only when `Force` is checked.
 
 ### License
 

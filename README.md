@@ -2,7 +2,7 @@
 
 > 精心整理的开箱即用 `.stignore` 规则集，自动排除系统文件、缓存、构建产物与应用数据，让 Syncthing 同步更干净高效。
 
-![Version](https://img.shields.io/badge/version-v1.2.0-blue)
+![Version](https://img.shields.io/badge/version-v1.3.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--06-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-16-blueviolet)
@@ -153,34 +153,21 @@ Syncthing 支持 `// #include` 指令，可将模式拆分到多个文件中：
 
 ![GUI](https://img.shields.io/badge/GUI-WinForms-blue)
 
-#### 命令行脚本
+#### 使用方式
 
-| 脚本 | 作用 |
-|------|------|
-| `scan-stignore.ps1` | 扫描全盘 `.stignore`，生成路径清单 `stignore-paths.json` |
-| `apply-stignore.ps1` | 读取清单，将标准规则写入所有已记录路径（自动备份原文件） |
+工具为**单一自包含脚本** `SyncthingIgnoreGUI.ps1`，扫描与应用逻辑均已内联，无需额外依赖：
+
+```powershell
+.\SyncthingIgnoreGUI.ps1
+```
 
 **工作流**
 
-```powershell
-# 1. 首次：全盘扫描，生成路径清单（只需一次）
-.\scan-stignore.ps1
+1. 勾选 `Preview only` 后点 **Scan**，预览将要扫描的根目录（不写清单）
+2. 取消 `Preview only` 再点 **Scan**，生成 `stignore-paths.json`
+3. 规则有更新时，勾选 `Force` 点 **Apply** 即可同步所有历史路径（替换前自动备份为 `.stignore.bak.<时间戳>`）
 
-# 2. 应用标准规则（替换前自动备份为 .stignore.bak.<时间戳>）
-.\apply-stignore.ps1 -Force
-
-# 3. 以后 .stignore 规则有更新时，直接重跑即可同步所有历史路径
-.\apply-stignore.ps1 -Force
-```
-
-**常用参数**
-
-- `-WhatIf`：仅预览将要替换/清理的项，不做任何修改（建议先跑）
-- `-Force`：跳过逐文件确认，直接执行
-- `-Path <目录>`（仅扫描）：只扫描指定目录而非全盘
-- 失效路径（文件已删除）会在替换时自动从清单移除
-
-> 说明：清单为 `stignore-paths.json`，记录每条路径的 SHA256、大小与修改时间；规则一致的文件会自动跳过，不会重复备份。GUI 与命令行共享同一套底层逻辑。
+> 说明：清单 `stignore-paths.json` 记录每条路径的 SHA256、大小与修改时间；规则一致的文件自动跳过，不会重复备份。失效路径（文件已删除）需勾选 `Force` 才会从清单清理。
 
 ### 开源许可
 
