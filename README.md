@@ -2,7 +2,7 @@
 
 > 精心整理的开箱即用 `.stignore` 规则集，自动排除系统文件、缓存、构建产物与应用数据，让 Syncthing 同步更干净高效。
 
-![Version](https://img.shields.io/badge/version-v1.13.0-blue)
+![Version](https://img.shields.io/badge/version-v1.14.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--06-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-16-blueviolet)
@@ -161,7 +161,7 @@ Syncthing 支持 `// #include` 指令，可将模式拆分到多个文件中：
 | 扫描摘要 | 窗体显示「已找到 N 个 .stignore 文件」；启动时自动加载已有清单数量 |
 | 安全防护 | 非预览且非强制时，Apply 前弹出确认框，避免误写大量路径 |
 | 关于 | 右上角「关于」显示版本与项目地址 |
-| 版本与项目地址 | 窗口底部显示当前版本号（v1.13.0）与可点击项目主页链接 |
+| 版本与项目地址 | 窗口底部显示当前版本号（v1.14.0）与可点击项目主页链接 |
 
 **工作流**
 
@@ -196,7 +196,7 @@ flowchart TD
     ROW2 --- ROW3[☑ 仅预览  ☑ 强制  ☑ 写回前备份]
     ROW3 --- BTN[Scan 按钮  |  Apply 按钮  |  打开清单]
     BTN --- LOG[日志框]
-    LOG --- STATUS[状态栏: v1.13.0 | 项目主页链接]
+    LOG --- STATUS[状态栏: v1.14.0 | 项目主页链接]
 ```
 
 ```
@@ -212,7 +212,7 @@ flowchart TD
 │  日志:                                                 │
 │  [_________________ 实时日志输出 _________________]    │
 ├──────────────────────────────────────────────────────┤
-│  v1.13.0  |  SyncthingIgnorePatterns   🔗 项目地址      │
+│  v1.14.0  |  SyncthingIgnorePatterns   🔗 项目地址      │
 └──────────────────────────────────────────────────────┘
 ```
 

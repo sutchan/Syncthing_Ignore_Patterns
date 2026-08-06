@@ -1,6 +1,6 @@
 <#
 //File: SyncthingIgnoreGUI.ps1
-//Version: 1.13.0
+//Version: 1.14.0
 //Updated: 2026-08-06
 .SYNOPSIS
     Graphical interface for scanning and applying Syncthing .stignore rules,
@@ -20,11 +20,26 @@
 
 $ErrorActionPreference = 'Stop'
 
+# WinForms requires an STA thread. When launched via "powershell -Command",
+# the default apartment is MTA and the form silently fails to open. Restart
+# the script in STA mode if needed.
+if ([System.Threading.Thread]::CurrentThread.ApartmentState -ne 'STA') {
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = (Get-Process -Id $PID).Path
+    $psi.Arguments = "-STA -NoProfile -File `"$PSCommandPath`""
+    $psi.WorkingDirectory = $PWD.ProviderPath
+    $proc = [System.Diagnostics.Process]::Start($psi)
+    $proc.WaitForExit()
+    exit $proc.ExitCode
+}
+
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
+# Must be called before any control is created so visual styles apply.
+[System.Windows.Forms.Application]::EnableVisualStyles() | Out-Null
 
 $scriptDir = $PSScriptRoot
-$ScriptVersion = '1.13.0'
+$ScriptVersion = '1.14.0'
 $StandardRuleSource = Join-Path $scriptDir '.stignore'
 
 # ---------- Localization ----------
@@ -377,6 +392,9 @@ function Apply-Theme {
     }
     $form.BackColor = $bg
     $form.ForeColor = $fg
+    # Dark mode: downgrade 3D borders to single-line so the bright system
+    # edge doesn't glare against the dark background.
+    $border = if ($dark) { 'FixedSingle' } else { 'Fixed3D' }
     foreach ($c in $form.Controls) {
         if ($c -is [System.Windows.Forms.Button] -and ($c.BackColor -ne [System.Drawing.Color]::FromArgb(0,120,215)) -and ($c.BackColor -ne [System.Drawing.Color]::FromArgb(46,138,87)) -and ($c.BackColor -ne [System.Drawing.Color]::FromArgb(192,80,77))) {
             $c.BackColor = $ctrlBg
@@ -385,8 +403,12 @@ function Apply-Theme {
             $c.BackColor = $bg
             $c.ForeColor = $fg
         }
+        if ($c -is [System.Windows.Forms.ComboBox] -or $c -is [System.Windows.Forms.TextBox] -or $c -is [System.Windows.Forms.ListBox]) {
+            $c.BorderStyle = $border
+        }
     }
     $txtLog.BackColor = $logBg
+    $txtLog.BorderStyle = $border
     $lstResults.BackColor = $ctrlBg
     $lstResults.ForeColor = $fg
     $form.PerformLayout()
@@ -396,6 +418,8 @@ function Apply-Theme {
 
 # ---------- Apply language to all controls ----------
 function Apply-Language {
+    $script:applyingLang = $true
+    try {
     $d = $T[$lang]
     $form.Text      = if ($lang -eq 'zh') { Decode-Uni $d.title } else { $d.title }
     $lblLang.Text   = if ($lang -eq 'zh') { Decode-Uni $d.lang } else { $d.lang }
@@ -428,6 +452,9 @@ function Apply-Language {
         $lblRepo.Text    = "$($d.repo)$RepoUrl"
     }
     $cmbLang.SelectedIndex = if ($lang -eq 'zh') { 1 } else { 0 }
+    } finally {
+        $script:applyingLang = $false
+    }
 }
 
 # ---------- Helpers ----------
@@ -723,12 +750,14 @@ function Start-ApplyJob {
 
 # ---------- Event handlers ----------
 $cmbLang.Add_SelectedIndexChanged({
+    if ($script:applyingLang) { return }
     $lang = if ($cmbLang.SelectedIndex -eq 1) { 'zh' } else { 'en' }
     Apply-Language
     Save-Config -Language $lang -Theme $script:currentTheme
 })
 
 $cmbTheme.Add_SelectedIndexChanged({
+    if ($script:applyingLang) { return }
     $script:currentTheme = if ($cmbTheme.SelectedIndex -eq 1) { 'dark' } else { 'light' }
     Apply-Theme -Theme $script:currentTheme
     Save-Config -Language $lang -Theme $script:currentTheme
@@ -978,5 +1007,4 @@ if (Test-Path $initList -PathType Leaf) {
 } else {
     $lblSummary.Text = (Lmsg $T[$lang].noManifest (Decode-Uni $T[$lang].noManifest))
 }
-[System.Windows.Forms.Application]::EnableVisualStyles() | Out-Null
 [System.Windows.Forms.Application]::Run($form)

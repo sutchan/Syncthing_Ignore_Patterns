@@ -30,6 +30,7 @@ SyncthingIgnorePatterns/
 ├── SyncthingIgnoreGUI.ps1    # 主工具（GUI + 扫描/应用逻辑，纯 ASCII）
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档
+├── CHANGELOG.md              # 独立变更日志（Keep a Changelog 风格）
 ├── .gitignore                # 忽略运行时产物（stignore-paths.json / *.bak.*）
 ├── stignore-paths.json       # 扫描清单输出（运行时生成，已被 .gitignore 忽略）
 ├── openspec/                 # 本规范目录
@@ -46,7 +47,7 @@ SyncthingIgnorePatterns/
   - `SyncthingIgnoreGUI.ps1` 变量 `$ScriptVersion = 'x.y.z'`
   - `.stignore` 文件头 `//Version: x.y.z`（规则集独立版本，随工具同步）
   - `README.md` / `README_EN.md` 版本徽章与界面功能版本号引用
-- 每次版本变更需同步更新 CHANGELOG（见第 7 节）与 README 的"版本与项目地址"。
+- 每次版本变更需同步更新 CHANGELOG（根目录 `CHANGELOG.md`，与第 7 节内容一致）与 README 的"版本与项目地址"。
 
 ## 5. GUI 功能规格
 
@@ -80,6 +81,11 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.14.0 (2026-08-07)
+- 修复 GUI 无法打开（致命）：PowerShell `-Command` 默认 MTA 线程，WinForms 要求 STA。脚本开头检测非 STA 时自动以 `powershell -STA -File` 重启自身（exit 透传退出码）
+- EnableVisualStyles 移至程序集加载后、控件创建前，确保视觉样式生效
+- 修复 Apply-Language 设 SelectedIndex 触发 SelectedIndexChanged 事件递归调用（加 `$script:applyingLang` 防重入标志），语言/主题切换事件均受保护
 
 ### v1.13.0 (2026-08-07)
 - 修复主题切换错位 bug：关闭窗体 AutoScroll（原因切换主题时重绘触发滚动条并把控件推出可视区）
