@@ -132,11 +132,14 @@ After applying the patterns:
 
 ### Batch Sync Tool
 
-The tool is a **single self-contained script**, `SyncthingIgnoreGUI.ps1`, which applies the standard `.stignore` rules to every Syncthing folder on your machine — **without scanning the whole disk every time**. Scan and apply logic is inlined; no external script dependencies. The GUI supports **English/Chinese switching** via the language box at the top-right (defaults to system locale); all UI text is stored as `\u` escapes in pure ASCII to avoid GBK re-encoding mojibake. Scanning uses a runspace thread pool (up to 4 threads) with a fast `-Filter .stignore` instead of `-Include`, greatly improving scan speed on multi-drive setups. A status bar shows the **current version** and a clickable **project homepage** link.
+The tool is a **single self-contained script**, `SyncthingIgnoreGUI.ps1`, which applies the standard `.stignore` rules to every Syncthing folder on your machine — **without scanning the whole disk every time**. Scan and apply logic is inlined; no external script dependencies. The GUI supports **English/Chinese switching** via the language box at the top-left (defaults to system locale); all UI text is stored as `\u` escapes in pure ASCII to avoid GBK re-encoding mojibake. Scanning uses a runspace thread pool (up to 4 threads) with a fast `-Filter .stignore` instead of `-Include`, greatly improving scan speed on multi-drive setups. A status bar shows the **current version** and a clickable **project homepage** link.
 
 ```powershell
-# Launch the graphical tool
+# Recommended: the script auto-detects and restarts itself on an STA thread (required by WinForms)
 .\SyncthingIgnoreGUI.ps1
+
+# Or explicitly specify STA (equivalent)
+powershell -STA -NoProfile -File .\SyncthingIgnoreGUI.ps1
 ```
 
 **Layout**
@@ -144,14 +147,17 @@ The tool is a **single self-contained script**, `SyncthingIgnoreGUI.ps1`, which 
 ```mermaid
 flowchart TD
     TITLE[Title: Syncthing .stignore Manager]
-    LANG[Language: EN / 中文 ▼]
-    TITLE --- LANG
-    LANG --- ROW1[Scan root: [_____] [Browse...]]
+    TOP[Language: EN / 中文 ▼   Theme: Light / Dark ▼]
+    TITLE --- TOP
+    TOP --- ROW1[Scan root: [_____] [Browse...]]
     ROW1 --- ROW2[Manifest out: [stignore-paths.json] [Browse...]]
     ROW2 --- ROW3[☑ Preview  ☑ Force  ☑ Back up]
-    ROW3 --- BTN[Scan button | Apply button | Open]
-    BTN --- LOG[Log box]
-    LOG --- STATUS[Status: v1.14.0 | project link]
+    ROW3 --- BTN[Scan | Apply | Open | Clear Log | Stop | About]
+    BTN --- SUM[Scan summary]
+    SUM --- LST[Result list (double-click to open)]
+    LST --- LOG[Log box]
+    LOG --- PROG[Progress bar + percentage]
+    PROG --- STATUS[Status: v1.14.0 | project link]
 ```
 
 > The diagram above shows the UI regions. UI text switches live between EN/中文; all Chinese text is stored as `\u` escapes so the script stays pure ASCII.
