@@ -19,6 +19,8 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
   `\uXXXX` 转义存储，运行时由 `Decode-Uni` 还原。原因：文件被 GBK 编码
   重编码会破坏 UTF-8 中文字节，导致 PowerShell 解析失败（历史已踩坑）。
 - **单一自包含脚本**：GUI 工具的扫描/应用逻辑全部内联，无外部脚本依赖。
+  此架构红线优先于通用「单文件超 200 行即拆分」规则——`SyncthingIgnoreGUI.ps1`
+  作为发布交付物须保持单文件自包含，不因行数拆分（见 CHANGELOG v0.1.0 设计决策）。
 - **PowerShell 5.1（Windows PowerShell）** 目标运行时；不依赖 PowerShell 7
   专有语法（如 `ForEach-Object -Parallel`）。并行改用 runspace 线程池实现。
 

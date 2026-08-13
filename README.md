@@ -2,10 +2,10 @@
 
 > 精心整理的开箱即用 `.stignore` 规则集，自动排除系统文件、缓存、构建产物与应用数据，让 Syncthing 同步更干净高效。
 
-![Version](https://img.shields.io/badge/version-v1.14.0-blue)
+![Version](https://img.shields.io/badge/version-v1.14.1-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--06-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Categories](https://img.shields.io/badge/categories-16-blueviolet)
+![Categories](https://img.shields.io/badge/categories-17-blueviolet)
 ![GitHub Repo](https://img.shields.io/badge/source-GitHub-black)
 
 [中文](#中文说明) | [English](README_EN.md)
@@ -25,9 +25,11 @@
 
 ### 特性
 
-- ✅ **12 大分类**覆盖系统、缓存、构建产物、数据库等常见噪音文件
+- ✅ **17 个分类**覆盖系统、缓存、构建产物、数据库等常见噪音文件
 - ✅ **开箱即用** — 直接复制即可生效，无需额外配置
 - ✅ **中英双语文档**，方便团队协作
+
+> 说明：`.stignore` 文件头 `Updated` 为规则集的最后更新日；脚本/封装的发布版本与日期见 CHANGELOG（当前 `v1.14.0`，发布于 `2026-08-07`），两者可能不同属正常。
 - ✅ **持续维护**，随生态更新规则
 
 ### 通配符语法
@@ -43,7 +45,7 @@
 
 ### 已包含的分类
 
-`.stignore` 文件按以下 16 个分类组织（完整内容请查看文件本身）：
+`.stignore` 文件按以下 17 个分类组织（完整内容请查看文件本身）：
 
 1. **系统与 OS 文件** — `$RECYCLE.BIN`、`.DS_Store`、`Thumbs.db`、`desktop.ini`、`pagefile.sys`、`Program Files/`、`System Volume Information/`、`LOST.DIR/` 等
 2. **数据库文件** — `#innodb_redo`、`#innodb_temp`、`ibdata1`、`*.ibd`、`pg_wal/`、`*.sqlite3`、`mongod.lock`、`dump.rdb` 等
@@ -165,7 +167,7 @@ powershell -STA -NoProfile -File .\SyncthingIgnoreGUI.ps1
 | 扫描摘要 | 窗体显示「已找到 N 个 .stignore 文件」；启动时自动加载已有清单数量 |
 | 安全防护 | 非预览且非强制时，Apply 前弹出确认框，避免误写大量路径 |
 | 关于 | 右上角「关于」显示版本与项目地址 |
-| 版本与项目地址 | 窗口底部显示当前版本号（v1.14.0）与可点击项目主页链接 |
+| 版本与项目地址 | 窗口底部显示当前版本号（v1.14.1）与可点击项目主页链接 |
 
 **工作流**
 

@@ -2,10 +2,10 @@
 
 > A curated, ready-to-use `.stignore` rule set that automatically excludes system files, caches, build artifacts, and app data — keeping your Syncthing sync clean and efficient.
 
-![Version](https://img.shields.io/badge/version-v1.14.0-blue)
+![Version](https://img.shields.io/badge/version-v1.14.1-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--06-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Categories](https://img.shields.io/badge/categories-16-blueviolet)
+![Categories](https://img.shields.io/badge/categories-17-blueviolet)
 ![GitHub Repo](https://img.shields.io/badge/source-GitHub-black)
 
 [English](#english) | [中文](README.md)
@@ -25,9 +25,11 @@
 
 ### Features
 
-- ✅ **12 categories** covering common noise — system, caches, build artifacts, databases, and more
+- ✅ **17 categories** covering common noise — system, caches, build artifacts, databases, and more
 - ✅ **Zero-config** — copy and it just works, no extra setup required
 - ✅ **Bilingual docs** (English & Chinese) for smoother team collaboration
+
+> Note: The `Updated` date in the `.stignore` header is the ruleset revision date. The script/package release version and date live in CHANGELOG (currently `v1.14.0`, released `2026-08-07`); the two may differ and that is expected.
 - ✅ **Actively maintained** as the ecosystem evolves
 
 ### Pattern Syntax
@@ -43,7 +45,7 @@
 
 ### Included Categories
 
-The `.stignore` file is organized into the following 16 categories (see the file for full details):
+The `.stignore` file is organized into the following 17 categories (see the file for full details):
 
 1. **System & OS Files** — `$RECYCLE.BIN`, `.DS_Store`, `Thumbs.db`, `desktop.ini`, `pagefile.sys`, `Program Files/`, `System Volume Information/`, `LOST.DIR/`, etc.
 2. **Database Files** — `#innodb_redo`, `#innodb_temp`, `ibdata1`, `*.ibd`, `pg_wal/`, `*.sqlite3`, `mongod.lock`, `dump.rdb`, etc.
@@ -157,7 +159,7 @@ flowchart TD
     SUM --- LST[Result list (double-click to open)]
     LST --- LOG[Log box]
     LOG --- PROG[Progress bar + percentage]
-    PROG --- STATUS[Status: v1.14.0 | project link]
+    PROG --- STATUS[Status: v1.14.1 | project link]
 ```
 
 > The diagram above shows the UI regions. UI text switches live between EN/中文; all Chinese text is stored as `\u` escapes so the script stays pure ASCII.
