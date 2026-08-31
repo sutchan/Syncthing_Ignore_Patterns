@@ -55,6 +55,7 @@
 **.tmp
 **Backup_of_*
 **Temp/
+**.bak
 
 //Application Data & Caches
 **.baiduyun.uploading.cfg
