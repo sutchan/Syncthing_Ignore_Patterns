@@ -29,7 +29,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 
 ```
 SyncthingIgnorePatterns/
-├── .stignore                 # 标准规则源文件（Apply 依赖，版本 v1.16.0）
+├── .stignore                 # 标准规则源文件（Apply 依赖，版本 v1.16.1）
 ├── SyncthingIgnoreGUI.ps1    # 主工具（GUI + 扫描/应用逻辑，纯 ASCII）
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档
@@ -86,6 +86,9 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.16.1 (2026-08-31)
+- docs: 精简 README / README_EN（删除重复界面布局图与重复段落，分类改表格）；版本同步至 v1.16.1
 
 ### v1.16.0 (2026-08-31)
 - feat(stignore): 新增第 18 类「缓存与临时目录」，用 `(?i)` 大小写不敏感覆盖 cache/ caches/ temp/ tmp/ .cache/ .tmp/ cachedata/ thumbnails/ thumbs/ 等

@@ -1,6 +1,6 @@
 <#
 //File: SyncthingIgnoreGUI.ps1
-//Version: 1.16.0
+//Version: 1.16.1
 //Updated: 2026-08-31
 .SYNOPSIS
     Graphical interface for scanning and applying Syncthing .stignore rules,
@@ -54,7 +54,7 @@ Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles() | Out-Null
 
 $scriptDir = $PSScriptRoot
-$ScriptVersion = '1.16.0'
+$ScriptVersion = '1.16.1'
 $StandardRuleSource = Join-Path $scriptDir '.stignore'
 
 # ---------- Localization ----------

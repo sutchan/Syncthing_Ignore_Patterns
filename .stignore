@@ -1,5 +1,5 @@
 //Syncthing Ignore Patterns Lists
-//Version: 1.16.0
+//Version: 1.16.1
 //Updated: 2026-08-31
 
 //System & OS Files
@@ -58,7 +58,7 @@
 **/*.db-wal
 **/*.db-shm
 **/*.db-journal
-// NOTE: generic "**/*.db" is intentionally omitted — it would drop real
+// NOTE: generic "**/*.db" is intentionally omitted - it would drop real
 // SQLite/KeePass data files. Use the patterns below if you really need it:
 // **/*.db
 
@@ -76,7 +76,7 @@
 
 //Application Data & Caches
 // NOTE: .stfolder (folder marker) and .stversions (Syncthing versioning) are
-// NOT ignored here — ignoring them breaks folder-marker detection on remotes
+// NOT ignored here - ignoring them breaks folder-marker detection on remotes
 // and silently disables file versioning. Add them manually only if you are
 // certain you never use Syncthing versioning.
 **/.baiduyun.uploading.cfg
@@ -115,7 +115,7 @@
 **/config/index-v2/**
 
 //Version Control Systems
-// NOTE: ignoring .git means repository history is not synced — remove this
+// NOTE: ignoring .git means repository history is not synced - remove this
 // line if you intend to mirror working git repositories.
 **/.git/
 **/.svn/
@@ -263,7 +263,7 @@
 **/Service Worker/
 
 //Lock & Log Files
-// Runtime locks only — package manager lock files are re-included below.
+// Runtime locks only - package manager lock files are re-included below.
 **/*.lock
 !**/Cargo.lock
 !**/package-lock.json
@@ -278,7 +278,7 @@
 **/nohup.out
 
 //Build Artifacts & Language Output
-// NOTE: dist/ build/ bin/ obj/ out/ are generic names — drop any line here if
+// NOTE: dist/ build/ bin/ obj/ out/ are generic names - drop any line here if
 // your project ships content from a folder with that name.
 **/target/
 **/dist/
@@ -297,7 +297,7 @@
 
 //Cache & Temp Directories
 // (?i) makes a pattern case-insensitive, so these also cover Cache/ CACHE/ Temp/ TMP/.
-// NOTE: cache/ temp/ tmp/ match EXACT directory names, not prefixes — so MyCacheFolder/,
+// NOTE: cache/ temp/ tmp/ match EXACT directory names, not prefixes - so MyCacheFolder/,
 // Template/ and Tempura/ are safe. Remove those three lines if your project ships
 // content from folders literally named "cache", "temp" or "tmp".
 (?i)**/cache/

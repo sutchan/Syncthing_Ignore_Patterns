@@ -1,12 +1,11 @@
 # Syncthing Ignore Patterns
 
-> A curated, ready-to-use `.stignore` rule set that automatically excludes system files, caches, build artifacts, and app data — keeping your Syncthing sync clean and efficient.
+> A curated, ready-to-use `.stignore` rule set: 20 categories · 285 patterns that exclude system files, caches, build artifacts, and app data.
 
-![Version](https://img.shields.io/badge/version-v1.16.0-blue)
+![Version](https://img.shields.io/badge/version-v1.16.1-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--31-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-20-blueviolet)
-![GitHub Repo](https://img.shields.io/badge/source-GitHub-black)
 
 [English](#english) | [中文](README.md)
 
@@ -14,164 +13,94 @@
 
 ## English
 
-### Table of Contents
-
-- [Features](#features)
-- [Pattern Syntax](#pattern-syntax)
-- [Included Categories](#included-categories)
-- [Usage](#usage)
-- [Examples](#examples)
-- [License](#license)
-
-### Features
-
-- ✅ **20 categories · 285 patterns** covering common noise — system, caches, build artifacts, databases, and more
-- ✅ **Zero-config** — copy and it just works, no extra setup required
-- ✅ **Bilingual docs** (English & Chinese) for smoother team collaboration
+- ✅ **20 categories / 285 patterns** covering system files, caches, build artifacts, databases, and more
+- ✅ **Zero-config**: drop it at the sync folder root and it works
+- ✅ **Bilingual docs** plus a batch-sync GUI tool
 - ✅ **Actively maintained** as the ecosystem evolves
 
-> Note: The `Updated` date in the `.stignore` header is the ruleset revision date (`2026-08-31`). The tool release version lives in CHANGELOG (currently `v1.16.0`, released `2026-08-31`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
+> The `Updated` date in the `.stignore` header (`2026-08-31`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.16.1`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
+
+### Quick Start
+
+1. Download `.stignore` and place it at the **root** of your Syncthing sync folder
+2. Restart Syncthing or trigger a rescan — patterns take effect on the next scan
+
+You can also paste the contents into the Web UI (default `http://localhost:8384`) → folder → **Edit** → **Ignore Patterns** and save; it applies immediately.
+
+To split patterns across files, use `// #include`:
+
+```text
+#include .stignore-base
+// Your custom rules below
+**/my-secret-folder
+*.local
+```
 
 ### Pattern Syntax
 
 | Pattern | Description |
 |---------|-------------|
-| `(?d)` | Allow deletion when blocked parent dir is removed |
+| `(?d)` | Allow deletion when the blocked parent dir is removed |
 | `(?i)` | Case-insensitive matching |
-| `!` | Negation (include this pattern) |
-| `*` | Single-level wildcard |
-| `**` | Multi-level wildcard |
+| `!` | Negation (re-include) |
+| `*` / `**` | Single-level / multi-level wildcard |
 | `//` | Comment |
 
-### Included Categories
+### Categories
 
-The `.stignore` file is organized into the following 20 categories (see the file for full details):
+See the `.stignore` file for the full rule set:
 
-1. **System & OS Files** — `$RECYCLE.BIN/`, `.DS_Store`, `Thumbs.db`, `desktop.ini`, `pagefile.sys`, `/Program Files/`, `System Volume Information/`, `LOST.DIR/`, `found.000/`, etc.
-2. **Database Files** — `#innodb_redo/`, `ibdata1`, `*.ibd`, `pg_wal/`, `*.sqlite3`, `mongod.lock`, `dump.rdb`, `*.db-wal`, etc. (no blanket `*.db` — it would drop real data files)
-3. **Backup & Temporary Files** — `*.tmp`, `*.bak`, `.delete/`, `Backup_of_*`, `.stignore.bak.*`, etc. (generic `temp/` lives in category 18)
-4. **Application Data & Caches** — `.dropbox.cache/`, `WeChat Files/`, `Tencent Files/`, `BaiduNetdiskDownload/`, `AliWorkbenchData/`, `Youku Files/`, `SteamLibrary/`, etc. (`.stfolder/` and `.stversions` are **not** ignored — keeping them preserves folder markers and versioning)
-5. **Version Control Systems** — `.git/`, `.svn/`, `.hg/`
-6. **Package Manager Caches & Dependencies** — `node_modules/`, `.npm/`, `.pnpm-store/`, `.venv/`, `.cargo/`, `.gradle/`, `.m2/`, `.nuget/`, `.bun/`, `.deno/`, `.dart_tool/`, `vendor/`, etc. (matches nested paths too)
-7. **Frontend Framework Build Caches** — `.next/`, `.nuxt/`, `.svelte-kit/`, `.vite/`, `.turbo/`, `.astro/`, `.docusaurus/`, `.parcel-cache/`, `.vercel/`, `.netlify/`, `.vuepress/dist/`, etc.
-8. **Python & Testing Caches** — `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.coverage`, `.jest-cache/`, `.vitest/`, `.tox/`, `.nox/`, `.ipynb_checkpoints/`, `htmlcov/`, etc.
-9. **C/C++ & Rust Build Caches** — `CMakeCache.txt`, `CMakeFiles/`, `cmake-build-debug/`, `cmake-build-release/`, `compile_commands.json`, `.ccls-cache/`, `.clangd/`, `.rustc_cache/`, etc.
-10. **JVM & Scala Build Caches** — `.ammonite/`, `.bloop/`, `.metals/`, `.kotlintest/`, `.scala-build/`, `.mvn/`
-11. **IDE & Tool Caches** — `.idea/`, `.history/`, `.terraform/`, `.terraform.lock.hcl`, `.terragrunt-cache/`, `.helm/`, `.kube/`, `.flyway/`, etc.
-12. **Editor & Dev Tool Caches** — `.vscode/` (keeps `settings.json`), `.vim/`, `*.swp`, `*~`, `.emacs.d/`, `.sublime-*`, `.zed/`, `.cursor/`, etc.
-13. **Archives & Partial Downloads** — `*.part`, `*.aria2`, `*.crdownload`, `downloading/`, etc.
-14. **Virtualization & Container Files** — `*.vmdk`, `*.qcow2`, `*.ova`, `.docker/`, `.minikube/`, `.vagrant/`, etc.
-15. **Media & Player Caches** — `Spotify/`, `iTunes/Album Artwork/`, `PotPlayerMini*`, `Service Worker/`, `.Spotlight-V100/`, `.Trashes/`, etc.
-16. **Lock & Log Files** — `*.lock` (re-includes `Cargo.lock`, `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, etc.), `*.log`, `*.log.*`, `nohup.out`
-17. **Build Artifacts & Language Output** — `target/`, `dist/`, `build/`, `bin/`, `obj/`, `out/`, `*.pyc`, `*.class`, `*.o`, `*.pdb`, etc.
-18. **Cache & Temp Directories** — `(?i)**/cache/`, `temp/`, `tmp/`, `.cache/`, `.tmp/`, `caches/`, `cachedata/`, `thumbnails/`, `thumbs/`, `.eslintcache`, `*.tsbuildinfo`, etc. (case-insensitive)
-19. **Browser & Electron Storage Caches** — `CacheStorage/`, `Code Cache/`, `GPUCache/`, `ShaderCache/`, `DawnCache/`, `INetCache/`, `Local Storage/`, `IndexedDB/`, `blob_storage/`, `Crashpad/`, etc.
-20. **OS Temp & Cache Locations** — `/tmp/`, `/var/tmp/`, `/var/cache/`, `/private/var/folders/`, `/Windows/Temp/` (root-anchored; only matches these paths at the sync folder root)
+| # | Category | Typical patterns |
+|---|----------|------------------|
+| 1 | System & OS Files | `$RECYCLE.BIN/`, `.DS_Store`, `Thumbs.db`, `desktop.ini`, `System Volume Information/` |
+| 2 | Database Files | `ibdata1`, `*.ibd`, `pg_wal/`, `*.sqlite3`, `*.db-wal` (no blanket `*.db`) |
+| 3 | Backup & Temp Files | `*.tmp`, `*.bak`, `.delete/`, `Backup_of_*`, `.stignore.bak.*` |
+| 4 | App Data & Caches | `.dropbox.cache/`, `WeChat Files/`, `BaiduNetdiskDownload/`, `SteamLibrary/` (keeps `.stfolder/`, `.stversions`) |
+| 5 | Version Control | `.git/`, `.svn/`, `.hg/` |
+| 6 | Package Manager Caches | `node_modules/`, `.npm/`, `.venv/`, `.cargo/`, `.gradle/`, `.m2/`, `vendor/` |
+| 7 | Frontend Build Caches | `.next/`, `.nuxt/`, `.svelte-kit/`, `.vite/`, `.turbo/`, `.vercel/` |
+| 8 | Python & Test Caches | `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.tox/`, `.ipynb_checkpoints/` |
+| 9 | C/C++ & Rust Builds | `CMakeCache.txt`, `CMakeFiles/`, `cmake-build-*/`, `.clangd/` |
+| 10 | JVM & Scala Builds | `.bloop/`, `.metals/`, `.scala-build/`, `.mvn/` |
+| 11 | IDE & Tool Caches | `.idea/`, `.history/`, `.terraform/`, `.terragrunt-cache/`, `.helm/`, `.kube/` |
+| 12 | Editors & Dev Tools | `.vscode/` (keeps `settings.json`), `.vim/`, `*.swp`, `*~`, `.cursor/` |
+| 13 | Archives & Partial Downloads | `*.part`, `*.aria2`, `*.crdownload`, `downloading/` |
+| 14 | Virtualization & Containers | `*.vmdk`, `*.qcow2`, `*.ova`, `.docker/`, `.vagrant/` |
+| 15 | Media & Player Caches | `Spotify/`, `iTunes/Album Artwork/`, `PotPlayerMini*`, `.Spotlight-V100/` |
+| 16 | Lock & Log Files | `*.lock` (re-includes `Cargo.lock`, `package-lock.json`, `yarn.lock`), `*.log`, `nohup.out` |
+| 17 | Build Artifacts | `target/`, `dist/`, `build/`, `bin/`, `obj/`, `*.pyc`, `*.class`, `*.o` |
+| 18 | Cache & Temp Directories | `(?i)**/cache/`, `temp/`, `tmp/`, `.cache/`, `thumbnails/`, `.eslintcache` |
+| 19 | Browser & Electron Caches | `Code Cache/`, `GPUCache/`, `ShaderCache/`, `IndexedDB/`, `blob_storage/` |
+| 20 | OS Temp & Cache Locations | `/tmp/`, `/var/tmp/`, `/var/cache/`, `/Windows/Temp/` (root-anchored) |
 
-> Heads-up 1: category 17's `dist/`, `build/`, `bin/`, `obj/`, `out/`, `target/` and category 18's `cache/`, `temp/`, `tmp/` are all generic names. If your project ships content from a folder with one of those names, delete the matching line.
-> Heads-up 2: category 18 uses the `(?i)` prefix for case-insensitive matching and matches **whole directory names only** (not prefixes), so `MyCacheFolder/`, `Template/` and `Tempura/` are safe.
+> Heads-up 1: `dist/`, `build/`, `bin/`, `target/`, `cache/`, `temp/` in categories 17–18 are generic names. If you need to sync a folder with one of those names, delete the matching line.
+> Heads-up 2: category 18 uses `(?i)` for case-insensitive matching and matches **whole directory names only**, so `MyCacheFolder/`, `Template/` and `Tempura/` are safe.
 
-### Usage
-
-#### Prerequisites
-
-- A running [Syncthing](https://syncthing.net/) instance
-- At least one configured sync folder
-
-#### Method 1: Copy the file directly
-
-1. Download `.stignore` from this repository
-2. Place it at the **root** of your Syncthing sync folder
-3. Restart Syncthing or trigger a rescan — patterns take effect on the next scan
-
-#### Method 2: Use the Syncthing Web GUI
-
-1. Open the Syncthing Web UI (default: `http://localhost:8384`)
-2. Click the target folder → **Edit** → **Ignore Patterns**
-3. Paste the contents of `.stignore` into the editor
-4. Click **Save** — patterns apply immediately and a rescan is triggered
-
-#### Method 3: Include external files
-
-Syncthing supports `// #include` directives to split patterns across files:
+### Customization Tips
 
 ```text
-// Include this repo's patterns
-#include .stignore-base
-
-// Add your own custom rules below
-**/my-secret-folder
-*.local
+!**/.git/          // whitelist: keep .git in sync
+(?i)**.jpg         // case-insensitive
+(?d)**/temp/**     // allow deletion with parent dir
 ```
 
-#### Customization Tips
-
-- **Whitelist files**: Use `!` to re-include patterns, e.g. `!**/.git/` keeps `.git` folders in sync
-- **Case-insensitive**: Prefix with `(?i)` to match across cases, e.g. `(?i)**.jpg` matches `.JPG`, `.jpg`, `.Jpg`
-- **Safe deletion**: Use `(?d)` prefix to allow Syncthing to delete files when their parent directory is removed
-- **Comments**: Lines starting with `//` are ignored — use them to document your rules
-- **Test before committing**: Use the "Ignore Patterns" preview in the Web UI to verify which files are matched
-
-#### Verification
-
-After applying the patterns:
-
-1. Open the Syncthing Web UI → folder → **Ignore Patterns** to confirm rules are loaded
-2. Check the folder status — files matching the patterns should no longer appear in the sync queue
-3. Use **Recent Changes** to verify ignored files are not being synced
-
-### Examples
-
-```text
-// Recursively exclude Recycle Bin
-**$RECYCLE.BIN
-
-// macOS system files
-**.DS_Store
-
-// node_modules
-**/node_modules/*
-
-// Case-insensitive match
-(?i)**.JPG
-
-// Whitelist .git folders
-!**/.git/
-```
+Use the "Ignore Patterns" preview in the Web UI to verify matches before saving.
 
 ### Batch Sync Tool
 
-The tool is a **single self-contained script**, `SyncthingIgnoreGUI.ps1`, which applies the standard `.stignore` rules to every Syncthing folder on your machine — **without scanning the whole disk every time**. Scan and apply logic is inlined; no external script dependencies. The GUI supports **English/Chinese switching** via the language box at the top-left (defaults to system locale); all UI text is stored as `\u` escapes in pure ASCII to avoid GBK re-encoding mojibake. Scanning uses a runspace thread pool (up to 4 threads) with a fast `-Filter .stignore` instead of `-Include`, greatly improving scan speed on multi-drive setups. A status bar shows the **current version** and a clickable **project homepage** link.
+`SyncthingIgnoreGUI.ps1` is a single self-contained WinForms script that applies the standard rules to every Syncthing folder on the machine — **without scanning the whole disk every time**:
 
 ```powershell
-# Recommended: the script auto-detects and restarts itself on an STA thread (required by WinForms)
-.\SyncthingIgnoreGUI.ps1
-
-# Or explicitly specify STA (equivalent)
-powershell -STA -NoProfile -File .\SyncthingIgnoreGUI.ps1
+.\SyncthingIgnoreGUI.ps1                                   # auto-restarts on an STA thread (required by WinForms)
+powershell -STA -NoProfile -File .\SyncthingIgnoreGUI.ps1   # equivalent
 ```
 
-**Layout**
-
-```mermaid
-flowchart TD
-    TITLE[Title: Syncthing .stignore Manager]
-    TOP[Language: EN / 中文 ▼   Theme: Light / Dark ▼]
-    TITLE --- TOP
-    TOP --- ROW1[Scan root: [_____] [Browse...]]
-    ROW1 --- ROW2[Manifest out: [config/stignore-paths.json] [Browse...]]
-    ROW2 --- ROW3[☑ Preview  ☑ Force  ☑ Back up]
-    ROW3 --- BTN[Scan | Apply | Open | Clear Log | Stop | About]
-    BTN --- SUM[Scan summary]
-    SUM --- LST[Result list (double-click to open)]
-    LST --- LOG[Log box]
-    LOG --- PROG[Progress bar + percentage]
-    PROG --- STATUS[Status: v1.16.0 | project link]
-```
-
-> The diagram above shows the UI regions. UI text switches live between EN/中文; all Chinese text is stored as `\u` escapes so the script stays pure ASCII.
-
-**Workflow**
+- **Language**: switch `English` / `中文` at the top-left; applies live and persists to `config.json` (Chinese stored as `\u` escapes, script stays pure ASCII)
+- **Theme**: `Light` / `Dark`, instant and persisted
+- **Scan**: runspace pool (≤4 threads) with `-Filter .stignore`; leave the root blank to scan all fixed drives, or drag & drop a folder
+- **Options**: `Preview` (write nothing), `Force` (skip per-file confirmation), `Back up manifest`
+- **Manifest**: defaults to `config/stignore-paths.json`, storing path/size/mtime; already-matching files are skipped, stale paths are cleaned only with `Force`
+- **More**: background execution keeps the UI responsive (real percentage progress), double-click a result to open it, **Stop** aborts the background job, and the status bar shows the version plus a project link
 
 ```mermaid
 flowchart LR
@@ -179,18 +108,7 @@ flowchart LR
     B --> C[Apply<br/>write rules, per-file backup ≤3]
 ```
 
-1. By default, simply click **Scan** to scan all drives and generate `stignore-paths.json`. To see results before writing, check `Preview only` first.
-2. Whenever `.stignore` is updated, check `Force` and click **Apply** to sync all recorded paths (originals are auto-backed up as `.stignore.bak.<timestamp>`).
-
-**Options**
-
-- `Preview only`: WhatIf mode — preview only, nothing written.
-- `Force`: Skip per-file confirmation and execute directly.
-- `Back up manifest`: Back up the manifest before writing it back.
-
-> Note: the manifest `stignore-paths.json` records each `.stignore` path's size and modification time; files already matching the rules are skipped to avoid duplicate backups. Stale paths (deleted files) are cleaned from the manifest only when `Force` is checked.
-
-**Backup rotation**: each replace produces a `.stignore.bak.<timestamp>`, and the manifest backup is `stignore-paths.json.bak.<timestamp>`. Both keep **at most 3** backups — older ones are deleted automatically to avoid unlimited growth.
+**Backup rotation**: `.stignore.bak.<timestamp>` and `stignore-paths.json.bak.<timestamp>` each keep **at most 3** copies — older ones are deleted automatically.
 
 ### License
 

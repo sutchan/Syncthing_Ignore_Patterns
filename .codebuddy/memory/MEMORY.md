@@ -7,7 +7,8 @@
 
 ## 项目约定（SyncthingIgnorePatterns）
 - 提交信息遵循 Git 规范（type: 描述，首字母小写、动词开头、≤50字）。
-- 版本管理：构建默认升级 MINOR 版本，同步所有文件头/脚本变量/.stignore/README/openspec 版本号。
+- 版本管理：构建默认升级 MINOR 版本，同步所有文件头/脚本变量/.stignore/README/openspec 版本号。同步清单（易漏）：`SyncthingIgnoreGUI.ps1` 头 `//Version` 与 `$ScriptVersion`、`.stignore` 头 `//Version`、两份 README 徽章+正文版本引用、openspec/project.md（目录结构注记 + 第 7 节）、CHANGELOG.md。
+- CHANGELOG 双副本：根 `CHANGELOG.md` 与 `openspec/project.md` §7 必须同时写，历史上多次只写一处（v1.16.0 曾漏根 CHANGELOG）。
 - 中文存储用纯 ASCII + `\u` 转义，规避 GBK 乱码；GUI 字典 en/zh 分离。
 - 后台任务用 runspace + Timer 轮询 `DoEvents`；跨线程用 `form.Invoke` 更新控件。
 
