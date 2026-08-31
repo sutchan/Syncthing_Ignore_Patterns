@@ -1,5 +1,5 @@
 //Syncthing Ignore Patterns Lists
-//Version: 1.17.2
+//Version: 1.18.0
 //Updated: 2026-08-31
 
 //System & OS Files
@@ -152,6 +152,11 @@
 **/.ghc/
 **/.phpunit.result.cache
 **/.packages
+**/.conda/
+**/.spack/
+**/.opam/
+**/.stack-work/
+**/.uv/
 /vendor/
 **/vendor/
 **/vendor/bundle/
@@ -183,6 +188,9 @@
 **/.ruff_cache/
 **/.tox/
 **/.vitest/
+**/.cypress/
+**/.playwright/
+**/.allure/
 **/coverage/
 **/htmlcov/
 
@@ -229,6 +237,11 @@
 **/.sublime-workspace
 **/.zed/
 **/.cursor/
+**/.claude/
+**/.windsurf/
+**/.aider/
+**/*.iml
+**/.serverless/
 
 //Archives & Partial Downloads
 **/downloading/
@@ -253,6 +266,9 @@
 **/.docker/
 **/.minikube/
 **/.vagrant/
+**/.buildkit/
+**/.podman/
+**/.containerd/
 
 //Media & Player Caches
 **/.Spotlight-V100/
@@ -279,6 +295,11 @@
 **/*.log
 **/*.log.*
 **/nohup.out
+**/.zsh_history
+**/.bash_history
+**/.sqlite_history
+**/.node_repl_history
+**/.python_history
 
 //Build Artifacts & Language Output
 // NOTE: dist/ build/ bin/ obj/ out/ are generic names - drop any line here if

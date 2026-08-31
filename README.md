@@ -1,8 +1,8 @@
 # Syncthing 忽略模式
 
-> 开箱即用的 `.stignore` 规则集：20 个分类 · 287 条规则，自动排除系统文件、缓存、构建产物与应用数据。
+> 开箱即用的 `.stignore` 规则集：20 个分类 · 309 条规则，自动排除系统文件、缓存、构建产物与应用数据。
 
-![Version](https://img.shields.io/badge/version-v1.17.2-blue)
+![Version](https://img.shields.io/badge/version-v1.18.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--31-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-20-blueviolet)
@@ -13,12 +13,12 @@
 
 ## 中文说明
 
-- ✅ **20 分类 / 287 条规则**，覆盖系统、缓存、构建产物、数据库等噪音文件
+- ✅ **20 分类 / 309 条规则**，覆盖系统、缓存、构建产物、数据库等噪音文件
 - ✅ **开箱即用**：复制到同步根目录即可生效
 - ✅ **中英双语文档**，附批量同步 GUI 工具
 - ✅ **持续维护**，随生态更新规则
 
-> `.stignore` 文件头 `Updated`（`2026-08-31`）是规则集修订日；工具发布版本见 CHANGELOG（当前 `v1.17.2`）。两者分别对应"规则集修订"与"工具发布"，不同步属正常。
+> `.stignore` 文件头 `Updated`（`2026-08-31`）是规则集修订日；工具发布版本见 CHANGELOG（当前 `v1.18.0`）。两者分别对应"规则集修订"与"工具发布"，不同步属正常。
 
 ### 快速开始
 
@@ -57,17 +57,17 @@
 | 3 | 备份与临时文件 | `*.tmp`、`*.bak`、`.delete/`、`Backup_of_*`、`.stignore.bak.*` |
 | 4 | 应用数据与缓存 | `.dropbox.cache/`、`WeChat Files/`、`BaiduNetdiskDownload/`、`SteamLibrary/`（保留 `.stfolder/`、`.stversions`） |
 | 5 | 版本控制系统 | `.git/`、`.svn/`、`.hg/` |
-| 6 | 包管理器缓存 | `node_modules/`、`.npm/`、`.venv/`、`.cargo/`、`.gradle/`、`.m2/`、`vendor/` |
+| 6 | 包管理器缓存 | `node_modules/`、`.npm/`、`.venv/`、`.cargo/`、`.gradle/`、`.m2/`、`vendor/`、`.conda/`、`.uv/`、`.opam/` |
 | 7 | 前端构建缓存 | `.next/`、`.nuxt/`、`.svelte-kit/`、`.vite/`、`.turbo/`、`.vercel/` |
-| 8 | Python 与测试缓存 | `.pytest_cache/`、`.mypy_cache/`、`.ruff_cache/`、`.tox/`、`.ipynb_checkpoints/` |
+| 8 | Python 与测试缓存 | `.pytest_cache/`、`.mypy_cache/`、`.ruff_cache/`、`.tox/`、`.ipynb_checkpoints/`、`.cypress/`、`.playwright/`、`.allure/` |
 | 9 | C/C++ 与 Rust 构建 | `CMakeCache.txt`、`CMakeFiles/`、`cmake-build-*/`、`.clangd/` |
 | 10 | JVM 与 Scala 构建 | `.bloop/`、`.metals/`、`.scala-build/`、`.mvn/` |
 | 11 | IDE 与工具缓存 | `.idea/`、`.history/`、`.terraform/`、`.terragrunt-cache/`、`.helm/`、`.kube/` |
-| 12 | 编辑器与开发工具 | `.vscode/`（保留 `settings.json`）、`.vim/`、`*.swp`、`*~`、`.cursor/` |
+| 12 | 编辑器与开发工具 | `.vscode/`（保留 `settings.json`）、`.vim/`、`*.swp`、`*~`、`.cursor/`、`.claude/`、`.windsurf/`、`.aider/`、`*.iml` |
 | 13 | 压缩包与分卷下载 | `*.part`、`*.aria2`、`*.crdownload`、`downloading/` |
-| 14 | 虚拟化与容器 | `*.vmdk`、`*.qcow2`、`*.ova`、`.docker/`、`.vagrant/` |
+| 14 | 虚拟化与容器 | `*.vmdk`、`*.qcow2`、`*.ova`、`.docker/`、`.vagrant/`、`.buildkit/`、`.podman/`、`.containerd/` |
 | 15 | 媒体与播放器缓存 | `Spotify/`、`iTunes/Album Artwork/`、`PotPlayerMini*`、`.Spotlight-V100/` |
-| 16 | 锁文件与日志 | `*.lock`（保留 `Cargo.lock`、`package-lock.json`、`yarn.lock`）、`*.log`、`nohup.out` |
+| 16 | 锁文件与日志 | `*.lock`（保留 `Cargo.lock`、`package-lock.json`、`yarn.lock`）、`*.log`、`nohup.out`、`.zsh_history`、`.bash_history` |
 | 17 | 构建产物与语言输出 | `target/`、`dist/`、`build/`、`bin/`、`obj/`、`*.pyc`、`*.class`、`*.o` |
 | 18 | 缓存与临时目录 | `(?i)**/cache/`、`temp/`、`tmp/`、`.cache/`、`thumbnails/`、`.eslintcache` |
 | 19 | 浏览器与 Electron 缓存 | `Code Cache/`、`GPUCache/`、`ShaderCache/`、`IndexedDB/`、`blob_storage/` |

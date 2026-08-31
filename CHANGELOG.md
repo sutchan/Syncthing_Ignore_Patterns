@@ -5,6 +5,21 @@
 
 ---
 
+## [v1.18.0] - 2026-08-31
+
+### 新增（规则集）
+- 补齐高频过滤缺口，新增 22 条规则（287 → 309），0 重复
+- 编辑器/AI 工具：`.claude/`、`.windsurf/`、`.aider/`、`*.iml`、`.serverless/`
+- Shell/REPL 历史：`.zsh_history`、`.bash_history`、`.sqlite_history`、`.node_repl_history`、`.python_history`
+- 包管理器缓存：`.conda/`、`.spack/`、`.opam/`、`.stack-work/`、`.uv/`
+- 测试/覆盖率缓存：`.cypress/`、`.playwright/`、`.allure/`
+- 容器运行时：`.buildkit/`、`.podman/`、`.containerd/`
+
+### 文档
+- README / README_EN 分类概览同步新增项，徽章规则数 287 → 309；版本同步至 v1.18.0
+
+---
+
 ## [v1.17.2] - 2026-08-31
 
 ### 新增（规则集）
