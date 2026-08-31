@@ -11,6 +11,8 @@
 - CHANGELOG 双副本：根 `CHANGELOG.md` 与 `openspec/project.md` §7 必须同时写，历史上多次只写一处（v1.16.0 曾漏根 CHANGELOG）。
 - 中文存储用纯 ASCII + `\u` 转义，规避 GBK 乱码；GUI 字典 en/zh 分离。
 - 后台任务用 runspace + Timer 轮询 `DoEvents`；跨线程用 `form.Invoke` 更新控件。
+- 实时进度/状态优先用「同步共享状态（Synchronized hashtable + Monitor 锁）由 UI Timer 拉取」，而非 `form.Invoke` 回调（v1.17.0 起）；`ProgressBar` 在 `Style=Marquee` 时赋值 `Value` 会抛异常，切模式/赋值须先回 Blocks。
+- 校验 `.ps1` 语法用临时脚本调 `[System.Management.Automation.Language.Parser]::ParseFile`；本机 shell 会吞 `$`，需写临时 `.ps1` 文件执行（勿用 `powershell -Command` 内联含 `$` 的代码）。
 
 ## 环境约束
-- 本机环境跳过 PowerShell / git 执行命令，改动需用户本地手动校验与提交。
+- 本机可运行 `powershell -File`，但 GUI 脚本不实跑（会弹窗）；git 提交由用户本地执行。

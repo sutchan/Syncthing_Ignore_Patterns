@@ -1,6 +1,6 @@
 <#
 //File: SyncthingIgnoreGUI.ps1
-//Version: 1.16.2
+//Version: 1.17.0
 //Updated: 2026-08-31
 .SYNOPSIS
     Graphical interface for scanning and applying Syncthing .stignore rules,
@@ -54,7 +54,7 @@ Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles() | Out-Null
 
 $scriptDir = $PSScriptRoot
-$ScriptVersion = '1.16.2'
+$ScriptVersion = '1.17.0'
 $StandardRuleSource = Join-Path $scriptDir '.stignore'
 
 # ---------- Localization ----------
@@ -116,6 +116,14 @@ $T = @{
         applyConfirm= 'About to write the standard .stignore rules into {0} path(s). Continue?'
         manifestLoaded = 'Existing manifest loaded: {0} file(s).'
         noManifest  = 'No manifest found. Run Scan first.'
+        statusIdle  = 'Ready.'
+        statusPrep  = 'Preparing...'
+        statusScan  = 'Scanning {0}/{1} roots  |  found: {2}  |  {3}  |  {4}'
+        statusApply = 'Applying {0}/{1}  |  {2}'
+        scanning    = 'Scanning... found {0} so far'
+        statusScanDone  = 'Scan done: {0} file(s) in {1}'
+        statusApplyDone = 'Apply done: {0} path(s) in {1}'
+        statusStopped   = 'Stopped by user.'
     }
     zh = [ordered]@{
         title       = 'Syncthing .stignore \u7ba1\u7406\u5668'
@@ -160,6 +168,14 @@ $T = @{
         applyDone   = '\u5e94\u7528\u5b8c\u6210\u3002'
         stopped     = '\u7528\u6237\u5df2\u505c\u6b62\u64cd\u4f5c\u3002'
         openFile    = '\u6253\u5f00\u6587\u4ef6'
+        statusIdle  = '\u5c31\u7eea\u3002'
+        statusPrep  = '\u6b63\u5728\u51c6\u5907...'
+        statusScan  = '\u6b63\u5728\u626b\u63cf {0}/{1} \u4e2a\u6839\u76ee\u5f55  |  \u5df2\u627e\u5230\uff1a{2}  |  {3}  |  {4}'
+        statusApply = '\u6b63\u5728\u5e94\u7528 {0}/{1}  |  {2}'
+        scanning    = '\u6b63\u5728\u626b\u63cf... \u76ee\u524d\u5df2\u627e\u5230 {0} \u4e2a'
+        statusScanDone  = '\u626b\u63cf\u5b8c\u6210\uff1a{0} \u4e2a\u6587\u4ef6\uff0c\u7528\u65f6 {1}'
+        statusApplyDone = '\u5e94\u7528\u5b8c\u6210\uff1a{0} \u4e2a\u8def\u5f84\uff0c\u7528\u65f6 {1}'
+        statusStopped   = '\u7528\u6237\u5df2\u505c\u6b62\u3002'
     }
 }
 
@@ -326,7 +342,7 @@ $form.Controls.Add($lblLog)
 
 $txtLog = New-Object System.Windows.Forms.TextBox
 $txtLog.Location = New-Object System.Drawing.Point(16, 452)
-$txtLog.Size = New-Object System.Drawing.Size(672, 104)
+$txtLog.Size = New-Object System.Drawing.Size(672, 88)
 $txtLog.Multiline = $true
 $txtLog.ScrollBars = 'Vertical'
 $txtLog.ReadOnly = $true
@@ -334,6 +350,17 @@ $txtLog.BackColor = [System.Drawing.Color]::FromArgb(245, 245, 245)
 $txtLog.Anchor = 'Top,Left,Right'
 $txtLog.Font = New-Object System.Drawing.Font('Consolas', 9)
 $form.Controls.Add($txtLog)
+
+# ---------- Real-time status line ----------
+# Single-line live status: current root / found count / latest hit / elapsed.
+$lblStatus = New-Object System.Windows.Forms.Label
+$lblStatus.Name = 'lblStatus'
+$lblStatus.Location = New-Object System.Drawing.Point(16, 546)
+$lblStatus.Size = New-Object System.Drawing.Size(672, 16)
+$lblStatus.AutoSize = $false
+$lblStatus.AutoEllipsis = $true
+$lblStatus.Font = New-Object System.Drawing.Font('Segoe UI', 8.5)
+$form.Controls.Add($lblStatus)
 
 # ---------- Custom dark-mode borders (avoid bright system 3D edges) ----------
 # Input controls get BorderStyle=None and a custom-drawn 1px border via the
@@ -515,6 +542,8 @@ function Apply-Language {
         $lblVersion.Text = "v$ScriptVersion  |  SyncthingIgnorePatterns"
         $lblRepo.Text    = "$($d.repo)$RepoUrl"
     }
+    # Idle status text; a running job overwrites it on the next timer tick.
+    $lblStatus.Text = (Lmsg $d.statusIdle (Decode-Uni $d.statusIdle))
     $cmbLang.SelectedIndex = if ($lang -eq 'zh') { 1 } else { 0 }
     } finally {
         $script:applyingLang = $false
@@ -536,6 +565,75 @@ function Write-LogLine {
 function Add-Log {
     param([string]$Message, [string]$Color = 'Black')
     Write-LogLine -Message $Message -Color $Color
+}
+
+# ---------- Real-time status helpers ----------
+# Thread-safe shared state for the parallel scanner. The scanner runspaces
+# write into it; the UI thread reads it every timer tick (no cross-thread
+# marshalling needed, so the UI never blocks).
+function New-ScanState {
+    $st = [hashtable]::Synchronized(([hashtable]@{}))
+    $st.Lock    = New-Object object
+    $st.Files   = 0
+    $st.Done    = 0
+    $st.Total   = 0
+    $st.Current = ''
+    $st.Last    = ''
+    $st.Started = $null
+    $st.Records = [System.Collections.ArrayList]::Synchronized((New-Object System.Collections.ArrayList))
+    return $st
+}
+
+# Elapsed time as mm:ss (h:mm:ss past one hour).
+function Format-Elapsed {
+    param($Start)
+    if ($null -eq $Start) { return '00:00' }
+    $ts = (Get-Date) - ([datetime]$Start)
+    if ($ts.TotalHours -ge 1) { return $ts.ToString('h\:mm\:ss') }
+    return $ts.ToString('mm\:ss')
+}
+
+# Keep long paths on one status line: head + '...' + tail.
+function Shorten-Path {
+    param([string]$Path, [int]$Max = 52)
+    if ([string]::IsNullOrEmpty($Path)) { return '' }
+    if ($Path.Length -le $Max) { return $Path }
+    $tailLen = 22
+    $headLen = [Math]::Max(1, $Max - $tailLen - 3)
+    return ($Path.Substring(0, $headLen) + '...' + $Path.Substring($Path.Length - $tailLen))
+}
+
+# Pull the live counters from the shared state onto the status line.
+function Update-ScanStatus {
+    param($State)
+    if ($null -eq $State) { return }
+    $files = [int]$State.Files
+    $done  = [int]$State.Done
+    $total = [int]$State.Total
+    $last  = [string]$State.Last
+    if (-not $last) { $last = [string]$State.Current }
+    $el = Format-Elapsed $State.Started
+    if ($total -gt 1 -and $progress.Style -ne 'Marquee') {
+        $pct = [int](($done / [Math]::Max(1, $total)) * 100)
+        $pct = [Math]::Max(0, [Math]::Min(100, $pct))
+        $progress.Value = $pct
+        $lblPct.Text = "$pct%"
+    } else {
+        $lblPct.Text = "$files"
+    }
+    $lblPct.Visible = $true
+    $tpl = $T[$lang].statusScan
+    $lblStatus.Text = (Lmsg ($tpl -f $done, $total, $files, (Shorten-Path $last), $el) (Decode-Uni $tpl -f $done, $total, $files, (Shorten-Path $last), $el))
+    $scanTpl = $T[$lang].scanning
+    $lblSummary.Text = (Lmsg ($scanTpl -f $files) (Decode-Uni $scanTpl -f $files))
+    # Stream newly found paths into the results list as they are discovered.
+    $recs = $State.Records
+    if ($null -ne $recs -and $recs.Count -gt $script:scanRendered) {
+        for ($i = $script:scanRendered; $i -lt $recs.Count; $i++) {
+            [void]$lstResults.Items.Add([string]$recs[$i].path)
+        }
+        $script:scanRendered = $recs.Count
+    }
 }
 
 # Keep at most $Keep newest backups matching "<Base>.bak.*" (by last-write time).
@@ -563,39 +661,58 @@ function Limit-Backups {
 # (which has no access to the caller's function definitions) can execute it.
 # Returns an ArrayList of file records (errors surfaced as __error entries).
 function Start-ParallelScan {
-    param([string[]]$Roots, [string]$ScriptDir, [int]$MaxThreads = 4, $FormObj)
+    param([string[]]$Roots, [string]$ScriptDir, [int]$MaxThreads = 4, $State)
 
     $scanScript = {
-        param([string]$Root, [string]$ScriptDir)
+        param([string]$Root, [string]$ScriptDir, $State)
+        # Bump a shared counter safely: several runspaces hit it concurrently.
+        function Add-StateCount {
+            param($State, [string]$Key, [int]$Delta = 1)
+            if ($null -eq $State) { return }
+            try {
+                [System.Threading.Monitor]::Enter($State.Lock)
+                $State[$Key] = ([int]$State[$Key]) + $Delta
+            } finally {
+                [System.Threading.Monitor]::Exit($State.Lock)
+            }
+        }
         function Find-StignoreFiles {
-            param([string]$Root, [string]$ScriptDir)
+            param([string]$Root, [string]$ScriptDir, $State)
             $local = [System.Collections.ArrayList]::new()
+            if ($null -ne $State) { $State.Current = $Root }
             try {
                 Get-ChildItem -Path $Root -Filter '.stignore' -Recurse -File -Force -ErrorAction SilentlyContinue |
                     ForEach-Object {
                         $full = $_.FullName
                         if ($full -like '*\.git\*') { return }
                         if ($full -like "$ScriptDir*") { return }
-                        [void]$local.Add([pscustomobject]@{
+                        $rec = [pscustomobject]@{
                             path         = $full
                             size         = $_.Length
                             lastWriteUtc = $_.LastWriteTimeUtc.ToString('o')
                             foundAtUtc   = (Get-Date).ToUniversalTime().ToString('o')
-                        })
+                        }
+                        [void]$local.Add($rec)
+                        # Live feedback: count + latest hit shared with the GUI.
+                        if ($null -ne $State) {
+                            Add-StateCount $State 'Files' 1
+                            $State.Last = $full
+                            [void]$State.Records.Add($rec)
+                        }
                     }
             } catch {
                 [void]$local.Add([pscustomobject]@{ __error = "$Root : $($_.Exception.Message)" })
             }
             return $local
         }
-        return (Find-StignoreFiles -Root $Root -ScriptDir $ScriptDir)
+        return (Find-StignoreFiles -Root $Root -ScriptDir $ScriptDir -State $State)
     }
 
     $pool = [runspacefactory]::CreateRunspacePool(1, [Math]::Max(1, $MaxThreads))
     $pool.Open()
     $jobs = @()
     foreach ($r in $Roots) {
-        $ps = [powershell]::Create().AddScript($scanScript).AddArgument($r).AddArgument($ScriptDir)
+        $ps = [powershell]::Create().AddScript($scanScript).AddArgument($r).AddArgument($ScriptDir).AddArgument($State)
         $ps.RunspacePool = $pool
         $jobs += [pscustomobject]@{ Root = $r; Handle = $ps.BeginInvoke(); PS = $ps }
     }
@@ -607,18 +724,10 @@ function Start-ParallelScan {
         foreach ($rec in $res) { [void]$all.Add($rec) }
         $j.PS.Dispose()
         $done++
-        # Report real progress (one root processed) to the GUI thread.
-        if ($null -ne $FormObj) {
-            $pct = [int](($done / [Math]::Max(1, $total)) * 100)
-            $FormObj.Invoke([Action[int]] {
-                param([int]$p)
-                $pb = $FormObj.Controls.Find('progress', $true)
-                $pc = $FormObj.Controls.Find('lblPct', $true)
-                if ($pb.Count -gt 0) { $pb[0].Value = [Math]::Max(0, [Math]::Min(100, $p)) }
-                if ($pc.Count -gt 0) { $pc[0].Text = "$p%" }
-                [System.Windows.Forms.Application]::DoEvents()
-            }, $pct)
-        }
+        # Only the orchestrating thread writes Done, so no lock is needed here.
+        # The GUI timer pulls these counters every tick instead of marshalling
+        # a callback here (also avoids touching Value while Style=Marquee).
+        if ($null -ne $State) { $State.Done = $done }
     }
     $pool.Close()
     $pool.Dispose()
@@ -626,7 +735,7 @@ function Start-ParallelScan {
 }
 
 function Set-Busy {
-    param([bool]$Busy)
+    param([bool]$Busy, [string]$Mode = 'scan', [int]$Total = 0)
     $btnScan.Enabled = -not $Busy
     $btnApply.Enabled = -not $Busy
     $btnOpenManifest.Enabled = -not $Busy
@@ -635,7 +744,24 @@ function Set-Busy {
     $btnStop.Enabled = $Busy
     $progress.Visible = $Busy
     $lblPct.Visible = $Busy
-    if ($Busy) { $progress.Value = 0; $lblPct.Text = '0%' } else { $progress.Value = 100; $lblPct.Text = '100%' }
+    if ($Busy) {
+        # Total is unknown (or a single root) for scans: use a marquee and let
+        # the live status line carry the real feedback instead of a fake %.
+        if ($Mode -eq 'scan' -and $Total -le 1) {
+            $progress.Style = 'Marquee'
+            $progress.MarqueeAnimationSpeed = 30
+            $lblPct.Text = '0'
+        } else {
+            $progress.Style = 'Blocks'
+            $progress.Value = 0
+            $lblPct.Text = '0%'
+        }
+    } else {
+        $progress.Style = 'Blocks'
+        $progress.MarqueeAnimationSpeed = 0
+        $progress.Value = 100
+        $lblPct.Text = '100%'
+    }
     [System.Windows.Forms.Application]::DoEvents()
 }
 
@@ -663,7 +789,7 @@ function Invoke-ScanCore {
     param(
         [string]$Root,
         [string]$ScriptDir,
-        $FormObj
+        $State
     )
     $roots = @()
     if ([string]::IsNullOrWhiteSpace($Root)) {
@@ -674,7 +800,11 @@ function Invoke-ScanCore {
         if (-not (Test-Path $Root)) { throw "Scan root does not exist: $Root" }
         $roots = @($Root)
     }
-    $raw = Start-ParallelScan -Roots $roots -ScriptDir $ScriptDir -MaxThreads 4 -FormObj $FormObj
+    if ($null -ne $State) {
+        $State.Total = $roots.Count
+        $State.Started = Get-Date
+    }
+    $raw = Start-ParallelScan -Roots $roots -ScriptDir $ScriptDir -MaxThreads 4 -State $State
     return [pscustomobject]@{ roots = $roots; raw = $raw }
 }
 
@@ -711,6 +841,22 @@ function Start-ApplyJob {
     foreach ($item in $manifest.files) {
         $full = $item.path
         if ([string]::IsNullOrWhiteSpace($full)) { continue }
+        $done++
+        if ($null -ne $FormObj) {
+            $pct = [int](($done / [Math]::Max(1, $total)) * 100)
+            $applyTpl = $T[$lang].statusApply
+            $curText = (Lmsg ($applyTpl -f $done, $total, (Shorten-Path $full)) (Decode-Uni $applyTpl -f $done, $total, (Shorten-Path $full)))
+            $FormObj.Invoke([Action[int,string]] {
+                param([int]$p, [string]$c)
+                $pb = $FormObj.Controls.Find('progress', $true)
+                if ($pb.Count -gt 0 -and $pb[0].Style -ne 'Marquee') { $pb[0].Value = [Math]::Max(0, [Math]::Min(100, $p)) }
+                $pc = $FormObj.Controls.Find('lblPct', $true)
+                if ($pc.Count -gt 0) { $pc[0].Text = "$p%" }
+                $st = $FormObj.Controls.Find('lblStatus', $true)
+                if ($st.Count -gt 0) { $st[0].Text = $c }
+                [System.Windows.Forms.Application]::DoEvents()
+            }, @($pct, $curText))
+        }
         if (-not (Test-Path $full -PathType Leaf)) {
             $doClean = $Force
             if (-not $doClean) {
@@ -768,16 +914,6 @@ function Start-ApplyJob {
             Write-LogLine (Lmsg "  failed $full : $($_.Exception.Message)" "  \u5931\u8d25 $full \uff1a$($_.Exception.Message)") 'Red'
             $errors++
             [void]$records.Add($item)
-        }
-        $done++
-        if ($null -ne $FormObj) {
-            $pct = [int](($done / [Math]::Max(1, $total)) * 100)
-            $FormObj.Invoke([Action[int]] {
-                param([int]$p)
-                $pb = $FormObj.Controls.Find('progress', $true)
-                if ($pb.Count -gt 0) { $pb[0].Value = [Math]::Max(0, [Math]::Min(100, $p)) }
-                [System.Windows.Forms.Application]::DoEvents()
-            }, $pct)
         }
     }
 
@@ -850,8 +986,8 @@ $btnOpenManifest.Add_Click({
 })
 
 $btnScan.Add_Click({
-    Set-Busy $true
     Add-Log (Lmsg '--- Starting scan ---' '--- \u5f00\u59cb\u626b\u63cf ---') 'Blue'
+    $lstResults.Items.Clear()
     $out = $txtOut.Text.Trim()
     if (-not $out) { $out = Join-Path $scriptDir 'config\stignore-paths.json'; $txtOut.Text = $out }
     # 确保清单输出目录存在（首次运行 config/ 可能尚未创建）
@@ -864,9 +1000,20 @@ $btnScan.Add_Click({
         Add-Log (Lmsg "Writing manifest to: $out" "\u6b63\u5728\u5199\u5165\u6e05\u5355\uff1a$out") 'Yellow'
     }
 
-    # Run the scan off the UI thread so the GUI stays responsive.
-    # Pass $form so the scanner can push real per-root progress.
-    $bg = [powershell]::Create().AddCommand('Invoke-ScanCore').AddArgument($rootArg).AddArgument($scriptDir).AddArgument($form)
+    # Pre-compute how many roots the scan will walk: with a single root the
+    # total is unknown, so the bar becomes a marquee and the status line shows
+    # the real feedback (found count / latest hit / elapsed).
+    $rootTotal = if ([string]::IsNullOrWhiteSpace($rootArg)) {
+        @(Get-PSDrive -PSProvider FileSystem -ErrorAction SilentlyContinue | Where-Object { $_.Free -ne $null }).Count
+    } else { 1 }
+    Set-Busy $true -Mode 'scan' -Total $rootTotal
+    $script:scanState = New-ScanState
+    $script:scanRendered = 0
+    $lblStatus.Text = (Lmsg $T[$lang].statusPrep (Decode-Uni $T[$lang].statusPrep))
+
+    # Run the scan off the UI thread so the GUI stays responsive. The shared
+    # $script:scanState carries live counters back to the UI thread.
+    $bg = [powershell]::Create().AddCommand('Invoke-ScanCore').AddArgument($rootArg).AddArgument($scriptDir).AddArgument($script:scanState)
     $bgHandle = $bg.BeginInvoke()
     $script:cancelFlag = $false
 
@@ -874,12 +1021,14 @@ $btnScan.Add_Click({
     $timer.Interval = 100
     $timer.Add_Tick({
         [System.Windows.Forms.Application]::DoEvents()
+        Update-ScanStatus -State $script:scanState
         if ($script:cancelFlag) {
             $timer.Stop()
             # Hard-abort the background job so it cannot write the manifest.
             try { $bg.Stop() } catch {}
             try { $bg.Dispose() } catch {}
             Add-Log (Lmsg 'Scan stopped by user. Background job aborted; manifest NOT written.' '\u7528\u6237\u5df2\u505c\u6b62\u626b\u63cf\u3002\u540e\u53f0\u4efb\u52a1\u5df2\u4e2d\u65ad\uff1b\u672a\u5199\u5165\u6e05\u5355\u3002') 'DarkOrange'
+            $lblStatus.Text = (Lmsg $T[$lang].statusStopped (Decode-Uni $T[$lang].statusStopped))
             $progress.Visible = $false; $lblPct.Visible = $false
             Set-Busy $false
             return
@@ -893,7 +1042,6 @@ $btnScan.Add_Click({
                 $roots = $core.roots
                 $records = [System.Collections.ArrayList]::new()
                 $errCount = 0
-                $script:lstResults.Items.Clear()
                 foreach ($rec in $raw) {
                     if ($null -ne $rec.__error) {
                         Add-Log (Lmsg "Cannot access $($rec.__error)" "\u65e0\u6cd5\u8bbf\u95ee $($rec.__error)") 'DarkOrange'
@@ -901,8 +1049,14 @@ $btnScan.Add_Click({
                         continue
                     }
                     [void]$records.Add($rec)
-                    [void]$script:lstResults.Items.Add($rec.path)
                 }
+                # Paths were streamed into the list while scanning; only rebuild
+                # if nothing was rendered (e.g. live state unavailable).
+                if ($script:lstResults.Items.Count -eq 0) {
+                    foreach ($rec in $records) { [void]$script:lstResults.Items.Add($rec.path) }
+                }
+                # Marquee mode rejects Value assignments, so switch back first.
+                $progress.Style = 'Blocks'
                 $progress.Value = 100; $lblPct.Text = '100%'
                 if ($whatif) {
                     Add-Log (Lmsg "Preview complete. Files: $($records.Count) (errors: $errCount). Manifest NOT written." "\u9884\u89c8\u5b8c\u6210\u3002\u6587\u4ef6\u6570\uff1a$($records.Count)\uff08\u9519\u8bef\uff1a$errCount\uff09\u3002\u672a\u5199\u5165\u6e05\u5355\u3002") 'Green'
@@ -920,6 +1074,9 @@ $btnScan.Add_Click({
                     [System.Windows.Forms.MessageBox]::Show((Lmsg $T[$lang].scanDone (Decode-Uni $T[$lang].scanDone)), (Lmsg $T[$lang].confirmTitle (Decode-Uni $T[$lang].confirmTitle)), 'OK', 'Information') | Out-Null
                 }
                 $script:lblSummary.Text = (Lmsg ($T[$lang].summary -f $records.Count) (Decode-Uni $T[$lang].summary -f $records.Count))
+                $scanTpl = $T[$lang].statusScanDone
+                $el = Format-Elapsed $script:scanState.Started
+                $lblStatus.Text = (Lmsg ($scanTpl -f $records.Count, $el) (Decode-Uni $scanTpl -f $records.Count, $el))
             } catch {
                 Add-Log (Lmsg "ERROR: $_" "\u9519\u8bef\uff1a$_") 'Red'
             } finally {
@@ -950,10 +1107,12 @@ $btnApply.Add_Click({
         }
     }
 
-    Set-Busy $true
+    Set-Busy $true -Mode 'apply' -Total 1
     $script:cancelFlag = $false
+    $script:applyStarted = Get-Date
+    $lblStatus.Text = (Lmsg $T[$lang].statusPrep (Decode-Uni $T[$lang].statusPrep))
     Add-Log (Lmsg '--- Starting apply ---' '--- \u5f00\u59cb\u5e94\u7528 ---') 'Blue'
-    # Run apply off the UI thread; progress is updated via form.Invoke.
+    # Run apply off the UI thread; progress is pushed via form.Invoke.
     $bg = [powershell]::Create().AddCommand('Start-ApplyJob').AddArgument($list).AddArgument($StandardRuleSource).AddArgument($chkPreview.Checked).AddArgument($chkForce.Checked).AddArgument($chkBackupList.Checked).AddArgument($form)
     $bgHandle = $bg.BeginInvoke()
     $timer = New-Object System.Windows.Forms.Timer
@@ -969,6 +1128,7 @@ $btnApply.Add_Click({
             try { $bg.Stop() } catch {}
             try { $bg.Dispose() } catch {}
             Add-Log (Lmsg 'Apply stopped by user. Background job aborted; no further files written.' '\u7528\u6237\u5df2\u505c\u6b62\u5e94\u7528\u3002\u540e\u53f0\u4efb\u52a1\u5df2\u4e2d\u65ad\uff1c\u4e0d\u518d\u5199\u5165\u6587\u4ef6\u3002') 'DarkOrange'
+            $lblStatus.Text = (Lmsg $T[$lang].statusStopped (Decode-Uni $T[$lang].statusStopped))
             $progress.Visible = $false; $lblPct.Visible = $false
             Set-Busy $false
             return
@@ -995,6 +1155,9 @@ $btnApply.Add_Click({
                         # Populate the results list with manifest paths.
                         $script:lstResults.Items.Clear()
                         foreach ($f in $m.files) { [void]$script:lstResults.Items.Add($f.path) }
+                        $applyTpl = $T[$lang].statusApplyDone
+                        $el = Format-Elapsed $script:applyStarted
+                        $lblStatus.Text = (Lmsg ($applyTpl -f $cnt, $el) (Decode-Uni $applyTpl -f $cnt, $el))
                     } catch {}
                 }
             }
@@ -1052,6 +1215,9 @@ $form.Add_DragDrop({
 # ---------- Run ----------
 # Restore persisted language/theme from config.json if present.
 $script:currentTheme = 'light'
+$script:scanState = $null
+$script:scanRendered = 0
+$script:applyStarted = $null
 $cfg = Get-Config
 if ($cfg -and $cfg.language -and ($cfg.language -eq 'zh' -or $cfg.language -eq 'en')) {
     $lang = $cfg.language

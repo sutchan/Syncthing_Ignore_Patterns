@@ -2,7 +2,7 @@
 
 > 开箱即用的 `.stignore` 规则集：20 个分类 · 285 条规则，自动排除系统文件、缓存、构建产物与应用数据。
 
-![Version](https://img.shields.io/badge/version-v1.16.2-blue)
+![Version](https://img.shields.io/badge/version-v1.17.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--31-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-20-blueviolet)
@@ -18,7 +18,7 @@
 - ✅ **中英双语文档**，附批量同步 GUI 工具
 - ✅ **持续维护**，随生态更新规则
 
-> `.stignore` 文件头 `Updated`（`2026-08-31`）是规则集修订日；工具发布版本见 CHANGELOG（当前 `v1.16.2`）。两者分别对应"规则集修订"与"工具发布"，不同步属正常。
+> `.stignore` 文件头 `Updated`（`2026-08-31`）是规则集修订日；工具发布版本见 CHANGELOG（当前 `v1.17.0`）。两者分别对应"规则集修订"与"工具发布"，不同步属正常。
 
 ### 快速开始
 
@@ -100,7 +100,8 @@ powershell -STA -NoProfile -File .\SyncthingIgnoreGUI.ps1   # 等价写法
 - **扫描**：runspace 线程池（≤4 线程）+ `-Filter .stignore`；根目录留空则扫描所有固定驱动器，支持拖拽填充
 - **选项**：`仅预览`（不写文件）、`强制`（跳过逐文件确认）、`写回清单前备份`
 - **清单**：默认 `config/stignore-paths.json`，记录路径/大小/修改时间；规则一致自动跳过，失效路径需 `强制` 才清理
-- **其他**：后台执行不卡顿（进度条显示真实百分比）、结果列表双击打开文件、「停止」可中止后台任务、底部状态栏显示版本与项目链接
+- **实时状态**：扫描/应用时底部实时状态行显示「已扫根目录数 / 已找到文件数 / 最新命中路径 / 耗时」，结果边扫边出（单根目录时进度条转为滚动模式，避免假百分比）
+- **其他**：后台执行不卡顿、结果列表双击打开文件、「停止」可中止后台任务、底部状态栏显示版本与项目链接
 
 ```mermaid
 flowchart LR

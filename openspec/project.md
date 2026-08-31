@@ -29,7 +29,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 
 ```
 SyncthingIgnorePatterns/
-├── .stignore                 # 标准规则源文件（Apply 依赖，版本 v1.16.2）
+├── .stignore                 # 标准规则源文件（Apply 依赖，版本 v1.17.0）
 ├── SyncthingIgnoreGUI.ps1    # 主工具（GUI + 扫描/应用逻辑，纯 ASCII）
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档
@@ -63,6 +63,8 @@ SyncthingIgnorePatterns/
 | 扫描根目录 | 留空=扫描所有固定驱动器；或浏览选择指定目录；支持文件夹/`.stignore` 拖拽自动填充（v1.10.0） |
 | 并行扫描 | runspace 线程池（最多 4 线程）+ `-Filter .stignore`，排除 `.git` 与脚本目录 |
 | 后台防卡顿 | 扫描/应用均在后台 runspace 执行，Timer 轮询 `DoEvents` 保持 UI 响应，进度条显示真实百分比与数字（v1.7.0 / v1.9.0） |
+| 实时状态行 | 进度条上方单行实时状态：已完成根目录数/总数、已找到文件数、最新命中路径（长路径截断）、耗时 mm:ss；扫描命中即流式追加到结果列表，摘要同步显示「正在扫描…已找到 N 个」（v1.17.0） |
+| 进度模式 | 多根目录按根数显示真实百分比；单根目录（总量未知）进度条转 Marquee，避免 0→100% 假百分比（v1.17.0）。进度由同步共享状态驱动，UI Timer 每 100ms 拉取，不再用 `form.Invoke` 回调 |
 | 结果列表 | 扫描/应用结果显示在专属 ListBox，双击可打开对应文件（v1.10.0） |
 | 停止按钮 | 运行中点击「停止」强制中止后台 job，确保不再写入清单/文件（v1.10.0 / v1.11.0 真正中止） |
 | 扫描摘要 | 窗体显示「已找到 N 个 .stignore 文件」；启动自动加载现有清单数量 |
@@ -86,6 +88,13 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.17.0 (2026-08-31)
+- feat(gui): 新增底部实时状态行，扫描/应用期间显示已完成根目录数、已找到文件数、最新命中路径与耗时
+- feat(gui): 扫描结果流式追加到结果列表，摘要实时刷新为「正在扫描... 当前已找到 N 个」
+- perf(gui): 进度改为共享状态 + Timer 拉取（去掉 form.Invoke 回调），单根目录时进度条转 Marquee 避免假百分比
+- fix(gui): Apply 进度计数仅在写入分支递增导致进度偏慢，移至循环入口逐路径计入
+- docs: 版本同步至 v1.17.0（脚本头 / `$ScriptVersion` / `.stignore` 头 / README 徽章与版本引用）
 
 ### v1.16.2 (2026-08-31)
 - docs: 新增 .github/ Community Health Files（CONTRIBUTING / CODE_OF_CONDUCT / SECURITY / SUPPORT / PR 模板 / 3 个 Issue 模板 + config.yml），README 中英增补对应入口；版本同步至 v1.16.2
