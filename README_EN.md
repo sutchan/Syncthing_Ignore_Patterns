@@ -2,7 +2,7 @@
 
 > A curated, ready-to-use `.stignore` rule set: 20 categories · 285 patterns that exclude system files, caches, build artifacts, and app data.
 
-![Version](https://img.shields.io/badge/version-v1.16.1-blue)
+![Version](https://img.shields.io/badge/version-v1.16.2-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--31-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-20-blueviolet)
@@ -18,7 +18,7 @@
 - ✅ **Bilingual docs** plus a batch-sync GUI tool
 - ✅ **Actively maintained** as the ecosystem evolves
 
-> The `Updated` date in the `.stignore` header (`2026-08-31`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.16.1`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
+> The `Updated` date in the `.stignore` header (`2026-08-31`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.16.2`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
 
 ### Quick Start
 
@@ -109,6 +109,11 @@ flowchart LR
 ```
 
 **Backup rotation**: `.stignore.bak.<timestamp>` and `stignore-paths.json.bak.<timestamp>` each keep **at most 3** copies — older ones are deleted automatically.
+
+### Contributing
+
+- [Contributing Guide](.github/CONTRIBUTING.md) — ruleset conventions, architecture red lines, and PR workflow
+- [Code of Conduct](.github/CODE_OF_CONDUCT.md) · [Security Policy](.github/SECURITY.md) · [Support](.github/SUPPORT.md)
 
 ### License
 

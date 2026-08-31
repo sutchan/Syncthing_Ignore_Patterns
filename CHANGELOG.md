@@ -36,6 +36,14 @@
 ### 文档
 - README / README_EN 分类列表同步 20 类，徽章 17→20、规则数 258→285；版本同步至 v1.16.0
 
+## [v1.16.2] - 2026-08-31
+
+### 文档
+- 新增 `.github/` Community Health Files：`CONTRIBUTING.md`（架构红线、规则集编写约定、版本同步清单、PR 检查项）、`CODE_OF_CONDUCT.md`（Contributor Covenant v2.1 中文改编）、`SECURITY.md`（私有报告渠道与响应时限）、`SUPPORT.md`（文档索引 + 常见问题）
+- 新增 `PULL_REQUEST_TEMPLATE.md` 与 `ISSUE_TEMPLATE/`（bug_report / rule-request / feature_request + `config.yml` 关闭空白 Issue 并指向 Discussions）
+- README / README_EN 增补「参与贡献 / Contributing」入口，链接到上述文件
+- 版本同步至 v1.16.2：脚本头 `//Version`、`$ScriptVersion`、`.stignore` 头、README 徽章与版本引用
+
 ## [v1.16.1] - 2026-08-31
 
 ### 文档

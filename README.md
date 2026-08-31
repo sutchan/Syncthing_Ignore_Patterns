@@ -2,7 +2,7 @@
 
 > 开箱即用的 `.stignore` 规则集：20 个分类 · 285 条规则，自动排除系统文件、缓存、构建产物与应用数据。
 
-![Version](https://img.shields.io/badge/version-v1.16.1-blue)
+![Version](https://img.shields.io/badge/version-v1.16.2-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--31-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-20-blueviolet)
@@ -18,7 +18,7 @@
 - ✅ **中英双语文档**，附批量同步 GUI 工具
 - ✅ **持续维护**，随生态更新规则
 
-> `.stignore` 文件头 `Updated`（`2026-08-31`）是规则集修订日；工具发布版本见 CHANGELOG（当前 `v1.16.1`）。两者分别对应"规则集修订"与"工具发布"，不同步属正常。
+> `.stignore` 文件头 `Updated`（`2026-08-31`）是规则集修订日；工具发布版本见 CHANGELOG（当前 `v1.16.2`）。两者分别对应"规则集修订"与"工具发布"，不同步属正常。
 
 ### 快速开始
 
@@ -109,6 +109,11 @@ flowchart LR
 ```
 
 **备份轮转**：`.stignore.bak.<时间戳>` 与 `stignore-paths.json.bak.<时间戳>` 各**最多保留 3 个**，超出自动删除最旧的。
+
+### 参与贡献
+
+- [贡献指南](.github/CONTRIBUTING.md) — 规则集编写约定、架构红线与 PR 流程
+- [行为准则](.github/CODE_OF_CONDUCT.md) · [安全策略](.github/SECURITY.md) · [获取帮助](.github/SUPPORT.md)
 
 ### 开源许可
 

@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 社区讨论
+    url: https://github.com/sutchan/Syncthing_Ignore_Patterns/discussions
+    about: 使用疑问、配置咨询、经验分享请先到这里讨论。
+  - name: 📖 使用文档
+    url: https://github.com/sutchan/Syncthing_Ignore_Patterns#readme
+    about: 安装步骤、分类列表与 GUI 功能说明见 README（中英双语）。
+  - name: 🔒 安全漏洞
+    url: https://github.com/sutchan/Syncthing_Ignore_Patterns/security/advisories/new
+    about: 请勿开公开 Issue，用 Security Advisories 私有报告。
+  - name: 🧩 Syncthing 本体问题
+    url: https://forum.syncthing.net/
+    about: 同步、设备配对、版本控制等 Syncthing 自身问题请到官方论坛。
