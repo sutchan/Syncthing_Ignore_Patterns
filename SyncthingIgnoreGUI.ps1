@@ -1,6 +1,6 @@
 <#
 //File: SyncthingIgnoreGUI.ps1
-//Version: 1.18.0
+//Version: 1.18.1
 //Updated: 2026-08-31
 .SYNOPSIS
     Graphical interface for scanning and applying Syncthing .stignore rules,
@@ -54,7 +54,7 @@ Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles() | Out-Null
 
 $scriptDir = $PSScriptRoot
-$ScriptVersion = '1.18.0'
+$ScriptVersion = '1.18.1'
 $StandardRuleSource = Join-Path $scriptDir '.stignore'
 
 # ---------- Localization ----------
@@ -1055,6 +1055,7 @@ $btnScan.Add_Click({
     $timer.Interval = 100
     $timer.Add_Tick({
         [System.Windows.Forms.Application]::DoEvents()
+        try {
         Update-ScanStatus -State $script:scanState
         if ($script:cancelFlag) {
             $timer.Stop()
@@ -1125,6 +1126,12 @@ $btnScan.Add_Click({
                 $script:cancelFlag = $false
             }
         }
+        } catch {
+            try { $timer.Stop() } catch {}
+            Add-Log (Lmsg "Scan timer error: $($_.Exception.Message)" "\u626b\u63cf\u8ba1\u65f6\u5668\u5f02\u5e38\uff1a$($_.Exception.Message)") 'Red'
+            try { Add-Log (Lmsg "$($_.ScriptStackTrace)" "$($_.ScriptStackTrace)") 'Gray' } catch {}
+            try { Set-Busy $false } catch {}
+        }
     })
     $timer.Start()
 })
@@ -1159,6 +1166,7 @@ $btnApply.Add_Click({
     $timer.Interval = 100
     $timer.Add_Tick({
         [System.Windows.Forms.Application]::DoEvents()
+        try {
         # Mirror the live progress (driven by form.Invoke inside the job).
         $lblPct.Visible = $true
         $lblPct.Text = "$($progress.Value)%"
@@ -1201,6 +1209,12 @@ $btnApply.Add_Click({
                     } catch {}
                 }
             }
+        }
+        } catch {
+            try { $timer.Stop() } catch {}
+            Add-Log (Lmsg "Apply timer error: $($_.Exception.Message)" "\u5e94\u7528\u8ba1\u65f6\u5668\u5f02\u5e38\uff1a$($_.Exception.Message)") 'Red'
+            try { Add-Log (Lmsg "$($_.ScriptStackTrace)" "$($_.ScriptStackTrace)") 'Gray' } catch {}
+            try { Set-Busy $false } catch {}
         }
     })
     $timer.Start()

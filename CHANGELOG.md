@@ -5,6 +5,14 @@
 
 ---
 
+## [v1.18.1] - 2026-08-31
+
+### 修复（GUI）
+- fix(gui): 扫描/应用 Timer 的 `OnTick` 回调缺少顶层异常捕获，控件或后台任务句柄为 `$null` 时抛「不能对 Null 值表达式调用方法」并触发 JIT 调试弹窗
+  - 为 `$btnScan` / `$btnApply` 两个 Timer tick 回调包裹 `try/catch`：捕获后写入日志（含 `$_.Exception.Message` 与 `$_.ScriptStackTrace`）、停止 Timer、调用 `Set-Busy $false` 恢复 UI，不再崩溃
+  - `$bgHandle.IsCompleted` 判定加 `$null` 守卫
+- docs: 版本同步至 v1.18.1（脚本头 / `$ScriptVersion` / README 徽章与版本引用）
+
 ## [v1.18.0] - 2026-08-31
 
 ### 新增（规则集）

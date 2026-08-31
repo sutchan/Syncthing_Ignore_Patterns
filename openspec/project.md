@@ -90,6 +90,10 @@ SyncthingIgnorePatterns/
 
 ## 7. CHANGELOG
 
+### v1.18.1 (2026-08-31)
+- fix(gui): 扫描/应用 Timer tick 回调补顶层 try/catch，修复 `$null` 调用引发的 JIT 崩溃；`$bgHandle.IsCompleted` 加 `$null` 守卫
+- docs: 版本同步至 v1.18.1（脚本头 / `$ScriptVersion` / README 徽章与版本引用）
+
 ### v1.18.0 (2026-08-31)
 - feat(stignore): 补齐高频过滤缺口，新增 22 条规则（287 → 309），0 重复
   - 编辑器/AI 工具：`.claude/` `.windsurf/` `.aider/` `*.iml` `.serverless/`
