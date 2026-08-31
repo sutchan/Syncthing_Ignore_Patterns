@@ -66,7 +66,6 @@
 **/.delete/
 **/.deletedByTMM/
 **/.tmp/
-**/Temp/
 **/Backup_of_*
 **/*.tmp
 **/*.bak
@@ -305,3 +304,49 @@
 **/*.pdb
 **/*.ilk
 **/*.dSYM/
+
+//Cache & Temp Directories
+// (?i) makes a pattern case-insensitive, so these also cover Cache/ CACHE/ Temp/ TMP/.
+// NOTE: cache/ temp/ tmp/ match EXACT directory names, not prefixes — so MyCacheFolder/,
+// Template/ and Tempura/ are safe. Remove those three lines if your project ships
+// content from folders literally named "cache", "temp" or "tmp".
+(?i)**/cache/
+(?i)**/caches/
+(?i)**/temp/
+(?i)**/tmp/
+(?i)**/cachedata/
+(?i)**/thumbnails/
+(?i)**/thumbnail/
+(?i)**/thumbs/
+**/.eslintcache
+**/.sass-cache/
+**/.rollup.cache/
+**/*.tsbuildinfo
+
+//Browser & Electron Storage Caches
+**/CacheStorage/
+**/Cache_Data/
+**/CachedData/
+**/CachedExtensions/
+**/Code Cache/
+**/GPUCache/
+**/ShaderCache/
+**/DawnCache/
+**/D3DSCache/
+**/INetCache/
+**/Application Cache/
+**/Local Storage/
+**/Session Storage/
+**/IndexedDB/
+**/blob_storage/
+**/Crashpad/
+**/Crash Reports/
+
+//OS Temp & Cache Locations
+// Root-anchored: only matches these paths at the sync folder root.
+/tmp/
+/var/tmp/
+/var/cache/
+/private/tmp/
+/private/var/folders/
+/Windows/Temp/

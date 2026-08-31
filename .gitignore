@@ -7,3 +7,4 @@ config/*.bak.*
 
 # 用户偏好配置（语言/主题，本地持久化，不入库）
 config.json
+*.mjs

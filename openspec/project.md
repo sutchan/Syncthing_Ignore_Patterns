@@ -28,7 +28,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 
 ```
 SyncthingIgnorePatterns/
-├── .stignore                 # 标准规则源文件（Apply 依赖，版本 v1.14.0）
+├── .stignore                 # 标准规则源文件（Apply 依赖，版本 v1.15.0）
 ├── SyncthingIgnoreGUI.ps1    # 主工具（GUI + 扫描/应用逻辑，纯 ASCII）
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档
@@ -85,6 +85,19 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.15.0 (2026-08-31)
+- fix(stignore): `/node_modules/**` 根锚定导致嵌套 node_modules 漏网 → `**/node_modules/`；`**/vendor/` 不匹配根级 → 并列 `/vendor/` 与 `**/vendor/`
+- fix(stignore): `**/.vscode/*` 只匹配直接子项 → `**/.vscode/**`（`!` 行同步改 `!**/.vscode/settings.json`）
+- fix(stignore): vim 交换文件模式 `**/.swp` / `**/.swo` 永远匹配不到 → `**/*.swp` / `**/*.swo`，补 `**/*.un~`
+- fix(stignore): 移除误伤真实数据的 `**/*.db`，保留 `*.db-wal` / `*.db-shm` / `*.db-journal`
+- fix(stignore): `*.lock` 误伤 `Cargo.lock` → 收窄并反转保留 8 类依赖锁文件
+- fix(stignore): 移除与注释自相矛盾的 `**.stfolder/` / `**.stversions`（破坏 folder marker 与版本控制）
+- fix(stignore): 移除宽泛误伤 `**Cache*` / `**Internet*` / `**download*/` / `**log*/` / `**metadata/` / `**thumb/` / `**packages/`，改为具名缓存目录
+- feat(stignore): 新增第 17 类「构建产物与语言输出」（target/dist/build/bin/obj/out/*.pyc/*.class/*.o/*.pdb 等）
+- feat(stignore): 补 `.svn/` `.hg/` `.mvn/` `.scala-build/` `cmake-build-*/` `found.000/` `ehthumbs.db` `hiberfil.sys` `.Trash-*/` `nohup.out` `*.log.*` 与项目自身备份 `**/.stignore.bak.*`
+- style(stignore): 统一目录尾斜杠与文件 `**/*.ext` 前缀，去重冗余覆盖；规则数 225 → 258
+- docs: README / README_EN 分类列表补齐第 17 项并同步新规则，版本同步至 v1.15.0
 
 ### v1.14.0 (2026-08-07)
 - 修复 GUI 无法打开（致命）：PowerShell `-Command` 默认 MTA 线程，WinForms 要求 STA。脚本开头检测非 STA 时自动以 `powershell -STA -File` 重启自身（exit 透传退出码）；STA 重启块加异常兜底，失败弹错误框而非静默退出
