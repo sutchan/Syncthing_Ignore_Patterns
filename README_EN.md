@@ -2,10 +2,10 @@
 
 > A curated, ready-to-use `.stignore` rule set that automatically excludes system files, caches, build artifacts, and app data — keeping your Syncthing sync clean and efficient.
 
-![Version](https://img.shields.io/badge/version-v1.15.0-blue)
+![Version](https://img.shields.io/badge/version-v1.16.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--31-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Categories](https://img.shields.io/badge/categories-17-blueviolet)
+![Categories](https://img.shields.io/badge/categories-20-blueviolet)
 ![GitHub Repo](https://img.shields.io/badge/source-GitHub-black)
 
 [English](#english) | [中文](README.md)
@@ -25,12 +25,12 @@
 
 ### Features
 
-- ✅ **17 categories · 258 patterns** covering common noise — system, caches, build artifacts, databases, and more
+- ✅ **20 categories · 285 patterns** covering common noise — system, caches, build artifacts, databases, and more
 - ✅ **Zero-config** — copy and it just works, no extra setup required
 - ✅ **Bilingual docs** (English & Chinese) for smoother team collaboration
 - ✅ **Actively maintained** as the ecosystem evolves
 
-> Note: The `Updated` date in the `.stignore` header is the ruleset revision date (`2026-08-31`). The tool release version lives in CHANGELOG (currently `v1.15.0`, released `2026-08-31`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
+> Note: The `Updated` date in the `.stignore` header is the ruleset revision date (`2026-08-31`). The tool release version lives in CHANGELOG (currently `v1.16.0`, released `2026-08-31`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
 
 ### Pattern Syntax
 
@@ -45,11 +45,11 @@
 
 ### Included Categories
 
-The `.stignore` file is organized into the following 17 categories (see the file for full details):
+The `.stignore` file is organized into the following 20 categories (see the file for full details):
 
 1. **System & OS Files** — `$RECYCLE.BIN/`, `.DS_Store`, `Thumbs.db`, `desktop.ini`, `pagefile.sys`, `/Program Files/`, `System Volume Information/`, `LOST.DIR/`, `found.000/`, etc.
 2. **Database Files** — `#innodb_redo/`, `ibdata1`, `*.ibd`, `pg_wal/`, `*.sqlite3`, `mongod.lock`, `dump.rdb`, `*.db-wal`, etc. (no blanket `*.db` — it would drop real data files)
-3. **Backup & Temporary Files** — `*.tmp`, `*.bak`, `.delete/`, `Temp/`, `Backup_of_*`, `.stignore.bak.*`, etc.
+3. **Backup & Temporary Files** — `*.tmp`, `*.bak`, `.delete/`, `Backup_of_*`, `.stignore.bak.*`, etc. (generic `temp/` lives in category 18)
 4. **Application Data & Caches** — `.dropbox.cache/`, `WeChat Files/`, `Tencent Files/`, `BaiduNetdiskDownload/`, `AliWorkbenchData/`, `Youku Files/`, `SteamLibrary/`, etc. (`.stfolder/` and `.stversions` are **not** ignored — keeping them preserves folder markers and versioning)
 5. **Version Control Systems** — `.git/`, `.svn/`, `.hg/`
 6. **Package Manager Caches & Dependencies** — `node_modules/`, `.npm/`, `.pnpm-store/`, `.venv/`, `.cargo/`, `.gradle/`, `.m2/`, `.nuget/`, `.bun/`, `.deno/`, `.dart_tool/`, `vendor/`, etc. (matches nested paths too)
@@ -61,11 +61,15 @@ The `.stignore` file is organized into the following 17 categories (see the file
 12. **Editor & Dev Tool Caches** — `.vscode/` (keeps `settings.json`), `.vim/`, `*.swp`, `*~`, `.emacs.d/`, `.sublime-*`, `.zed/`, `.cursor/`, etc.
 13. **Archives & Partial Downloads** — `*.part`, `*.aria2`, `*.crdownload`, `downloading/`, etc.
 14. **Virtualization & Container Files** — `*.vmdk`, `*.qcow2`, `*.ova`, `.docker/`, `.minikube/`, `.vagrant/`, etc.
-15. **Media & Player Caches** — `.cache/`, `.thumbnails/`, `Spotify/`, `GPUCache/`, `Code Cache/`, `Service Worker/`, `.Spotlight-V100/`, `.Trashes/`, etc.
+15. **Media & Player Caches** — `Spotify/`, `iTunes/Album Artwork/`, `PotPlayerMini*`, `Service Worker/`, `.Spotlight-V100/`, `.Trashes/`, etc.
 16. **Lock & Log Files** — `*.lock` (re-includes `Cargo.lock`, `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, etc.), `*.log`, `*.log.*`, `nohup.out`
 17. **Build Artifacts & Language Output** — `target/`, `dist/`, `build/`, `bin/`, `obj/`, `out/`, `*.pyc`, `*.class`, `*.o`, `*.pdb`, etc.
+18. **Cache & Temp Directories** — `(?i)**/cache/`, `temp/`, `tmp/`, `.cache/`, `.tmp/`, `caches/`, `cachedata/`, `thumbnails/`, `thumbs/`, `.eslintcache`, `*.tsbuildinfo`, etc. (case-insensitive)
+19. **Browser & Electron Storage Caches** — `CacheStorage/`, `Code Cache/`, `GPUCache/`, `ShaderCache/`, `DawnCache/`, `INetCache/`, `Local Storage/`, `IndexedDB/`, `blob_storage/`, `Crashpad/`, etc.
+20. **OS Temp & Cache Locations** — `/tmp/`, `/var/tmp/`, `/var/cache/`, `/private/var/folders/`, `/Windows/Temp/` (root-anchored; only matches these paths at the sync folder root)
 
-> Heads-up: `dist/`, `build/`, `bin/`, `obj/`, `out/` and `target/` are generic names. If your project ships content from a folder with one of those names, delete the matching line in category 17.
+> Heads-up 1: category 17's `dist/`, `build/`, `bin/`, `obj/`, `out/`, `target/` and category 18's `cache/`, `temp/`, `tmp/` are all generic names. If your project ships content from a folder with one of those names, delete the matching line.
+> Heads-up 2: category 18 uses the `(?i)` prefix for case-insensitive matching and matches **whole directory names only** (not prefixes), so `MyCacheFolder/`, `Template/` and `Tempura/` are safe.
 
 ### Usage
 
@@ -162,7 +166,7 @@ flowchart TD
     SUM --- LST[Result list (double-click to open)]
     LST --- LOG[Log box]
     LOG --- PROG[Progress bar + percentage]
-    PROG --- STATUS[Status: v1.15.0 | project link]
+    PROG --- STATUS[Status: v1.16.0 | project link]
 ```
 
 > The diagram above shows the UI regions. UI text switches live between EN/中文; all Chinese text is stored as `\u` escapes so the script stays pure ASCII.

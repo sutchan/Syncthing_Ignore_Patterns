@@ -2,10 +2,10 @@
 
 > 精心整理的开箱即用 `.stignore` 规则集，自动排除系统文件、缓存、构建产物与应用数据，让 Syncthing 同步更干净高效。
 
-![Version](https://img.shields.io/badge/version-v1.15.0-blue)
+![Version](https://img.shields.io/badge/version-v1.16.0-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--31-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Categories](https://img.shields.io/badge/categories-17-blueviolet)
+![Categories](https://img.shields.io/badge/categories-20-blueviolet)
 ![GitHub Repo](https://img.shields.io/badge/source-GitHub-black)
 
 [中文](#中文说明) | [English](README_EN.md)
@@ -25,12 +25,12 @@
 
 ### 特性
 
-- ✅ **17 个分类 · 258 条规则**覆盖系统、缓存、构建产物、数据库等常见噪音文件
+- ✅ **20 个分类 · 285 条规则**覆盖系统、缓存、构建产物、数据库等常见噪音文件
 - ✅ **开箱即用** — 直接复制即可生效，无需额外配置
 - ✅ **中英双语文档**，方便团队协作
 - ✅ **持续维护**，随生态更新规则
 
-> 说明：`.stignore` 文件头 `Updated` 为规则集的最后更新日（`2026-08-31`）；工具发布版本见 CHANGELOG（当前 `v1.15.0`，发布于 `2026-08-31`）。两者分别对应"规则集修订"与"工具发布"，可能不同步属正常。
+> 说明：`.stignore` 文件头 `Updated` 为规则集的最后更新日（`2026-08-31`）；工具发布版本见 CHANGELOG（当前 `v1.16.0`，发布于 `2026-08-31`）。两者分别对应"规则集修订"与"工具发布"，可能不同步属正常。
 
 ### 通配符语法
 
@@ -45,11 +45,11 @@
 
 ### 已包含的分类
 
-`.stignore` 文件按以下 17 个分类组织（完整内容请查看文件本身）：
+`.stignore` 文件按以下 20 个分类组织（完整内容请查看文件本身）：
 
 1. **系统与 OS 文件** — `$RECYCLE.BIN/`、`.DS_Store`、`Thumbs.db`、`desktop.ini`、`pagefile.sys`、`/Program Files/`、`System Volume Information/`、`LOST.DIR/`、`found.000/` 等
 2. **数据库文件** — `#innodb_redo/`、`ibdata1`、`*.ibd`、`pg_wal/`、`*.sqlite3`、`mongod.lock`、`dump.rdb`、`*.db-wal` 等（**不含**通配 `*.db`，避免误删真实数据文件）
-3. **备份与临时文件** — `*.tmp`、`*.bak`、`.delete/`、`Temp/`、`Backup_of_*`、`.stignore.bak.*` 等
+3. **备份与临时文件** — `*.tmp`、`*.bak`、`.delete/`、`Backup_of_*`、`.stignore.bak.*` 等（通用 `temp/` 目录见第 18 类）
 4. **应用数据与缓存** — `.dropbox.cache/`、`WeChat Files/`、`Tencent Files/`、`BaiduNetdiskDownload/`、`AliWorkbenchData/`、`Youku Files/`、`SteamLibrary/` 等（**不忽略** `.stfolder/` 与 `.stversions`，保住 folder marker 与版本控制）
 5. **版本控制系统** — `.git/`、`.svn/`、`.hg/`
 6. **包管理器缓存与依赖** — `node_modules/`、`.npm/`、`.pnpm-store/`、`.venv/`、`.cargo/`、`.gradle/`、`.m2/`、`.nuget/`、`.bun/`、`.deno/`、`.dart_tool/`、`vendor/` 等
@@ -61,11 +61,15 @@
 12. **编辑器与开发工具缓存** — `.vscode/`（保留 `settings.json`）、`.vim/`、`*.swp`、`*~`、`.emacs.d/`、`.sublime-*`、`.zed/`、`.cursor/` 等
 13. **压缩包与分卷下载** — `*.part`、`*.aria2`、`*.crdownload`、`downloading/` 等
 14. **虚拟化与容器文件** — `*.vmdk`、`*.qcow2`、`*.ova`、`.docker/`、`.minikube/`、`.vagrant/` 等
-15. **媒体与播放器缓存** — `.cache/`、`.thumbnails/`、`Spotify/`、`GPUCache/`、`Code Cache/`、`Service Worker/`、`.Spotlight-V100/`、`.Trashes/` 等
+15. **媒体与播放器缓存** — `Spotify/`、`iTunes/Album Artwork/`、`PotPlayerMini*`、`Service Worker/`、`.Spotlight-V100/`、`.Trashes/` 等
 16. **锁文件与日志文件** — `*.lock`（保留 `Cargo.lock`、`package-lock.json`、`pnpm-lock.yaml`、`yarn.lock` 等依赖锁文件）、`*.log`、`*.log.*`、`nohup.out`
 17. **构建产物与语言输出** — `target/`、`dist/`、`build/`、`bin/`、`obj/`、`out/`、`*.pyc`、`*.class`、`*.o`、`*.pdb` 等
+18. **缓存与临时目录** — `(?i)**/cache/`、`temp/`、`tmp/`、`.cache/`、`.tmp/`、`caches/`、`cachedata/`、`thumbnails/`、`thumbs/`、`.eslintcache`、`*.tsbuildinfo` 等（大小写不敏感）
+19. **浏览器与 Electron 存储缓存** — `CacheStorage/`、`Code Cache/`、`GPUCache/`、`ShaderCache/`、`DawnCache/`、`INetCache/`、`Local Storage/`、`IndexedDB/`、`blob_storage/`、`Crashpad/` 等
+20. **系统临时与缓存位置** — `/tmp/`、`/var/tmp/`、`/var/cache/`、`/private/var/folders/`、`/Windows/Temp/`（根锚定，仅匹配同步根下的同名路径）
 
-> 提示：`dist/`、`build/`、`bin/`、`obj/`、`out/`、`target/` 为通用目录名，若你的项目有同名目录需要同步，请删除第 17 类中对应行。
+> 提示一：第 17 类的 `dist/`、`build/`、`bin/`、`obj/`、`out/`、`target/` 与第 18 类的 `cache/`、`temp/`、`tmp/` 均为通用目录名，若你的项目有同名目录需要同步，请删除对应行。
+> 提示二：第 18 类用 `(?i)` 前缀做大小写不敏感匹配，且只匹配**完整目录名**（非前缀），因此 `MyCacheFolder/`、`Template/`、`Tempura/` 不会被误伤。
 
 ### 使用方法
 
@@ -170,7 +174,7 @@ powershell -STA -NoProfile -File .\SyncthingIgnoreGUI.ps1
 | 扫描摘要 | 窗体显示「已找到 N 个 .stignore 文件」；启动时自动加载已有清单数量 |
 | 安全防护 | 非预览且非强制时，Apply 前弹出确认框，避免误写大量路径 |
 | 关于 | 右上角「关于」显示版本与项目地址 |
-| 版本与项目地址 | 窗口底部显示当前版本号（v1.15.0）与可点击项目主页链接 |
+| 版本与项目地址 | 窗口底部显示当前版本号（v1.16.0）与可点击项目主页链接 |
 
 **工作流**
 
@@ -212,7 +216,7 @@ flowchart TD
     SUM --- LST[结果列表（双击打开文件）]
     LST --- LOG[日志框]
     LOG --- PROG[进度条 + 百分比]
-    PROG --- STATUS[状态栏: v1.15.0 | 项目主页链接]
+    PROG --- STATUS[状态栏: v1.16.0 | 项目主页链接]
 ```
 
 ```
@@ -231,7 +235,7 @@ flowchart TD
 │ [_________________ 实时日志输出 _________________]    │
 │ [==========进度==========] 100%                       │
 ├──────────────────────────────────────────────────────┤
-│ v1.15.0 | SyncthingIgnorePatterns   🔗 项目地址        │
+│ v1.16.0 | SyncthingIgnorePatterns   🔗 项目地址        │
 └──────────────────────────────────────────────────────┘
 ```
 

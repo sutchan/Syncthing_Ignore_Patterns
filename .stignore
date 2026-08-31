@@ -1,5 +1,5 @@
 //Syncthing Ignore Patterns Lists
-//Version: 1.15.0
+//Version: 1.16.0
 //Updated: 2026-08-31
 
 //System & OS Files
@@ -65,7 +65,6 @@
 //Backup & Temporary Files
 **/.delete/
 **/.deletedByTMM/
-**/.tmp/
 **/Backup_of_*
 **/*.tmp
 **/*.bak
@@ -253,8 +252,6 @@
 **/.vagrant/
 
 //Media & Player Caches
-**/.cache/
-**/.thumbnails/**
 **/.Spotlight-V100/
 **/.fseventsd/
 **/.DocumentRevisions-V100/
@@ -263,13 +260,6 @@
 **/PotPlayerMini*
 **/Spotify/
 **/iTunes/Album Artwork/
-**/Cache/
-**/Caches/
-**/CacheStorage/
-**/Code Cache/
-**/GPUCache/
-**/ShaderCache/
-**/INetCache/
 **/Service Worker/
 
 //Lock & Log Files
@@ -311,11 +301,14 @@
 // Template/ and Tempura/ are safe. Remove those three lines if your project ships
 // content from folders literally named "cache", "temp" or "tmp".
 (?i)**/cache/
+(?i)**/.cache/
 (?i)**/caches/
 (?i)**/temp/
 (?i)**/tmp/
+(?i)**/.tmp/
 (?i)**/cachedata/
 (?i)**/thumbnails/
+(?i)**/.thumbnails/
 (?i)**/thumbnail/
 (?i)**/thumbs/
 **/.eslintcache

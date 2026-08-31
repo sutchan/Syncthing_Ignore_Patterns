@@ -7,9 +7,10 @@
 Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产物与应用数据，
 造成带宽与存储浪费。本项目提供：
 
-1. **规则集** `.stignore` — 开箱即用的 17 类忽略模式（系统/OS 文件、数据库、
+1. **规则集** `.stignore` — 开箱即用的 20 类忽略模式（系统/OS 文件、数据库、
    备份临时文件、应用缓存、版本控制、包管理器、前端/Python/C++/JVM 构建缓存、
-   IDE/编辑器、归档与部分下载、虚拟化、媒体、锁与日志等噪音）。
+   IDE/编辑器、归档与部分下载、虚拟化、媒体、锁与日志、构建产物、缓存与临时
+   目录、浏览器存储缓存、系统临时位置等噪音）。
 2. **批量管理 GUI** `SyncthingIgnoreGUI.ps1` — WinForms 图形界面，将标准规则
    批量应用到本机所有 Syncthing 同步目录，无需每次全盘扫描。
 
@@ -28,7 +29,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 
 ```
 SyncthingIgnorePatterns/
-├── .stignore                 # 标准规则源文件（Apply 依赖，版本 v1.15.0）
+├── .stignore                 # 标准规则源文件（Apply 依赖，版本 v1.16.0）
 ├── SyncthingIgnoreGUI.ps1    # 主工具（GUI + 扫描/应用逻辑，纯 ASCII）
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档
@@ -85,6 +86,14 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.16.0 (2026-08-31)
+- feat(stignore): 新增第 18 类「缓存与临时目录」，用 `(?i)` 大小写不敏感覆盖 cache/ caches/ temp/ tmp/ .cache/ .tmp/ cachedata/ thumbnails/ thumbs/ 等
+- feat(stignore): 新增第 19 类「浏览器与 Electron 存储缓存」（CacheStorage/ Code Cache/ GPUCache/ ShaderCache/ DawnCache/ INetCache/ Local Storage/ IndexedDB/ blob_storage/ Crashpad/ 等）
+- feat(stignore): 新增第 20 类「系统临时与缓存位置」，根锚定 /tmp/ /var/tmp/ /var/cache/ /private/var/folders/ /Windows/Temp/
+- feat(stignore): 补充开发缓存文件 .eslintcache / .sass-cache/ / .rollup.cache/ / *.tsbuildinfo
+- refactor(stignore): 散落在「媒体与播放器缓存」的 9 条 cache 规则归位至新类，消除 5 条重复；Temp/ 与 .tmp/ 由 (?i) 规则覆盖后删除
+- docs: README / README_EN 分类列表同步 20 类，徽章 17→20、规则数 258→285；版本同步至 v1.16.0
 
 ### v1.15.0 (2026-08-31)
 - fix(stignore): `/node_modules/**` 根锚定导致嵌套 node_modules 漏网 → `**/node_modules/`；`**/vendor/` 不匹配根级 → 并列 `/vendor/` 与 `**/vendor/`
