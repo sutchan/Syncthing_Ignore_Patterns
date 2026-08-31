@@ -1,5 +1,5 @@
 //Syncthing Ignore Patterns Lists
-//Version: 1.17.1
+//Version: 1.17.2
 //Updated: 2026-08-31
 
 //System & OS Files
@@ -69,6 +69,8 @@
 **/Backup_of_*
 **/*.tmp
 **/*.bak
+**/logs/
+**/log/
 **/*.old
 **/*.orig
 **/*.rej

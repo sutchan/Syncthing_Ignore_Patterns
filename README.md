@@ -1,8 +1,8 @@
 # Syncthing 忽略模式
 
-> 开箱即用的 `.stignore` 规则集：20 个分类 · 285 条规则，自动排除系统文件、缓存、构建产物与应用数据。
+> 开箱即用的 `.stignore` 规则集：20 个分类 · 287 条规则，自动排除系统文件、缓存、构建产物与应用数据。
 
-![Version](https://img.shields.io/badge/version-v1.17.1-blue)
+![Version](https://img.shields.io/badge/version-v1.17.2-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--31-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-20-blueviolet)
@@ -13,12 +13,12 @@
 
 ## 中文说明
 
-- ✅ **20 分类 / 285 条规则**，覆盖系统、缓存、构建产物、数据库等噪音文件
+- ✅ **20 分类 / 287 条规则**，覆盖系统、缓存、构建产物、数据库等噪音文件
 - ✅ **开箱即用**：复制到同步根目录即可生效
 - ✅ **中英双语文档**，附批量同步 GUI 工具
 - ✅ **持续维护**，随生态更新规则
 
-> `.stignore` 文件头 `Updated`（`2026-08-31`）是规则集修订日；工具发布版本见 CHANGELOG（当前 `v1.17.1`）。两者分别对应"规则集修订"与"工具发布"，不同步属正常。
+> `.stignore` 文件头 `Updated`（`2026-08-31`）是规则集修订日；工具发布版本见 CHANGELOG（当前 `v1.17.2`）。两者分别对应"规则集修订"与"工具发布"，不同步属正常。
 
 ### 快速开始
 

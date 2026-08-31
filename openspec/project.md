@@ -29,7 +29,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 
 ```
 SyncthingIgnorePatterns/
-├── .stignore                 # 标准规则源文件（Apply 依赖，版本 v1.17.1）
+├── .stignore                 # 标准规则源文件（Apply 依赖，版本 v1.17.2）
 ├── SyncthingIgnoreGUI.ps1    # 主工具（GUI + 扫描/应用逻辑，纯 ASCII）
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档
@@ -89,6 +89,11 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.17.2 (2026-08-31)
+- feat(stignore): 新增 `**/logs/` `**/log/` 日志目录忽略规则（归位至「Backup & Temporary Files」类），规则总数 285 → 287
+- refactor(stignore): 原误置在「Database Files」类的 `logs/` `log/` 移出，避免与数据库语义混淆
+- docs: 版本同步至 v1.17.2（脚本头 / `$ScriptVersion` / `.stignore` 头 / README 徽章与版本引用）
 
 ### v1.17.1 (2026-08-31)
 - feat(gui): 扫描时实时显示当前正在遍历的目录（原只显示最新命中文件），状态行改为「根进度 | 已找到 N | 当前目录 | 耗时」

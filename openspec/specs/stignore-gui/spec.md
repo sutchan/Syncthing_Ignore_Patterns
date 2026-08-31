@@ -13,8 +13,8 @@
 - 输入：扫描根目录（留空=所有固定驱动器；或指定单目录）
 - 行为：
   - 使用 runspace 线程池（最多 4 线程）并行检索各根目录
-  - 使用 `Get-ChildItem -Filter '.stignore' -Recurse -File -Force`
-  - 排除 `.git` 目录与脚本自身所在目录
+  - 使用显式栈深度优先遍历 + `DirectoryInfo.EnumerateFileSystemInfos()`（v1.17.1 起；`Get-ChildItem -Recurse` 管道无法上报当前遍历目录，故改为显式遍历）；一次枚举同时取得文件与子目录
+  - 排除 `.git` 目录与脚本自身所在目录；无权限目录跳过并累计，不中断整个根
   - 扫描阶段不做逐文件 UI 刷新（结束统一汇总），不做哈希计算
   - 后台 runspace 执行 + Timer 轮询 `DoEvents`，GUI 线程不阻塞（v1.7.0）
   - 扫描完成后窗体显示「已找到 N 个 .stignore 文件」摘要

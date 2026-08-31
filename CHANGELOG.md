@@ -5,6 +5,17 @@
 
 ---
 
+## [v1.17.2] - 2026-08-31
+
+### 新增（规则集）
+- 新增 `**/logs/`、`**/log/` 日志目录忽略规则，归位至「Backup & Temporary Files」类；规则总数 285 → 287
+
+### 重构（规则集）
+- 原误置于「Database Files」类的 `logs/`、`log/` 移出，避免与数据库语义混淆
+
+### 文档
+- 版本同步至 v1.17.2：脚本头 `//Version`、`$ScriptVersion`、`.stignore` 头、README 徽章与版本引用
+
 ## [v1.17.1] - 2026-08-31
 
 ### 新增（GUI）
@@ -48,20 +59,6 @@
 - README / README_EN 分类列表同步为 20 类，徽章 17 → 20，规则数 258 → 285
 - 新增两条提示：通用目录名（含 `cache/`、`temp/`、`tmp/`）可能误伤同名业务目录；`(?i)` 只匹配完整目录名不误伤 `MyCacheFolder/`、`Template/`
 - 版本同步至 v1.16.0：脚本头、`$ScriptVersion`、`.stignore` 头、README 徽章与界面版本引用、`config.json`
-
-## [v1.16.0] - 2026-08-31
-
-### 新增（规则集）
-- 新增第 18 类「缓存与临时目录」：`(?i)` 大小写不敏感覆盖 `cache/`、`caches/`、`temp/`、`tmp/`、`.cache/`、`.tmp/`、`cachedata/`、`thumbnails/`、`thumbs/` 等
-- 新增第 19 类「浏览器与 Electron 存储缓存」：`CacheStorage/`、`Code Cache/`、`GPUCache/`、`ShaderCache/`、`DawnCache/`、`INetCache/`、`Local Storage/`、`IndexedDB/`、`blob_storage/`、`Crashpad/` 等
-- 新增第 20 类「系统临时与缓存位置」：根锚定 `/tmp/`、`/var/tmp/`、`/var/cache/`、`/private/var/folders/`、`/Windows/Temp/`
-- 补充开发缓存文件 `.eslintcache`、`.sass-cache/`、`.rollup.cache/`、`*.tsbuildinfo`
-
-### 重构（规则集）
-- 散落在「媒体与播放器缓存」的 9 条 cache 规则归位至新类，消除 5 条重复；`Temp/` 与 `.tmp/` 由 `(?i)` 规则覆盖后删除
-
-### 文档
-- README / README_EN 分类列表同步 20 类，徽章 17→20、规则数 258→285；版本同步至 v1.16.0
 
 ## [v1.16.2] - 2026-08-31
 

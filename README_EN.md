@@ -1,8 +1,8 @@
 # Syncthing Ignore Patterns
 
-> A curated, ready-to-use `.stignore` rule set: 20 categories · 285 patterns that exclude system files, caches, build artifacts, and app data.
+> A curated, ready-to-use `.stignore` rule set: 20 categories · 287 patterns that exclude system files, caches, build artifacts, and app data.
 
-![Version](https://img.shields.io/badge/version-v1.17.1-blue)
+![Version](https://img.shields.io/badge/version-v1.17.2-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--31-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-20-blueviolet)
@@ -13,12 +13,12 @@
 
 ## English
 
-- ✅ **20 categories / 285 patterns** covering system files, caches, build artifacts, databases, and more
+- ✅ **20 categories / 287 patterns** covering system files, caches, build artifacts, databases, and more
 - ✅ **Zero-config**: drop it at the sync folder root and it works
 - ✅ **Bilingual docs** plus a batch-sync GUI tool
 - ✅ **Actively maintained** as the ecosystem evolves
 
-> The `Updated` date in the `.stignore` header (`2026-08-31`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.17.1`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
+> The `Updated` date in the `.stignore` header (`2026-08-31`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.17.2`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
 
 ### Quick Start
 
