@@ -5,6 +5,18 @@
 
 ---
 
+## [v1.18.2] - 2026-08-31
+
+### 修复（GUI）
+- fix(scan): 后台 job/timer 提升为脚本作用域（`$script:scanBg`/`scanHandle`/`scanTimer`）；点击开头清理上一次遗留任务，避免快速重击产生并行 runspace 池
+- fix(scan): 取消分支 `$bg.Dispose()` 后置 handles 为 `$null`，完成判定加 `$null` 守卫，避免已释放对象被排队 tick 误调 `EndInvoke` 刷假错误
+- fix(apply): 同上升级脚本作用域 + 清理 + 取消分支置 `$null` 守卫
+- fix(apply): `finally` 仅恢复 UI，成功提示/清单刷新移入成功路径；job 抛错不再误报「Apply finished」（#6）
+- fix(apply): `Get-FileHash` 包 `try/catch`，锁定/不可读文件计入 `errors` 并保留记录，不再终止整个 job（#5）
+- fix(apply): 进度推送改为闭包直访问 `$progress`/`$lblPct`/`$lblStatus`，去除 `Controls.Find` 字符串查找（#3）
+- fix(log): 移除 `Write-LogLine` 内 `DoEvents`，规避 `form.Invoke` 内的消息泵重入（#4）
+- docs: 版本同步至 v1.18.2（脚本头 / `$ScriptVersion` / README 徽章与版本引用）
+
 ## [v1.18.1] - 2026-08-31
 
 ### 修复（GUI）

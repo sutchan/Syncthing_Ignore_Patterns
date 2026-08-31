@@ -90,6 +90,10 @@ SyncthingIgnorePatterns/
 
 ## 7. CHANGELOG
 
+### v1.18.2 (2026-08-31)
+- fix(gui): 扫描/应用后台 job 升脚本作用域 + 点击清理并行竞争；取消分支置 handles `$null` 守卫；apply 失败不再误报完成；`Get-FileHash` 锁文件容错；进度推送去 `Controls.Find`；日志去 `DoEvents` 重入
+- docs: 版本同步至 v1.18.2（脚本头 / `$ScriptVersion` / README 徽章与版本引用）
+
 ### v1.18.1 (2026-08-31)
 - fix(gui): 扫描/应用 Timer tick 回调补顶层 try/catch，修复 `$null` 调用引发的 JIT 崩溃；`$bgHandle.IsCompleted` 加 `$null` 守卫
 - docs: 版本同步至 v1.18.1（脚本头 / `$ScriptVersion` / README 徽章与版本引用）

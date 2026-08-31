@@ -1,6 +1,6 @@
 <#
 //File: SyncthingIgnoreGUI.ps1
-//Version: 1.18.1
+//Version: 1.18.2
 //Updated: 2026-08-31
 .SYNOPSIS
     Graphical interface for scanning and applying Syncthing .stignore rules,
@@ -54,7 +54,7 @@ Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles() | Out-Null
 
 $scriptDir = $PSScriptRoot
-$ScriptVersion = '1.18.1'
+$ScriptVersion = '1.18.2'
 $StandardRuleSource = Join-Path $scriptDir '.stignore'
 
 # ---------- Localization ----------
@@ -560,7 +560,6 @@ function Write-LogLine {
     $txtLog.SelectionStart = $txtLog.Text.Length
     $txtLog.AppendText("[$ts] $Message`r`n")
     $txtLog.ScrollToCaret()
-    [System.Windows.Forms.Application]::DoEvents()
 }
 
 # Backwards-compatible alias for older call sites.
@@ -882,12 +881,12 @@ function Start-ApplyJob {
             $curText = (Lmsg ($applyTpl -f $done, $total, (Shorten-Path $full)) (Decode-Uni $applyTpl -f $done, $total, (Shorten-Path $full)))
             $FormObj.Invoke([Action[int,string]] {
                 param([int]$p, [string]$c)
-                $pb = $FormObj.Controls.Find('progress', $true)
-                if ($pb.Count -gt 0 -and $pb[0].Style -ne 'Marquee') { $pb[0].Value = [Math]::Max(0, [Math]::Min(100, $p)) }
-                $pc = $FormObj.Controls.Find('lblPct', $true)
-                if ($pc.Count -gt 0) { $pc[0].Text = "$p%" }
-                $st = $FormObj.Controls.Find('lblStatus', $true)
-                if ($st.Count -gt 0) { $st[0].Text = $c }
+                # Access controls directly via script-scope references captured in
+                # this closure (already on the STA thread inside Invoke) instead of
+                # string-based Controls.Find, which is fragile under theme relayout.
+                if ($progress.Style -ne 'Marquee') { $progress.Value = [Math]::Max(0, [Math]::Min(100, $p)) }
+                $lblPct.Text = "$p%"
+                $lblStatus.Text = $c
                 [System.Windows.Forms.Application]::DoEvents()
             }, @($pct, $curText))
         }
@@ -908,7 +907,16 @@ function Start-ApplyJob {
             continue
         }
         $kept++
-        $fileHash = (Get-FileHash -Path $full -Algorithm SHA256).Hash
+        try {
+            $fileHash = (Get-FileHash -Path $full -Algorithm SHA256).Hash
+        } catch {
+            # File locked or unreadable (e.g. in use by another process). Count it
+            # as an error and keep the existing record instead of aborting the job.
+            $errors++
+            Write-LogLine (Lmsg "  hash error (kept, skipped replace): $full -> $_" "  \u54c8\u5e0c\u9519\u8bef\uff08\u4fdd\u7559\uff0c\u8df3\u8fc7\u66ff\u6362\uff09\uff1a$full -> $_") 'Red'
+            [void]$records.Add($item)
+            continue
+        }
         if ($fileHash -eq $sourceHash) {
             Write-LogLine (Lmsg "  skipped (identical): $full" "  \u8df3\u8fc7\uff08\u5df2\u4e00\u81f4\uff09\uff1a$full") 'DarkGray'
             $skippedSame++
@@ -1020,6 +1028,18 @@ $btnOpenManifest.Add_Click({
 })
 
 $btnScan.Add_Click({
+    # Clean up any previous (e.g. cancelled-but-still-referenced) background job
+    # so a fast re-click cannot leave two parallel runspace pools sharing
+    # $script:scanState / $script:cancelFlag.
+    if ($null -ne $script:scanTimer) {
+        try { $script:scanTimer.Stop(); $script:scanTimer.Dispose() } catch {}
+        $script:scanTimer = $null
+    }
+    if ($null -ne $script:scanBg) {
+        try { $script:scanBg.Stop() } catch {}
+        try { $script:scanBg.Dispose() } catch {}
+        $script:scanBg = $null
+    }
     Add-Log (Lmsg '--- Starting scan ---' '--- \u5f00\u59cb\u626b\u63cf ---') 'Blue'
     $lstResults.Items.Clear()
     $out = $txtOut.Text.Trim()
@@ -1047,32 +1067,35 @@ $btnScan.Add_Click({
 
     # Run the scan off the UI thread so the GUI stays responsive. The shared
     # $script:scanState carries live counters back to the UI thread.
-    $bg = [powershell]::Create().AddCommand('Invoke-ScanCore').AddArgument($rootArg).AddArgument($scriptDir).AddArgument($script:scanState)
-    $bgHandle = $bg.BeginInvoke()
+    $script:scanBg = [powershell]::Create().AddCommand('Invoke-ScanCore').AddArgument($rootArg).AddArgument($scriptDir).AddArgument($script:scanState)
+    $script:scanHandle = $script:scanBg.BeginInvoke()
     $script:cancelFlag = $false
 
-    $timer = New-Object System.Windows.Forms.Timer
-    $timer.Interval = 100
-    $timer.Add_Tick({
+    $script:scanTimer = New-Object System.Windows.Forms.Timer
+    $script:scanTimer.Interval = 100
+    $script:scanTimer.Add_Tick({
         [System.Windows.Forms.Application]::DoEvents()
         try {
         Update-ScanStatus -State $script:scanState
         if ($script:cancelFlag) {
-            $timer.Stop()
+            $script:scanTimer.Stop()
             # Hard-abort the background job so it cannot write the manifest.
-            try { $bg.Stop() } catch {}
-            try { $bg.Dispose() } catch {}
+            try { $script:scanBg.Stop() } catch {}
+            try { $script:scanBg.Dispose() } catch {}
+            # Null the handles so a queued extra tick cannot call EndInvoke on a
+            # disposed object (which would log a spurious error).
+            $script:scanBg = $null; $script:scanHandle = $null
             Add-Log (Lmsg 'Scan stopped by user. Background job aborted; manifest NOT written.' '\u7528\u6237\u5df2\u505c\u6b62\u626b\u63cf\u3002\u540e\u53f0\u4efb\u52a1\u5df2\u4e2d\u65ad\uff1b\u672a\u5199\u5165\u6e05\u5355\u3002') 'DarkOrange'
             $lblStatus.Text = (Lmsg $T[$lang].statusStopped (Decode-Uni $T[$lang].statusStopped))
             $progress.Visible = $false; $lblPct.Visible = $false
             Set-Busy $false
             return
         }
-        if ($bgHandle.IsCompleted) {
-            $timer.Stop()
+        if ($null -ne $script:scanBg -and $null -ne $script:scanHandle -and $script:scanHandle.IsCompleted) {
+            $script:scanTimer.Stop()
             try {
-                $core = $bg.EndInvoke($bgHandle)
-                $bg.Dispose()
+                $core = $script:scanBg.EndInvoke($script:scanHandle)
+                $script:scanBg.Dispose()
                 $raw = $core.raw
                 $roots = $core.roots
                 $records = [System.Collections.ArrayList]::new()
@@ -1127,13 +1150,13 @@ $btnScan.Add_Click({
             }
         }
         } catch {
-            try { $timer.Stop() } catch {}
+            try { $script:scanTimer.Stop() } catch {}
             Add-Log (Lmsg "Scan timer error: $($_.Exception.Message)" "\u626b\u63cf\u8ba1\u65f6\u5668\u5f02\u5e38\uff1a$($_.Exception.Message)") 'Red'
             try { Add-Log (Lmsg "$($_.ScriptStackTrace)" "$($_.ScriptStackTrace)") 'Gray' } catch {}
             try { Set-Busy $false } catch {}
         }
     })
-    $timer.Start()
+    $script:scanTimer.Start()
 })
 
 $btnApply.Add_Click({
@@ -1155,43 +1178,60 @@ $btnApply.Add_Click({
     }
 
     Set-Busy $true -Mode 'apply' -Total 1
+    # Clean up any previous background job before starting a new one.
+    if ($null -ne $script:applyTimer) {
+        try { $script:applyTimer.Stop(); $script:applyTimer.Dispose() } catch {}
+        $script:applyTimer = $null
+    }
+    if ($null -ne $script:applyBg) {
+        try { $script:applyBg.Stop() } catch {}
+        try { $script:applyBg.Dispose() } catch {}
+        $script:applyBg = $null
+    }
     $script:cancelFlag = $false
     $script:applyStarted = Get-Date
     $lblStatus.Text = (Lmsg $T[$lang].statusPrep (Decode-Uni $T[$lang].statusPrep))
     Add-Log (Lmsg '--- Starting apply ---' '--- \u5f00\u59cb\u5e94\u7528 ---') 'Blue'
     # Run apply off the UI thread; progress is pushed via form.Invoke.
-    $bg = [powershell]::Create().AddCommand('Start-ApplyJob').AddArgument($list).AddArgument($StandardRuleSource).AddArgument($chkPreview.Checked).AddArgument($chkForce.Checked).AddArgument($chkBackupList.Checked).AddArgument($form)
-    $bgHandle = $bg.BeginInvoke()
-    $timer = New-Object System.Windows.Forms.Timer
-    $timer.Interval = 100
-    $timer.Add_Tick({
+    $script:applyBg = [powershell]::Create().AddCommand('Start-ApplyJob').AddArgument($list).AddArgument($StandardRuleSource).AddArgument($chkPreview.Checked).AddArgument($chkForce.Checked).AddArgument($chkBackupList.Checked).AddArgument($form)
+    $script:applyHandle = $script:applyBg.BeginInvoke()
+    $script:applyTimer = New-Object System.Windows.Forms.Timer
+    $script:applyTimer.Interval = 100
+    $script:applyTimer.Add_Tick({
         [System.Windows.Forms.Application]::DoEvents()
         try {
         # Mirror the live progress (driven by form.Invoke inside the job).
         $lblPct.Visible = $true
         $lblPct.Text = "$($progress.Value)%"
         if ($script:cancelFlag) {
-            $timer.Stop()
+            $script:applyTimer.Stop()
             # Hard-abort the background job so no further files are written.
-            try { $bg.Stop() } catch {}
-            try { $bg.Dispose() } catch {}
+            try { $script:applyBg.Stop() } catch {}
+            try { $script:applyBg.Dispose() } catch {}
+            $script:applyBg = $null; $script:applyHandle = $null
             Add-Log (Lmsg 'Apply stopped by user. Background job aborted; no further files written.' '\u7528\u6237\u5df2\u505c\u6b62\u5e94\u7528\u3002\u540e\u53f0\u4efb\u52a1\u5df2\u4e2d\u65ad\uff1c\u4e0d\u518d\u5199\u5165\u6587\u4ef6\u3002') 'DarkOrange'
             $lblStatus.Text = (Lmsg $T[$lang].statusStopped (Decode-Uni $T[$lang].statusStopped))
             $progress.Visible = $false; $lblPct.Visible = $false
             Set-Busy $false
             return
         }
-        if ($bgHandle.IsCompleted) {
-            $timer.Stop()
+        if ($null -ne $script:applyBg -and $null -ne $script:applyHandle -and $script:applyHandle.IsCompleted) {
+            $script:applyTimer.Stop()
+            $finished = $true
             try {
-                $bg.EndInvoke($bgHandle)
-                $bg.Dispose()
+                $script:applyBg.EndInvoke($script:applyHandle)
+                $script:applyBg.Dispose()
                 $progress.Value = 100; $lblPct.Text = '100%'
             } catch {
+                $finished = $false
                 Add-Log (Lmsg "ERROR: $_" "\u9519\u8bef\uff1a$_") 'Red'
             } finally {
                 Set-Busy $false
                 $script:cancelFlag = $false
+            }
+            # Only report success when the job actually completed without error;
+            # a failed job must not show the "finished" dialog / refresh the list.
+            if ($finished) {
                 Add-Log (Lmsg 'Apply finished.' '\u5e94\u7528\u5b8c\u6210\u3002') 'Green'
                 [System.Windows.Forms.MessageBox]::Show((Lmsg $T[$lang].applyDone (Decode-Uni $T[$lang].applyDone)), (Lmsg $T[$lang].confirmTitle (Decode-Uni $T[$lang].confirmTitle)), 'OK', 'Information') | Out-Null
                 # Refresh the manifest summary in the GUI from the updated list.
@@ -1211,13 +1251,13 @@ $btnApply.Add_Click({
             }
         }
         } catch {
-            try { $timer.Stop() } catch {}
+            try { $script:applyTimer.Stop() } catch {}
             Add-Log (Lmsg "Apply timer error: $($_.Exception.Message)" "\u5e94\u7528\u8ba1\u65f6\u5668\u5f02\u5e38\uff1a$($_.Exception.Message)") 'Red'
             try { Add-Log (Lmsg "$($_.ScriptStackTrace)" "$($_.ScriptStackTrace)") 'Gray' } catch {}
             try { Set-Busy $false } catch {}
         }
     })
-    $timer.Start()
+    $script:applyTimer.Start()
 })
 
 $btnClearLog.Add_Click({
