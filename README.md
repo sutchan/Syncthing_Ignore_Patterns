@@ -2,8 +2,8 @@
 
 > 精心整理的开箱即用 `.stignore` 规则集，自动排除系统文件、缓存、构建产物与应用数据，让 Syncthing 同步更干净高效。
 
-![Version](https://img.shields.io/badge/version-v1.14.1-blue)
-![Updated](https://img.shields.io/badge/updated-2026--08--06-brightgreen)
+![Version](https://img.shields.io/badge/version-v1.15.0-blue)
+![Updated](https://img.shields.io/badge/updated-2026--08--31-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-17-blueviolet)
 ![GitHub Repo](https://img.shields.io/badge/source-GitHub-black)
@@ -25,12 +25,12 @@
 
 ### 特性
 
-- ✅ **17 个分类**覆盖系统、缓存、构建产物、数据库等常见噪音文件
+- ✅ **17 个分类 · 258 条规则**覆盖系统、缓存、构建产物、数据库等常见噪音文件
 - ✅ **开箱即用** — 直接复制即可生效，无需额外配置
 - ✅ **中英双语文档**，方便团队协作
-
-> 说明：`.stignore` 文件头 `Updated` 为规则集的最后更新日；脚本/封装的发布版本与日期见 CHANGELOG（当前 `v1.14.0`，发布于 `2026-08-07`），两者可能不同属正常。
 - ✅ **持续维护**，随生态更新规则
+
+> 说明：`.stignore` 文件头 `Updated` 为规则集的最后更新日（`2026-08-31`）；工具发布版本见 CHANGELOG（当前 `v1.15.0`，发布于 `2026-08-31`）。两者分别对应"规则集修订"与"工具发布"，可能不同步属正常。
 
 ### 通配符语法
 
@@ -47,22 +47,25 @@
 
 `.stignore` 文件按以下 17 个分类组织（完整内容请查看文件本身）：
 
-1. **系统与 OS 文件** — `$RECYCLE.BIN`、`.DS_Store`、`Thumbs.db`、`desktop.ini`、`pagefile.sys`、`Program Files/`、`System Volume Information/`、`LOST.DIR/` 等
-2. **数据库文件** — `#innodb_redo`、`#innodb_temp`、`ibdata1`、`*.ibd`、`pg_wal/`、`*.sqlite3`、`mongod.lock`、`dump.rdb` 等
-3. **备份与临时文件** — `.cache`、`.tmp`、`.delete`、`Temp/`、`Backup_of_*` 等
-4. **应用数据与缓存** — `.stfolder/`、`.stversions`、`.dropbox.cache/`、`WeChat Files/`、`Tencent Files/`、`BaiduNetdiskDownload/`、`AliWorkbenchData/`、`Youku Files/`、`SteamLibrary/` 等
-5. **版本控制系统** — `.git/`
-6. **包管理器缓存与依赖** — `node_modules/`、`.npm/`、`.pnpm-store/`、`.venv/`、`__pycache__/`、`.cargo/`、`.gradle/`、`.m2/`、`.nuget/`、`.bun/`、`.deno/`、`.dart_tool/`、`vendor/` 等
+1. **系统与 OS 文件** — `$RECYCLE.BIN/`、`.DS_Store`、`Thumbs.db`、`desktop.ini`、`pagefile.sys`、`/Program Files/`、`System Volume Information/`、`LOST.DIR/`、`found.000/` 等
+2. **数据库文件** — `#innodb_redo/`、`ibdata1`、`*.ibd`、`pg_wal/`、`*.sqlite3`、`mongod.lock`、`dump.rdb`、`*.db-wal` 等（**不含**通配 `*.db`，避免误删真实数据文件）
+3. **备份与临时文件** — `*.tmp`、`*.bak`、`.delete/`、`Temp/`、`Backup_of_*`、`.stignore.bak.*` 等
+4. **应用数据与缓存** — `.dropbox.cache/`、`WeChat Files/`、`Tencent Files/`、`BaiduNetdiskDownload/`、`AliWorkbenchData/`、`Youku Files/`、`SteamLibrary/` 等（**不忽略** `.stfolder/` 与 `.stversions`，保住 folder marker 与版本控制）
+5. **版本控制系统** — `.git/`、`.svn/`、`.hg/`
+6. **包管理器缓存与依赖** — `node_modules/`、`.npm/`、`.pnpm-store/`、`.venv/`、`.cargo/`、`.gradle/`、`.m2/`、`.nuget/`、`.bun/`、`.deno/`、`.dart_tool/`、`vendor/` 等
 7. **前端框架构建缓存** — `.next/`、`.nuxt/`、`.svelte-kit/`、`.vite/`、`.turbo/`、`.astro/`、`.docusaurus/`、`.parcel-cache/`、`.vercel/`、`.netlify/`、`.vuepress/dist/` 等
 8. **Python 与测试缓存** — `.pytest_cache/`、`.mypy_cache/`、`.ruff_cache/`、`.coverage`、`.jest-cache/`、`.vitest/`、`.tox/`、`.nox/`、`.ipynb_checkpoints/`、`htmlcov/` 等
 9. **C/C++ 与 Rust 构建缓存** — `CMakeCache.txt`、`CMakeFiles/`、`cmake-build-debug/`、`cmake-build-release/`、`compile_commands.json`、`.ccls-cache/`、`.clangd/`、`.rustc_cache/` 等
-10. **JVM 与 Scala 构建缓存** — `.ammonite/`、`.bloop/`、`.metals/`、`.kotlintest/`
+10. **JVM 与 Scala 构建缓存** — `.ammonite/`、`.bloop/`、`.metals/`、`.kotlintest/`、`.scala-build/`、`.mvn/`
 11. **IDE 与工具缓存** — `.idea/`、`.history/`、`.terraform/`、`.terraform.lock.hcl`、`.terragrunt-cache/`、`.helm/`、`.kube/`、`.flyway/` 等
-12. **编辑器与开发工具缓存** — `.vscode/`（保留 `settings.json`）、`.vim/`、`.swp`、`*~`、`.emacs.d/`、`.sublime-*`、`.zed/`、`.cursor/` 等
-13. **压缩包与分卷下载** — `*.part`、`*.aria2`、`*.crdownload`、`/downloading/` 等
+12. **编辑器与开发工具缓存** — `.vscode/`（保留 `settings.json`）、`.vim/`、`*.swp`、`*~`、`.emacs.d/`、`.sublime-*`、`.zed/`、`.cursor/` 等
+13. **压缩包与分卷下载** — `*.part`、`*.aria2`、`*.crdownload`、`downloading/` 等
 14. **虚拟化与容器文件** — `*.vmdk`、`*.qcow2`、`*.ova`、`.docker/`、`.minikube/`、`.vagrant/` 等
-15. **媒体与播放器缓存** — `.cache/`、`Spotify/`、`GPUCache/`、`Service Worker/`、`Spotlight-V100/`、`.Trashes/` 等
-16. **锁文件与日志文件** — `*.lock`、`*.log.*`、`**.log`
+15. **媒体与播放器缓存** — `.cache/`、`.thumbnails/`、`Spotify/`、`GPUCache/`、`Code Cache/`、`Service Worker/`、`.Spotlight-V100/`、`.Trashes/` 等
+16. **锁文件与日志文件** — `*.lock`（保留 `Cargo.lock`、`package-lock.json`、`pnpm-lock.yaml`、`yarn.lock` 等依赖锁文件）、`*.log`、`*.log.*`、`nohup.out`
+17. **构建产物与语言输出** — `target/`、`dist/`、`build/`、`bin/`、`obj/`、`out/`、`*.pyc`、`*.class`、`*.o`、`*.pdb` 等
+
+> 提示：`dist/`、`build/`、`bin/`、`obj/`、`out/`、`target/` 为通用目录名，若你的项目有同名目录需要同步，请删除第 17 类中对应行。
 
 ### 使用方法
 
@@ -167,7 +170,7 @@ powershell -STA -NoProfile -File .\SyncthingIgnoreGUI.ps1
 | 扫描摘要 | 窗体显示「已找到 N 个 .stignore 文件」；启动时自动加载已有清单数量 |
 | 安全防护 | 非预览且非强制时，Apply 前弹出确认框，避免误写大量路径 |
 | 关于 | 右上角「关于」显示版本与项目地址 |
-| 版本与项目地址 | 窗口底部显示当前版本号（v1.14.1）与可点击项目主页链接 |
+| 版本与项目地址 | 窗口底部显示当前版本号（v1.15.0）与可点击项目主页链接 |
 
 **工作流**
 
@@ -209,7 +212,7 @@ flowchart TD
     SUM --- LST[结果列表（双击打开文件）]
     LST --- LOG[日志框]
     LOG --- PROG[进度条 + 百分比]
-    PROG --- STATUS[状态栏: v1.14.0 | 项目主页链接]
+    PROG --- STATUS[状态栏: v1.15.0 | 项目主页链接]
 ```
 
 ```
@@ -228,7 +231,7 @@ flowchart TD
 │ [_________________ 实时日志输出 _________________]    │
 │ [==========进度==========] 100%                       │
 ├──────────────────────────────────────────────────────┤
-│ v1.14.0 | SyncthingIgnorePatterns   🔗 项目地址        │
+│ v1.15.0 | SyncthingIgnorePatterns   🔗 项目地址        │
 └──────────────────────────────────────────────────────┘
 ```
 

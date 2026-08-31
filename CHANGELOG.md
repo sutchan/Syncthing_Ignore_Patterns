@@ -5,6 +5,30 @@
 
 ---
 
+## [v1.15.0] - 2026-08-31
+
+### 修复（规则集）
+- `/node_modules/**` 为根锚定，嵌套 `node_modules`（monorepo 子包）漏网 → 改 `**/node_modules/`
+- `**/.vscode/*` 只匹配直接子项，`.vscode/extensions/**` 等深层文件仍同步 → 改 `**/.vscode/**`，`!` 行同步改为 `!**/.vscode/settings.json`
+- `**/.swp` / `**/.swp` 类模式匹配不到 vim 真实交换文件（`.foo.swp`）→ 改 `**/*.swp` / `**/*.swo`，补充 `**/*.un~`
+- `**/vendor/` 不匹配同步根级 `vendor/` → 并列 `/vendor/` 与 `**/vendor/`
+- `**/*.db` 误伤 SQLite/KeePass 真实数据文件 → 移除，改保留 `*.db-wal` / `*.db-shm` / `*.db-journal` 临时文件
+- `*.lock` 误伤 `Cargo.lock` → 收窄并反转保留 `Cargo.lock`、`package-lock.json`、`pnpm-lock.yaml`、`yarn.lock`、`composer.lock`、`poetry.lock`、`go.sum`、`flake.lock`
+- 移除与注释自相矛盾的 `**.stfolder/` 与 `**.stversions`（忽略会破坏远端 folder marker 检测并静默禁用版本控制）
+- 移除误伤面过宽的 `**Cache*`、`**Internet*`、`**download/`、`**downloads/`、`**log/`、`**logs/`、`**metadata/`、`**thumb/`、`**packages/`、`**Temp/`，改为具名缓存目录（`Code Cache/`、`GPUCache/`、`ShaderCache/`、`INetCache/` 等）
+- `**Program Files/`、`**System Volume Information/` 改为根锚定，避免多级同名目录误伤
+- 统一目录模式尾斜杠、文件模式 `**/*.ext` 前缀；去重 `**.cache` 与 `**/.cache/`、`**Cache*` 与 `/Cache/` 等冗余覆盖
+
+### 新增（规则集）
+- 新增第 17 个分类「构建产物与语言输出」：`target/`、`dist/`、`build/`、`bin/`、`obj/`、`out/`、`*.pyc`、`*.pyo`、`*.class`、`*.o`、`*.obj`、`*.pdb`、`*.ilk`、`*.dSYM/`
+- 补充 `.svn/`、`.hg/`、`.scala-build/`、`.mvn/`、`cmake-build-*/`、`found.000/`、`ehthumbs.db`、`hiberfil.sys`、`.Trash-*/`、`nohup.out`、`*.log.*`
+- 补充项目自身备份 `**/.stignore.bak.*`、`**/stignore-paths.json.bak.*`，避免 GUI 备份被同步
+
+### 文档
+- README / README_EN 分类列表同步新规则集，补齐第 17 项（此前徽章写 17 却只列 16 项）
+- 修正 README 版本说明文案过时引用（v1.14.0 / 2026-08-07）与特性列表错位
+- 版本同步至 v1.15.0：脚本头、`$ScriptVersion`、`.stignore` 头、README 徽章与界面版本引用、`config.json`
+
 ## [v1.14.1] - 2026-08-13
 
 ### 文档

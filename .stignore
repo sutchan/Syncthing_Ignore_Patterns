@@ -1,209 +1,226 @@
 //Syncthing Ignore Patterns Lists
-//Version: 1.14.0
-//Updated: 2026-08-06
+//Version: 1.15.0
+//Updated: 2026-08-31
 
 //System & OS Files
-**#Recycle
-**$RECYCLE.BIN
-**.@__thumb
-**.@datasync_temp_*
-**.AppleDB
-**.DS_Store
-**.Recovery
-**.Recycle_bin
-**@Recycle
-**LOST.DIR/
-**Program Files (x86)/
-**Program Files/
-**System Volume Information/
-**Thumbs.db
-**desktop.ini
-**pagefile.sys
-**swapfile.sys
-**~$*
+**/$RECYCLE.BIN/
+**/#Recycle/
+**/@Recycle/
+**/.Recovery/
+**/.Recycle_bin/
+**/.Trash-*/
+**/LOST.DIR/
+**/System Volume Information/
+**/found.000/
+/Program Files/
+/Program Files (x86)/
+**/.@__thumb/
+**/.@datasync_temp_*/
+**/.AppleDB
+**/.DS_Store
+**/.VolumeIcon.icns
+**/.PKInstallSandboxManager
+**/.com.apple.timemachine.donotpresent
+**/.metadata_never_index
+**/Thumbs.db
+**/ehthumbs.db
+**/desktop.ini
+**/pagefile.sys
+**/swapfile.sys
+**/hiberfil.sys
+**/~$*
 
 //Database Files
-**#innodb_redo
-**#innodb_temp
-**ibdata1
-**.ibd
-**ib_logfile*
-**mysql.sock
+**/#innodb_redo/
+**/#innodb_temp/
+**/ibdata1
+**/ib_logfile*
+**/ibtmp1
+**/mysql.sock
+**/postmaster.pid
+**/.pgpass
 **/pg_wal/
 **/pg_xlog/
-**.pgpass
-**postmaster.pid
 **/sqlite.db
-**/*.sqlite
-**/*.sqlite3
-**/*.db
 **/master.db
 **/mongod.lock
 **/WiredTiger*
 **/journal/
-**dump.rdb
+**/dump.rdb
 **/redis/
 **/elastic/
 **/data/elasticsearch/
 **/leveldb/
 **/rocksdb/
+**/*.ibd
+**/*.sqlite
+**/*.sqlite3
+**/*.db-wal
+**/*.db-shm
+**/*.db-journal
+// NOTE: generic "**/*.db" is intentionally omitted — it would drop real
+// SQLite/KeePass data files. Use the patterns below if you really need it:
+// **/*.db
 
 //Backup & Temporary Files
-**.cache
-**.delete
-**.deletedByTMM/
-**.tmp
-**Backup_of_*
-**Temp/
-**.bak
+**/.delete/
+**/.deletedByTMM/
+**/.tmp/
+**/Temp/
+**/Backup_of_*
+**/*.tmp
+**/*.bak
+**/*.old
+**/*.orig
+**/*.rej
+**/.stignore.bak.*
+**/stignore-paths.json.bak.*
 
 //Application Data & Caches
-**.baiduyun.uploading.cfg
-**.dropbox.cache/
-**.egstore/
-**.gs/
-**.gs_*
-**.hls
-**.ldb
-**.microthumbnailFile/
-**.midownloading
-**.resona
-**.secretAlbum/
-// NOTE: .stfolder (SyncTrayzor marker) and .stversions (Syncthing versioning)
-// are Syncthing's own directories. Ignoring them disables versioning/marks.
-// Keep only if you intentionally don't use Syncthing versioning.
-**.stfolder/
-**.streams/
-**.stversions
-**.sync/
-**.tmfs
-**.trashBin/
-**.webaxs
+// NOTE: .stfolder (folder marker) and .stversions (Syncthing versioning) are
+// NOT ignored here — ignoring them breaks folder-marker detection on remotes
+// and silently disables file versioning. Add them manually only if you are
+// certain you never use Syncthing versioning.
+**/.baiduyun.uploading.cfg
+**/.dropbox.cache/
+**/.egstore/
+**/.gs/
+**/.gs_*/
+**/.hls/
+**/.ldb/
+**/.microthumbnailFile/
+**/.midownloading/
+**/.resona/
+**/.secretAlbum/
+**/.streams/
+**/.stignore-extra
+**/.sync/
+**/.tmfs/
+**/.trashBin/
+**/.webaxs/
+**/AliWorkbenchData/
+**/BaiduNetdiskDownload/
+**/KwDownload/
+**/QLDownload/
+**/SteamLibrary/
+**/Tencent Files/
+**/UpdateCache/
+**/WeChat Files/
+**/Youku Files/
+**/debug_log/
+**/hls/
+**/nplayerdisk/
+**/qycache/
+**/sync.ffs_db
+**/xiaoya/media/
 **/config/index-v1/**
 **/config/index-v2/**
-**AliWorkbenchData/
-**BaiduNetdiskDownload/
-**Cache*
-**Internet*
-**KwDownload/
-**QLDownload/
-**SteamLibrary/
-**Tencent Files/
-**UpdateCache/
-**WeChat Files/
-**Youku Files/
-**debug_log/
-**download/
-**downloads/
-**hls*
-**log/
-**logs/
-**metadata/
-**nplayerdisk/
-**qycache/
-**sync.ffs_db
-**thumb/
-**trashbox*
-**xiaoya/media/
 
 //Version Control Systems
-**.git/
+// NOTE: ignoring .git means repository history is not synced — remove this
+// line if you intend to mirror working git repositories.
+**/.git/
+**/.svn/
+**/.hg/
 
 //Package Manager Caches & Dependencies
-**.bun/
-**.cargo/
-**.dart_tool/
-**.deno/
-**.gradle/
-**.m2/
-**.npm/
-**.nuget/
-**.pnpm-local-store
-**.pnpm-store/
-**.pub-cache/
-**.venv/
-**.venv-*/
-**.yarn/cache/
-**.yarn/install-state.gz
-**/node_modules/**
-**packages/
-**.go/
+**/node_modules/
+**/.bun/
+**/.cargo/
+**/.dart_tool/
+**/.deno/
+**/.gradle/
+**/.m2/
+**/.npm/
+**/.nuget/
+**/.pnpm-local-store/
+**/.pnpm-store/
+**/.pub-cache/
+**/.venv/
+**/.venv-*/
+**/.yarn/cache/
+**/.yarn/install-state.gz
+**/.go/
+**/.gocode/
 **/go.mod.verify
-**.gocode/
-**.ruby/
-**.gem/
-**.bundle/
-**/vendor/bundle/
-**.composer/
+**/.ruby/
+**/.gem/
+**/.bundle/
+**/.composer/
+**/.cabal/
+**/.ghc/
+**/.phpunit.result.cache
+**/.packages
+/vendor/
 **/vendor/
-**.cabal/
-**.ghc/
-**.phpunit.result.cache
+**/vendor/bundle/
 
 //Frontend Framework Build Caches
-**.astro/
-**.docusaurus/
-**.netlify/
-**.next/
-**.nuxt/
-**.output/
-**.parcel-cache/
-**.svelte-kit/
-**.turbo/
-**.vercel/
-**.vite/
-**.vuepress/dist/
+**/.astro/
+**/.docusaurus/
+**/.netlify/
+**/.next/
+**/.nuxt/
+**/.output/
+**/.parcel-cache/
+**/.svelte-kit/
+**/.turbo/
+**/.vercel/
+**/.vite/
+**/.vuepress/dist/
 
 //Python & Testing Caches
-**.coverage
-**__pycache__/
-**.eggs/
-**.ipynb_checkpoints/
-**.jest-cache/
-**.mypy_cache/
-**.nox/
-**.nyc_output/
-**.pytest_cache/
-**.ruff_cache/
-**.tox/
-**.vitest/
-**coverage/
-**htmlcov/
+**/__pycache__/
+**/.coverage
+**/.eggs/
+**/.ipynb_checkpoints/
+**/.jest-cache/
+**/.mypy_cache/
+**/.nox/
+**/.nyc_output/
+**/.pytest_cache/
+**/.ruff_cache/
+**/.tox/
+**/.vitest/
+**/coverage/
+**/htmlcov/
 
 //C/C++ & Rust Build Caches
-**.ccls-cache/
-**.clangd/
-**.rustc_cache/
-**CMakeCache.txt
-**CMakeFiles/
-**cmake-build-debug/
-**cmake-build-release/
-**compile_commands.json
+**/.ccls-cache/
+**/.clangd/
+**/.rustc_cache/
+**/CMakeCache.txt
+**/CMakeFiles/
+**/cmake-build-*/
+**/compile_commands.json
 
 //JVM & Scala Build Caches
-**.ammonite/
-**.bloop/
-**.kotlintest/
-**.metals/
+**/.ammonite/
+**/.bloop/
+**/.kotlintest/
+**/.metals/
+**/.scala-build/
+**/.mvn/
 
 //IDE & Tool Caches
-**.flyway/
-**.helm/
-**.history/
-**.idea/
-**.kube/
-**.terraform/
-**.terraform.lock.hcl
-**.terragrunt-cache/
+**/.flyway/
+**/.helm/
+**/.history/
+**/.idea/
+**/.kube/
+**/.terraform/
+**/.terraform.lock.hcl
+**/.terragrunt-cache/
 
 //Editor & Dev Tool Caches
-**/.vscode/*
-**!/.vscode/settings.json
+**/.vscode/**
+!**/.vscode/settings.json
 **/.vscode-test/
 **/.vim/
 **/.viminfo
-**/.swp
-**/.swo
+**/*.swp
+**/*.swo
+**/*.un~
 **/*~
 **/.emacs.d/auto-save-list/
 **/.session
@@ -213,15 +230,15 @@
 **/.cursor/
 
 //Archives & Partial Downloads
-*.part
-*.partial
-*.crdownload
-*.aria2
-*.download
-*.tmp.download
-*.qtemporary
-*.opdownload
 **/downloading/
+**/*.part
+**/*.partial
+**/*.crdownload
+**/*.aria2
+**/*.download
+**/*.tmp.download
+**/*.qtemporary
+**/*.opdownload
 
 //Virtualization & Container Files
 **/*.vmdk
@@ -238,26 +255,53 @@
 
 //Media & Player Caches
 **/.cache/
-**/PotPlayerMini*
-**/Spotify/
-**/iTunes/Album Artwork/
 **/.thumbnails/**
-**/Cache/
-**/Caches/
-**/CacheStorage/
-**/GPUCache/
-**/Service Worker/
 **/.Spotlight-V100/
 **/.fseventsd/
 **/.DocumentRevisions-V100/
-**/.VolumeIcon.icns
-**/.com.apple.timemachine.donotpresent
 **/.Trashes/
 **/.apdisk
-**/.PKInstallSandboxManager
-**/.metadata_never_index
+**/PotPlayerMini*
+**/Spotify/
+**/iTunes/Album Artwork/
+**/Cache/
+**/Caches/
+**/CacheStorage/
+**/Code Cache/
+**/GPUCache/
+**/ShaderCache/
+**/INetCache/
+**/Service Worker/
 
 //Lock & Log Files
-*.lock
-*.log.*
-**.log
+// Runtime locks only — package manager lock files are re-included below.
+**/*.lock
+!**/Cargo.lock
+!**/package-lock.json
+!**/pnpm-lock.yaml
+!**/yarn.lock
+!**/composer.lock
+!**/poetry.lock
+!**/go.sum
+!**/flake.lock
+**/*.log
+**/*.log.*
+**/nohup.out
+
+//Build Artifacts & Language Output
+// NOTE: dist/ build/ bin/ obj/ out/ are generic names — drop any line here if
+// your project ships content from a folder with that name.
+**/target/
+**/dist/
+**/build/
+**/bin/
+**/obj/
+**/out/
+**/*.pyc
+**/*.pyo
+**/*.class
+**/*.o
+**/*.obj
+**/*.pdb
+**/*.ilk
+**/*.dSYM/

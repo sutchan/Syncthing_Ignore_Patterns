@@ -2,8 +2,8 @@
 
 > A curated, ready-to-use `.stignore` rule set that automatically excludes system files, caches, build artifacts, and app data — keeping your Syncthing sync clean and efficient.
 
-![Version](https://img.shields.io/badge/version-v1.14.1-blue)
-![Updated](https://img.shields.io/badge/updated-2026--08--06-brightgreen)
+![Version](https://img.shields.io/badge/version-v1.15.0-blue)
+![Updated](https://img.shields.io/badge/updated-2026--08--31-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-17-blueviolet)
 ![GitHub Repo](https://img.shields.io/badge/source-GitHub-black)
@@ -25,12 +25,12 @@
 
 ### Features
 
-- ✅ **17 categories** covering common noise — system, caches, build artifacts, databases, and more
+- ✅ **17 categories · 258 patterns** covering common noise — system, caches, build artifacts, databases, and more
 - ✅ **Zero-config** — copy and it just works, no extra setup required
 - ✅ **Bilingual docs** (English & Chinese) for smoother team collaboration
-
-> Note: The `Updated` date in the `.stignore` header is the ruleset revision date. The script/package release version and date live in CHANGELOG (currently `v1.14.0`, released `2026-08-07`); the two may differ and that is expected.
 - ✅ **Actively maintained** as the ecosystem evolves
+
+> Note: The `Updated` date in the `.stignore` header is the ruleset revision date (`2026-08-31`). The tool release version lives in CHANGELOG (currently `v1.15.0`, released `2026-08-31`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
 
 ### Pattern Syntax
 
@@ -47,22 +47,25 @@
 
 The `.stignore` file is organized into the following 17 categories (see the file for full details):
 
-1. **System & OS Files** — `$RECYCLE.BIN`, `.DS_Store`, `Thumbs.db`, `desktop.ini`, `pagefile.sys`, `Program Files/`, `System Volume Information/`, `LOST.DIR/`, etc.
-2. **Database Files** — `#innodb_redo`, `#innodb_temp`, `ibdata1`, `*.ibd`, `pg_wal/`, `*.sqlite3`, `mongod.lock`, `dump.rdb`, etc.
-3. **Backup & Temporary Files** — `.cache`, `.tmp`, `.delete`, `Temp/`, `Backup_of_*`, etc.
-4. **Application Data & Caches** — `.stfolder/`, `.stversions`, `.dropbox.cache/`, `WeChat Files/`, `Tencent Files/`, `BaiduNetdiskDownload/`, `AliWorkbenchData/`, `Youku Files/`, `SteamLibrary/`, etc.
-5. **Version Control Systems** — `.git/`
-6. **Package Manager Caches & Dependencies** — `node_modules/`, `.npm/`, `.pnpm-store/`, `.venv/`, `__pycache__/`, `.cargo/`, `.gradle/`, `.m2/`, `.nuget/`, `.bun/`, `.deno/`, `.dart_tool/`, `vendor/`, etc.
+1. **System & OS Files** — `$RECYCLE.BIN/`, `.DS_Store`, `Thumbs.db`, `desktop.ini`, `pagefile.sys`, `/Program Files/`, `System Volume Information/`, `LOST.DIR/`, `found.000/`, etc.
+2. **Database Files** — `#innodb_redo/`, `ibdata1`, `*.ibd`, `pg_wal/`, `*.sqlite3`, `mongod.lock`, `dump.rdb`, `*.db-wal`, etc. (no blanket `*.db` — it would drop real data files)
+3. **Backup & Temporary Files** — `*.tmp`, `*.bak`, `.delete/`, `Temp/`, `Backup_of_*`, `.stignore.bak.*`, etc.
+4. **Application Data & Caches** — `.dropbox.cache/`, `WeChat Files/`, `Tencent Files/`, `BaiduNetdiskDownload/`, `AliWorkbenchData/`, `Youku Files/`, `SteamLibrary/`, etc. (`.stfolder/` and `.stversions` are **not** ignored — keeping them preserves folder markers and versioning)
+5. **Version Control Systems** — `.git/`, `.svn/`, `.hg/`
+6. **Package Manager Caches & Dependencies** — `node_modules/`, `.npm/`, `.pnpm-store/`, `.venv/`, `.cargo/`, `.gradle/`, `.m2/`, `.nuget/`, `.bun/`, `.deno/`, `.dart_tool/`, `vendor/`, etc. (matches nested paths too)
 7. **Frontend Framework Build Caches** — `.next/`, `.nuxt/`, `.svelte-kit/`, `.vite/`, `.turbo/`, `.astro/`, `.docusaurus/`, `.parcel-cache/`, `.vercel/`, `.netlify/`, `.vuepress/dist/`, etc.
 8. **Python & Testing Caches** — `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.coverage`, `.jest-cache/`, `.vitest/`, `.tox/`, `.nox/`, `.ipynb_checkpoints/`, `htmlcov/`, etc.
 9. **C/C++ & Rust Build Caches** — `CMakeCache.txt`, `CMakeFiles/`, `cmake-build-debug/`, `cmake-build-release/`, `compile_commands.json`, `.ccls-cache/`, `.clangd/`, `.rustc_cache/`, etc.
-10. **JVM & Scala Build Caches** — `.ammonite/`, `.bloop/`, `.metals/`, `.kotlintest/`
+10. **JVM & Scala Build Caches** — `.ammonite/`, `.bloop/`, `.metals/`, `.kotlintest/`, `.scala-build/`, `.mvn/`
 11. **IDE & Tool Caches** — `.idea/`, `.history/`, `.terraform/`, `.terraform.lock.hcl`, `.terragrunt-cache/`, `.helm/`, `.kube/`, `.flyway/`, etc.
-12. **Editor & Dev Tool Caches** — `.vscode/` (keeps `settings.json`), `.vim/`, `.swp`, `*~`, `.emacs.d/`, `.sublime-*`, `.zed/`, `.cursor/`, etc.
-13. **Archives & Partial Downloads** — `*.part`, `*.aria2`, `*.crdownload`, `/downloading/`, etc.
+12. **Editor & Dev Tool Caches** — `.vscode/` (keeps `settings.json`), `.vim/`, `*.swp`, `*~`, `.emacs.d/`, `.sublime-*`, `.zed/`, `.cursor/`, etc.
+13. **Archives & Partial Downloads** — `*.part`, `*.aria2`, `*.crdownload`, `downloading/`, etc.
 14. **Virtualization & Container Files** — `*.vmdk`, `*.qcow2`, `*.ova`, `.docker/`, `.minikube/`, `.vagrant/`, etc.
-15. **Media & Player Caches** — `.cache/`, `Spotify/`, `GPUCache/`, `Service Worker/`, `Spotlight-V100/`, `.Trashes/`, etc.
-16. **Lock & Log Files** — `*.lock`, `*.log.*`, `**.log`
+15. **Media & Player Caches** — `.cache/`, `.thumbnails/`, `Spotify/`, `GPUCache/`, `Code Cache/`, `Service Worker/`, `.Spotlight-V100/`, `.Trashes/`, etc.
+16. **Lock & Log Files** — `*.lock` (re-includes `Cargo.lock`, `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, etc.), `*.log`, `*.log.*`, `nohup.out`
+17. **Build Artifacts & Language Output** — `target/`, `dist/`, `build/`, `bin/`, `obj/`, `out/`, `*.pyc`, `*.class`, `*.o`, `*.pdb`, etc.
+
+> Heads-up: `dist/`, `build/`, `bin/`, `obj/`, `out/` and `target/` are generic names. If your project ships content from a folder with one of those names, delete the matching line in category 17.
 
 ### Usage
 
@@ -159,7 +162,7 @@ flowchart TD
     SUM --- LST[Result list (double-click to open)]
     LST --- LOG[Log box]
     LOG --- PROG[Progress bar + percentage]
-    PROG --- STATUS[Status: v1.14.1 | project link]
+    PROG --- STATUS[Status: v1.15.0 | project link]
 ```
 
 > The diagram above shows the UI regions. UI text switches live between EN/中文; all Chinese text is stored as `\u` escapes so the script stays pure ASCII.
