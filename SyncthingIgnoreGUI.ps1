@@ -1,6 +1,6 @@
 <#
 //File: SyncthingIgnoreGUI.ps1
-//Version: 1.17.0
+//Version: 1.17.1
 //Updated: 2026-08-31
 .SYNOPSIS
     Graphical interface for scanning and applying Syncthing .stignore rules,
@@ -54,7 +54,7 @@ Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles() | Out-Null
 
 $scriptDir = $PSScriptRoot
-$ScriptVersion = '1.17.0'
+$ScriptVersion = '1.17.1'
 $StandardRuleSource = Join-Path $scriptDir '.stignore'
 
 # ---------- Localization ----------
@@ -118,7 +118,8 @@ $T = @{
         noManifest  = 'No manifest found. Run Scan first.'
         statusIdle  = 'Ready.'
         statusPrep  = 'Preparing...'
-        statusScan  = 'Scanning {0}/{1} roots  |  found: {2}  |  {3}  |  {4}'
+        statusScan  = 'Scanning {0}/{1} roots | found: {2} | now: {3} | {4}'
+        statusScanOne = 'Scanning | found: {0} | now: {1} | {2}'
         statusApply = 'Applying {0}/{1}  |  {2}'
         scanning    = 'Scanning... found {0} so far'
         statusScanDone  = 'Scan done: {0} file(s) in {1}'
@@ -170,7 +171,8 @@ $T = @{
         openFile    = '\u6253\u5f00\u6587\u4ef6'
         statusIdle  = '\u5c31\u7eea\u3002'
         statusPrep  = '\u6b63\u5728\u51c6\u5907...'
-        statusScan  = '\u6b63\u5728\u626b\u63cf {0}/{1} \u4e2a\u6839\u76ee\u5f55  |  \u5df2\u627e\u5230\uff1a{2}  |  {3}  |  {4}'
+        statusScan  = '\u6b63\u5728\u626b\u63cf {0}/{1} \u4e2a\u6839\u76ee\u5f55  |  \u5df2\u627e\u5230\uff1a{2}  |  \u5f53\u524d\uff1a{3}  |  {4}'
+        statusScanOne = '\u6b63\u5728\u626b\u63cf  |  \u5df2\u627e\u5230\uff1a{0}  |  \u5f53\u524d\uff1a{1}  |  {2}'
         statusApply = '\u6b63\u5728\u5e94\u7528 {0}/{1}  |  {2}'
         scanning    = '\u6b63\u5728\u626b\u63cf... \u76ee\u524d\u5df2\u627e\u5230 {0} \u4e2a'
         statusScanDone  = '\u626b\u63cf\u5b8c\u6210\uff1a{0} \u4e2a\u6587\u4ef6\uff0c\u7528\u65f6 {1}'
@@ -578,7 +580,9 @@ function New-ScanState {
     $st.Done    = 0
     $st.Total   = 0
     $st.Current = ''
+    $st.CurrentDir = ''
     $st.Last    = ''
+    $st.ErrDirs = 0
     $st.Started = $null
     $st.Records = [System.Collections.ArrayList]::Synchronized((New-Object System.Collections.ArrayList))
     return $st
@@ -610,8 +614,9 @@ function Update-ScanStatus {
     $files = [int]$State.Files
     $done  = [int]$State.Done
     $total = [int]$State.Total
-    $last  = [string]$State.Last
-    if (-not $last) { $last = [string]$State.Current }
+    # Prefer the directory being traversed; fall back to the latest hit.
+    $last  = [string]$State.CurrentDir
+    if (-not $last) { $last = [string]$State.Last }
     $el = Format-Elapsed $State.Started
     if ($total -gt 1 -and $progress.Style -ne 'Marquee') {
         $pct = [int](($done / [Math]::Max(1, $total)) * 100)
@@ -622,8 +627,14 @@ function Update-ScanStatus {
         $lblPct.Text = "$files"
     }
     $lblPct.Visible = $true
-    $tpl = $T[$lang].statusScan
-    $lblStatus.Text = (Lmsg ($tpl -f $done, $total, $files, (Shorten-Path $last), $el) (Decode-Uni $tpl -f $done, $total, $files, (Shorten-Path $last), $el))
+    $cur = Shorten-Path $last 72
+    if ($total -gt 1) {
+        $tpl = $T[$lang].statusScan
+        $lblStatus.Text = (Lmsg ($tpl -f $done, $total, $files, $cur, $el) (Decode-Uni $tpl -f $done, $total, $files, $cur, $el))
+    } else {
+        $tpl = $T[$lang].statusScanOne
+        $lblStatus.Text = (Lmsg ($tpl -f $files, $cur, $el) (Decode-Uni $tpl -f $files, $cur, $el))
+    }
     $scanTpl = $T[$lang].scanning
     $lblSummary.Text = (Lmsg ($scanTpl -f $files) (Decode-Uni $scanTpl -f $files))
     # Stream newly found paths into the results list as they are discovered.
@@ -676,32 +687,55 @@ function Start-ParallelScan {
                 [System.Threading.Monitor]::Exit($State.Lock)
             }
         }
+        # Explicit depth-first walk instead of Get-ChildItem -Recurse: the
+        # pipeline cannot report where it currently is, while this loop
+        # publishes every directory it enters to the shared state, so the GUI
+        # can show the live scan path. One enumeration per directory yields
+        # both files and sub-directories (no extra IO per entry).
         function Find-StignoreFiles {
             param([string]$Root, [string]$ScriptDir, $State)
             $local = [System.Collections.ArrayList]::new()
-            if ($null -ne $State) { $State.Current = $Root }
-            try {
-                Get-ChildItem -Path $Root -Filter '.stignore' -Recurse -File -Force -ErrorAction SilentlyContinue |
-                    ForEach-Object {
-                        $full = $_.FullName
-                        if ($full -like '*\.git\*') { return }
-                        if ($full -like "$ScriptDir*") { return }
+            if (-not [System.IO.Directory]::Exists($Root)) {
+                [void]$local.Add([pscustomobject]@{ __error = "$Root : directory not found" })
+                return $local
+            }
+            $skipDir = if ($ScriptDir) { $ScriptDir.TrimEnd('\', '/').ToLowerInvariant() } else { '' }
+            $stack = [System.Collections.Stack]::new()
+            $stack.Push($Root)
+            while ($stack.Count -gt 0) {
+                $dir = [string]$stack.Pop()
+                # Live feedback: the directory being traversed right now.
+                if ($null -ne $State) { $State.CurrentDir = $dir }
+                try {
+                    $di = [System.IO.DirectoryInfo]::new($dir)
+                    foreach ($e in $di.EnumerateFileSystemInfos('*')) {
+                        if ($e -is [System.IO.DirectoryInfo]) {
+                            # Skip .git and the tool's own directory subtree.
+                            if ($e.Name -eq '.git') { continue }
+                            if ($skipDir -and $e.FullName.ToLowerInvariant() -eq $skipDir) { continue }
+                            $stack.Push($e.FullName)
+                            continue
+                        }
+                        if ($e.Name -ne '.stignore') { continue }
                         $rec = [pscustomobject]@{
-                            path         = $full
-                            size         = $_.Length
-                            lastWriteUtc = $_.LastWriteTimeUtc.ToString('o')
+                            path         = $e.FullName
+                            size         = $e.Length
+                            lastWriteUtc = $e.LastWriteTimeUtc.ToString('o')
                             foundAtUtc   = (Get-Date).ToUniversalTime().ToString('o')
                         }
                         [void]$local.Add($rec)
                         # Live feedback: count + latest hit shared with the GUI.
                         if ($null -ne $State) {
                             Add-StateCount $State 'Files' 1
-                            $State.Last = $full
+                            $State.Last = $e.FullName
                             [void]$State.Records.Add($rec)
                         }
                     }
-            } catch {
-                [void]$local.Add([pscustomobject]@{ __error = "$Root : $($_.Exception.Message)" })
+                } catch {
+                    # Unreadable directory (access denied / too long path):
+                    # count it and keep walking the rest of the tree.
+                    if ($null -ne $State) { Add-StateCount $State 'ErrDirs' 1 }
+                }
             }
             return $local
         }
@@ -1054,6 +1088,12 @@ $btnScan.Add_Click({
                 # if nothing was rendered (e.g. live state unavailable).
                 if ($script:lstResults.Items.Count -eq 0) {
                     foreach ($rec in $records) { [void]$script:lstResults.Items.Add($rec.path) }
+                }
+                # Unreadable directories were skipped individually; report the
+                # total once so the count is visible but does not flood the log.
+                $skipDirs = [int]$script:scanState.ErrDirs
+                if ($skipDirs -gt 0) {
+                    Add-Log (Lmsg "Skipped $skipDirs inaccessible directories." "\u5df2\u8df3\u8fc7 $skipDirs \u4e2a\u65e0\u6743\u8bbf\u95ee\u7684\u76ee\u5f55\u3002") 'DarkGray'
                 }
                 # Marquee mode rejects Value assignments, so switch back first.
                 $progress.Style = 'Blocks'

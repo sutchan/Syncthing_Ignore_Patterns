@@ -2,7 +2,7 @@
 
 > A curated, ready-to-use `.stignore` rule set: 20 categories · 285 patterns that exclude system files, caches, build artifacts, and app data.
 
-![Version](https://img.shields.io/badge/version-v1.17.0-blue)
+![Version](https://img.shields.io/badge/version-v1.17.1-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--08--31-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-20-blueviolet)
@@ -18,7 +18,7 @@
 - ✅ **Bilingual docs** plus a batch-sync GUI tool
 - ✅ **Actively maintained** as the ecosystem evolves
 
-> The `Updated` date in the `.stignore` header (`2026-08-31`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.17.0`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
+> The `Updated` date in the `.stignore` header (`2026-08-31`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.17.1`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
 
 ### Quick Start
 
@@ -100,7 +100,7 @@ powershell -STA -NoProfile -File .\SyncthingIgnoreGUI.ps1   # equivalent
 - **Scan**: runspace pool (≤4 threads) with `-Filter .stignore`; leave the root blank to scan all fixed drives, or drag & drop a folder
 - **Options**: `Preview` (write nothing), `Force` (skip per-file confirmation), `Back up manifest`
 - **Manifest**: defaults to `config/stignore-paths.json`, storing path/size/mtime; already-matching files are skipped, stale paths are cleaned only with `Force`
-- **Live status**: while scanning/applying, the status line shows roots done, files found, the latest hit and elapsed time; results stream in as they are found (a single root switches the bar to marquee mode instead of a fake percentage)
+- **Live status**: while scanning, the status line shows roots done, files found, the **directory currently being scanned** and elapsed time; results stream in as they are found (a single root switches the bar to marquee mode instead of a fake percentage)
 - **More**: background execution keeps the UI responsive, double-click a result to open it, **Stop** aborts the background job, and the status bar shows the version plus a project link
 
 ```mermaid

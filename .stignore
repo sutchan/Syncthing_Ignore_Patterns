@@ -1,5 +1,5 @@
 //Syncthing Ignore Patterns Lists
-//Version: 1.17.0
+//Version: 1.17.1
 //Updated: 2026-08-31
 
 //System & OS Files
@@ -22,6 +22,7 @@
 **/.PKInstallSandboxManager
 **/.com.apple.timemachine.donotpresent
 **/.metadata_never_index
+**/metadata/
 **/Thumbs.db
 **/ehthumbs.db
 **/desktop.ini
