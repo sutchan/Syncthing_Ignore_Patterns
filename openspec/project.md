@@ -7,7 +7,7 @@
 Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产物与应用数据，
 造成带宽与存储浪费。本项目提供：
 
-1. **规则集** `.stignore` — 开箱即用的 20 类忽略模式（系统/OS 文件、数据库、
+1. **规则集** `.stignore` — 开箱即用的 21 类忽略模式（系统/OS 文件、数据库、
    备份临时文件、应用缓存、版本控制、包管理器、前端/Python/C++/JVM 构建缓存、
    IDE/编辑器、归档与部分下载、虚拟化、媒体、锁与日志、构建产物、缓存与临时
    目录、浏览器存储缓存、系统临时位置等噪音）。
@@ -29,7 +29,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 
 ```
 SyncthingIgnorePatterns/
-├── .stignore                 # 标准规则源文件（Apply 依赖，版本 v1.18.0）
+├── .stignore                 # 标准规则源文件（Apply 依赖，版本 v1.18.4）
 ├── SyncthingIgnoreGUI.ps1    # 主工具（GUI + 扫描/应用逻辑，纯 ASCII）
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档
@@ -89,6 +89,18 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.18.4 (2026-09-21)
+- fix(gui): 后台作业改由克隆会话状态的 runspace 运行（`CreateDefault` + 复制脚本函数），修复 Scan/Apply 因 runspace 隔离抛 `CommandNotFoundException`、且 `$T`/`$lang` 等脚本变量不可见导致的**两个核心功能完全不可用**
+- fix(gui): Apply 进度/状态/摘要/日志改走 `Synchronized` 共享状态 + UI Timer 轮询，移除失效的 `Control.Invoke` 闭包（PowerShell 闭包无法跨 `Control.Invoke` 捕获脚本变量）
+- fix(gui): `Lmsg` 中文分支 `Decode-Uni $X -f ...` 运算符优先级错误，导致中文状态/摘要/进度/确认框/关于框显示未替换的模板字面量（如 `已找到 {0}`），改为 `((Decode-Uni $X) -f ...)`
+- fix(gui): `Write-LogLine` 的 `Color` 参数此前被忽略，日志框改用 `RichTextBox` 实现逐行着色
+- fix(gui): 语言下拉框项已本地化（中文界面显示 英文/中文）；`Pick-File` 初始目录跟随当前清单路径；修正停止应用提示中误用的全角小于号 `\uff1c` → `\uff1b`
+- docs: 版本同步至 v1.18.4（脚本头 / `$ScriptVersion` / `.stignore` 头 / README 徽章 / openspec）
+
+### v1.18.3 (2026-09-21)
+- feat(stignore): 新增第 21 类「AI 编码助手与 Vibecoding 临时文件」，覆盖 20 个 AI 结对编程工具数据/缓存目录（.codex/ .gemini/ .qwen/ .codeium/ .continue/ .cline/ .roo/ .kilocode/ .cody/ .trae/ .junie/ .supermaven/ .opencode/ .goose/ .openhands/ .augment/ .tabnine/ .qoder/ .workbuddy/ .amp/），规则总数 309 → 329
+- docs: README / README_EN 分类概览同步新增第 21 类，徽章分类 20→21、规则数 309→329；版本同步至 v1.18.3
 
 ### v1.18.2 (2026-08-31)
 - fix(gui): 扫描/应用后台 job 升脚本作用域 + 点击清理并行竞争；取消分支置 handles `$null` 守卫；apply 失败不再误报完成；`Get-FileHash` 锁文件容错；进度推送去 `Controls.Find`；日志去 `DoEvents` 重入

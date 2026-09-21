@@ -1,6 +1,6 @@
 <#
 //File: SyncthingIgnoreGUI.ps1
-//Version: 1.18.2
+//Version: 1.18.4
 //Updated: 2026-08-31
 .SYNOPSIS
     Graphical interface for scanning and applying Syncthing .stignore rules,
@@ -54,7 +54,7 @@ Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles() | Out-Null
 
 $scriptDir = $PSScriptRoot
-$ScriptVersion = '1.18.2'
+$ScriptVersion = '1.18.4'
 $StandardRuleSource = Join-Path $scriptDir '.stignore'
 
 # ---------- Localization ----------
@@ -342,7 +342,7 @@ $lblLog.Location = New-Object System.Drawing.Point(16, 430)
 $lblLog.AutoSize = $true
 $form.Controls.Add($lblLog)
 
-$txtLog = New-Object System.Windows.Forms.TextBox
+$txtLog = New-Object System.Windows.Forms.RichTextBox
 $txtLog.Location = New-Object System.Drawing.Point(16, 452)
 $txtLog.Size = New-Object System.Drawing.Size(672, 88)
 $txtLog.Multiline = $true
@@ -537,6 +537,10 @@ function Apply-Language {
         $cmbTheme.Items[0] = if ($lang -eq 'zh') { Decode-Uni $d.themeLight } else { $d.themeLight }
         $cmbTheme.Items[1] = if ($lang -eq 'zh') { Decode-Uni $d.themeDark } else { $d.themeDark }
     }
+    if ($cmbLang.Items.Count -ge 2) {
+        $cmbLang.Items[0] = if ($lang -eq 'zh') { Decode-Uni $d.enItem } else { $d.enItem }
+        $cmbLang.Items[1] = if ($lang -eq 'zh') { Decode-Uni $d.zhItem } else { $d.zhItem }
+    }
     if ($lang -eq 'zh') {
         $lblVersion.Text = "v$ScriptVersion  |  SyncthingIgnorePatterns"
         $lblRepo.Text    = "$(Decode-Uni $d.repo)$RepoUrl"
@@ -553,11 +557,18 @@ function Apply-Language {
 }
 
 # ---------- Helpers ----------
-# Unified logging entry used by both Scan and Apply jobs.
+# Unified logging entry. Called only from the UI thread (timer ticks / button
+# handlers), so it touches $txtLog directly without cross-thread marshalling.
+# The background Apply job does NOT call this; it writes to the shared
+# $script:applyState log queue, which the apply timer drains onto $txtLog.
 function Write-LogLine {
     param([string]$Message, [string]$Color = 'Black')
     $ts = (Get-Date).ToString('HH:mm:ss')
+    $col = [System.Drawing.Color]::Black
+    try { $col = [System.Drawing.Color]::FromName($Color) } catch {}
+    if ($col.IsEmpty) { $col = [System.Drawing.Color]::Black }
     $txtLog.SelectionStart = $txtLog.Text.Length
+    $txtLog.SelectionColor = $col
     $txtLog.AppendText("[$ts] $Message`r`n")
     $txtLog.ScrollToCaret()
 }
@@ -566,6 +577,27 @@ function Write-LogLine {
 function Add-Log {
     param([string]$Message, [string]$Color = 'Black')
     Write-LogLine -Message $Message -Color $Color
+}
+
+# Build a background runspace's InitialSessionState seeded with the script
+# functions the jobs call. A default [powershell]::Create() runspace is isolated
+# and would throw CommandNotFoundException for Invoke-ScanCore / Start-ApplyJob.
+# Variables the jobs reference ($T, $lang, controls, ...) are injected per call
+# via a wrapper script block (a SessionStateVariableEntry copy does not bind to
+# the copied function's scope), so only functions are seeded here.
+function New-BackgroundRunspace {
+    # CreateDefault (not Create) so the built-in providers - notably FileSystem,
+    # required by Get-Content / Get-ChildItem - are available in the job runspace.
+    $iss = [System.Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
+    $iss.LanguageMode = [System.Management.Automation.PSLanguageMode]::FullLanguage
+    $names = 'Invoke-ScanCore', 'Start-ApplyJob', 'Start-ParallelScan', 'New-ScanState',
+             'Lmsg', 'Decode-Uni', 'Shorten-Path', 'Limit-Backups', 'Add-ApplyLog'
+    foreach ($fn in (Get-ChildItem -Path function: -ErrorAction SilentlyContinue)) {
+        if ($names -contains $fn.Name) {
+            try { $iss.Commands.Add((New-Object System.Management.Automation.Runspaces.SessionStateFunctionEntry $fn.Name, $fn.ScriptBlock)) } catch {}
+        }
+    }
+    return $iss
 }
 
 # ---------- Real-time status helpers ----------
@@ -585,6 +617,29 @@ function New-ScanState {
     $st.Started = $null
     $st.Records = [System.Collections.ArrayList]::Synchronized((New-Object System.Collections.ArrayList))
     return $st
+}
+
+# Shared state for the Apply job, mirroring New-ScanState. The background job
+# writes progress / status / summary / log lines into it; the apply timer tick
+# (running on the UI thread) drains it onto the controls. This avoids any
+# cross-thread control access or PowerShell closure variable capture, which is
+# unreliable across runspace/Control.Invoke boundaries.
+function New-ApplyState {
+    $st = [hashtable]::Synchronized(([hashtable]@{}))
+    $st.Lock         = New-Object object
+    $st.Progress     = 0
+    $st.Status       = ''
+    $st.Summary      = ''
+    $st.Started      = Get-Date
+    $st.Log          = [System.Collections.ArrayList]::Synchronized((New-Object System.Collections.ArrayList))
+    return $st
+}
+
+# Append a log line (text + color name) to the shared Apply log queue.
+function Add-ApplyLog {
+    param($State, [string]$Message, [string]$Color = 'Black')
+    if ($null -eq $State) { return }
+    [void]$State.Log.Add([pscustomobject]@{ text = $Message; color = $Color })
 }
 
 # Elapsed time as mm:ss (h:mm:ss past one hour).
@@ -629,13 +684,13 @@ function Update-ScanStatus {
     $cur = Shorten-Path $last 72
     if ($total -gt 1) {
         $tpl = $T[$lang].statusScan
-        $lblStatus.Text = (Lmsg ($tpl -f $done, $total, $files, $cur, $el) (Decode-Uni $tpl -f $done, $total, $files, $cur, $el))
+        $lblStatus.Text = (Lmsg ($tpl -f $done, $total, $files, $cur, $el) ((Decode-Uni $tpl) -f $done, $total, $files, $cur, $el))
     } else {
         $tpl = $T[$lang].statusScanOne
-        $lblStatus.Text = (Lmsg ($tpl -f $files, $cur, $el) (Decode-Uni $tpl -f $files, $cur, $el))
+        $lblStatus.Text = (Lmsg ($tpl -f $files, $cur, $el) ((Decode-Uni $tpl) -f $files, $cur, $el))
     }
     $scanTpl = $T[$lang].scanning
-    $lblSummary.Text = (Lmsg ($scanTpl -f $files) (Decode-Uni $scanTpl -f $files))
+    $lblSummary.Text = (Lmsg ($scanTpl -f $files) ((Decode-Uni $scanTpl) -f $files))
     # Stream newly found paths into the results list as they are discovered.
     $recs = $State.Records
     if ($null -ne $recs -and $recs.Count -gt $script:scanRendered) {
@@ -811,7 +866,7 @@ function Pick-File {
     $dlg.Title = $Title
     $dlg.Filter = $Filter
     $dlg.FileName = [System.IO.Path]::GetFileName($txtOut.Text)
-    $dlg.InitialDirectory = $scriptDir
+    $dlg.InitialDirectory = (Split-Path $txtOut.Text -Parent)
     if ($dlg.ShowDialog() -eq 'OK') { return $dlg.FileName }
     return $null
 }
@@ -848,7 +903,7 @@ function Start-ApplyJob {
         [bool]$WhatIf,
         [bool]$Force,
         [bool]$BackupList,
-        $FormObj
+        $State
     )
     if (-not (Test-Path $Source -PathType Leaf)) { throw (Lmsg "Standard rule source not found: $Source" "\u672a\u627e\u5230\u6807\u51c6\u89c4\u5219\u6e90\u6587\u4ef6\uff1a$Source") }
     if (-not (Test-Path $List -PathType Leaf)) { throw (Lmsg "Manifest not found: $List (run Scan first)" "\u672a\u627e\u5230\u6e05\u5355\uff1a$List\uff08\u8bf7\u5148\u626b\u63cf\uff09") }
@@ -856,7 +911,7 @@ function Start-ApplyJob {
     $sourceBytes = [System.IO.File]::ReadAllBytes($Source)
     if ($sourceBytes.Length -eq 0) { throw (Lmsg "Standard rule source is empty: $Source" "\u6807\u51c6\u89c4\u5219\u6e90\u6587\u4ef6\u4e3a\u7a7a\uff1a$Source") }
     $sourceHash = (Get-FileHash -Path $Source -Algorithm SHA256).Hash
-    Write-LogLine (Lmsg "Source: $Source  SHA256: $sourceHash" "\u6e90\uff1a$Source  SHA256\uff1a$sourceHash") 'DarkGray'
+    Add-ApplyLog $State (Lmsg "Source: $Source  SHA256: $sourceHash" "\u6e90\uff1a$Source  SHA256\uff1a$sourceHash") 'DarkGray'
 
     try {
         $manifest = Get-Content -Path $List -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -875,34 +930,26 @@ function Start-ApplyJob {
         $full = $item.path
         if ([string]::IsNullOrWhiteSpace($full)) { continue }
         $done++
-        if ($null -ne $FormObj) {
+        if ($null -ne $State) {
             $pct = [int](($done / [Math]::Max(1, $total)) * 100)
             $applyTpl = $T[$lang].statusApply
-            $curText = (Lmsg ($applyTpl -f $done, $total, (Shorten-Path $full)) (Decode-Uni $applyTpl -f $done, $total, (Shorten-Path $full)))
-            $FormObj.Invoke([Action[int,string]] {
-                param([int]$p, [string]$c)
-                # Access controls directly via script-scope references captured in
-                # this closure (already on the STA thread inside Invoke) instead of
-                # string-based Controls.Find, which is fragile under theme relayout.
-                if ($progress.Style -ne 'Marquee') { $progress.Value = [Math]::Max(0, [Math]::Min(100, $p)) }
-                $lblPct.Text = "$p%"
-                $lblStatus.Text = $c
-                [System.Windows.Forms.Application]::DoEvents()
-            }, @($pct, $curText))
+            $curText = (Lmsg ($applyTpl -f $done, $total, (Shorten-Path $full)) ((Decode-Uni $applyTpl) -f $done, $total, (Shorten-Path $full)))
+            $State.Progress = $pct
+            $State.Status = $curText
         }
         if (-not (Test-Path $full -PathType Leaf)) {
             $doClean = $Force
             if (-not $doClean) {
-                Write-LogLine (Lmsg "  stale path (skipped, use Force to clean): $full" "  \u5931\u6548\u8def\u5f84\uff08\u5df2\u8df3\u8fc7\uff0c\u7528\u5f3a\u5236\u6e05\u7406\uff09\uff1a$full") 'DarkOrange'
+                Add-ApplyLog $State (Lmsg "  stale path (skipped, use Force to clean): $full" "  \u5931\u6548\u8def\u5f84\uff08\u5df2\u8df3\u8fc7\uff0c\u7528\u5f3a\u5236\u6e05\u7406\uff09\uff1a$full") 'DarkOrange'
                 [void]$records.Add($item)
                 continue
             }
             if ($WhatIf) {
-                Write-LogLine (Lmsg "  [preview] will clean: $full" "  \u9884\u89c8 \u5c06\u6e05\u7406\uff1a$full") 'Yellow'
+                Add-ApplyLog $State (Lmsg "  [preview] will clean: $full" "  \u9884\u89c8 \u5c06\u6e05\u7406\uff1a$full") 'Yellow'
                 $cleaned++
                 continue
             }
-            Write-LogLine (Lmsg "  cleaned stale path: $full" "  \u5df2\u6e05\u7406\u5931\u6548\u8def\u5f84\uff1a$full") 'DarkGray'
+            Add-ApplyLog $State (Lmsg "  cleaned stale path: $full" "  \u5df2\u6e05\u7406\u5931\u6548\u8def\u5f84\uff1a$full") 'DarkGray'
             $cleaned++
             continue
         }
@@ -913,24 +960,24 @@ function Start-ApplyJob {
             # File locked or unreadable (e.g. in use by another process). Count it
             # as an error and keep the existing record instead of aborting the job.
             $errors++
-            Write-LogLine (Lmsg "  hash error (kept, skipped replace): $full -> $_" "  \u54c8\u5e0c\u9519\u8bef\uff08\u4fdd\u7559\uff0c\u8df3\u8fc7\u66ff\u6362\uff09\uff1a$full -> $_") 'Red'
+            Add-ApplyLog $State (Lmsg "  hash error (kept, skipped replace): $full -> $_" "  \u54c8\u5e0c\u9519\u8bef\uff08\u4fdd\u7559\uff0c\u8df3\u8fc7\u66ff\u6362\uff09\uff1a$full -> $_") 'Red'
             [void]$records.Add($item)
             continue
         }
         if ($fileHash -eq $sourceHash) {
-            Write-LogLine (Lmsg "  skipped (identical): $full" "  \u8df3\u8fc7\uff08\u5df2\u4e00\u81f4\uff09\uff1a$full") 'DarkGray'
+            Add-ApplyLog $State (Lmsg "  skipped (identical): $full" "  \u8df3\u8fc7\uff08\u5df2\u4e00\u81f4\uff09\uff1a$full") 'DarkGray'
             $skippedSame++
             [void]$records.Add($item)
             continue
         }
         if ($WhatIf) {
-            Write-LogLine (Lmsg "  [preview] will replace: $full" "  \u9884\u89c8 \u5c06\u66ff\u6362\uff1a$full") 'Yellow'
+            Add-ApplyLog $State (Lmsg "  [preview] will replace: $full" "  \u9884\u89c8 \u5c06\u66ff\u6362\uff1a$full") 'Yellow'
             $replaced++
             [void]$records.Add($item)
             continue
         }
         if (-not $Force) {
-            Write-LogLine (Lmsg "  skipped (use Force to replace): $full" "  \u8df3\u8fc7\uff08\u7528\u5f3a\u5236\u66ff\u6362\uff09\uff1a$full") 'DarkOrange'
+            Add-ApplyLog $State (Lmsg "  skipped (use Force to replace): $full" "  \u8df3\u8fc7\uff08\u7528\u5f3a\u5236\u66ff\u6362\uff09\uff1a$full") 'DarkOrange'
             [void]$records.Add($item)
             continue
         }
@@ -943,17 +990,17 @@ function Start-ApplyJob {
                 Copy-Item -Path $full -Destination $bak -Force
                 $removed = Limit-Backups -Base $full -Keep 3
                 if ($removed -gt 0) {
-                    Write-LogLine (Lmsg "  cleaned $removed old backup(s) for: $full" "  \u5df2\u6e05\u7406 $removed \u4e2a\u65e7\u5907\u4efd\uff1a$full") 'DarkGray'
+                    Add-ApplyLog $State (Lmsg "  cleaned $removed old backup(s) for: $full" "  \u5df2\u6e05\u7406 $removed \u4e2a\u65e7\u5907\u4efd\uff1a$full") 'DarkGray'
                 }
-                Write-LogLine (Lmsg "  replaced (backup: $bak): $full" "  \u5df2\u66ff\u6362\uff08\u5907\u4efd\uff1a$bak\uff09\uff1a$full") 'Green'
+                Add-ApplyLog $State (Lmsg "  replaced (backup: $bak): $full" "  \u5df2\u66ff\u6362\uff08\u5907\u4efd\uff1a$bak\uff09\uff1a$full") 'Green'
             } else {
-                Write-LogLine (Lmsg "  replaced (no backup, source .stignore): $full" "  \u5df2\u66ff\u6362\uff08\u4e0d\u5907\u4efd\uff0c\u6e90 .stignore\uff09\uff1a$full") 'Green'
+                Add-ApplyLog $State (Lmsg "  replaced (no backup, source .stignore): $full" "  \u5df2\u66ff\u6362\uff08\u4e0d\u5907\u4efd\uff0c\u6e90 .stignore\uff09\uff1a$full") 'Green'
             }
             [System.IO.File]::WriteAllBytes($full, $sourceBytes)
             $replaced++
             [void]$records.Add($item)
         } catch {
-            Write-LogLine (Lmsg "  failed $full : $($_.Exception.Message)" "  \u5931\u8d25 $full \uff1a$($_.Exception.Message)") 'Red'
+            Add-ApplyLog $State (Lmsg "  failed $full : $($_.Exception.Message)" "  \u5931\u8d25 $full \uff1a$($_.Exception.Message)") 'Red'
             $errors++
             [void]$records.Add($item)
         }
@@ -965,9 +1012,9 @@ function Start-ApplyJob {
             Copy-Item -Path $List -Destination $listBak -Force
             $removed = Limit-Backups -Base $List -Keep 3
             if ($removed -gt 0) {
-                Write-LogLine (Lmsg "Cleaned $removed old manifest backup(s)" "\u5df2\u6e05\u7406 $removed \u4e2a\u65e7\u6e05\u5355\u5907\u4efd") 'DarkGray'
+                Add-ApplyLog $State (Lmsg "Cleaned $removed old manifest backup(s)" "\u5df2\u6e05\u7406 $removed \u4e2a\u65e7\u6e05\u5355\u5907\u4efd") 'DarkGray'
             }
-            Write-LogLine (Lmsg "Manifest backed up: $listBak" "\u6e05\u5355\u5df2\u5907\u4efd\uff1a$listBak") 'DarkGray'
+            Add-ApplyLog $State (Lmsg "Manifest backed up: $listBak" "\u6e05\u5355\u5df2\u5907\u4efd\uff1a$listBak") 'DarkGray'
         }
         $newManifest = [pscustomobject]@{
             version   = $manifest.version
@@ -981,15 +1028,11 @@ function Start-ApplyJob {
         Set-Content -Path $List -Value $json -Encoding UTF8
     }
 
-    Write-LogLine (Lmsg "Summary: valid=$kept identical=$skippedSame replaced=$replaced cleaned=$cleaned errors=$errors" "\u6458\u8981\uff1a\u6709\u6548=$kept \u4e00\u81f4=$skippedSame \u66ff\u6362=$replaced \u6e05\u7406=$cleaned \u9519\u8bef=$errors") 'Cyan'
+    Add-ApplyLog $State (Lmsg "Summary: valid=$kept identical=$skippedSame replaced=$replaced cleaned=$cleaned errors=$errors" "\u6458\u8981\uff1a\u6709\u6548=$kept \u4e00\u81f4=$skippedSame \u66ff\u6362=$replaced \u6e05\u7406=$cleaned \u9519\u8bef=$errors") 'Cyan'
 
-    # Surface a short status for the GUI summary label via a cross-thread-safe call.
-    if ($null -ne $FormObj) {
-        $summaryMsg = (Lmsg ($T[$lang].summary -f $total) (Decode-Uni $T[$lang].summary -f $total))
-        $FormObj.Invoke([Action[string]] {
-            param([string]$m)
-            $script:lblSummary.Text = $m
-        }, $summaryMsg)
+    # Surface a short status for the GUI summary label via the shared state.
+    if ($null -ne $State) {
+        $State.Summary = (Lmsg ($T[$lang].summary -f $total) ((Decode-Uni $T[$lang].summary) -f $total))
     }
 }
 
@@ -1040,6 +1083,10 @@ $btnScan.Add_Click({
         try { $script:scanBg.Dispose() } catch {}
         $script:scanBg = $null
     }
+    if ($null -ne $script:scanRs) {
+        try { $script:scanBg.Runspace.Dispose() } catch {}
+        $script:scanRs = $null
+    }
     Add-Log (Lmsg '--- Starting scan ---' '--- \u5f00\u59cb\u626b\u63cf ---') 'Blue'
     $lstResults.Items.Clear()
     $out = $txtOut.Text.Trim()
@@ -1067,7 +1114,8 @@ $btnScan.Add_Click({
 
     # Run the scan off the UI thread so the GUI stays responsive. The shared
     # $script:scanState carries live counters back to the UI thread.
-    $script:scanBg = [powershell]::Create().AddCommand('Invoke-ScanCore').AddArgument($rootArg).AddArgument($scriptDir).AddArgument($script:scanState)
+    $script:scanRs = New-BackgroundRunspace
+    $script:scanBg = [powershell]::Create($script:scanRs).AddCommand('Invoke-ScanCore').AddArgument($rootArg).AddArgument($scriptDir).AddArgument($script:scanState)
     $script:scanHandle = $script:scanBg.BeginInvoke()
     $script:cancelFlag = $false
 
@@ -1082,6 +1130,8 @@ $btnScan.Add_Click({
             # Hard-abort the background job so it cannot write the manifest.
             try { $script:scanBg.Stop() } catch {}
             try { $script:scanBg.Dispose() } catch {}
+            try { $script:scanBg.Runspace.Dispose() } catch {}
+            $script:scanRs = $null
             # Null the handles so a queued extra tick cannot call EndInvoke on a
             # disposed object (which would log a spurious error).
             $script:scanBg = $null; $script:scanHandle = $null
@@ -1096,6 +1146,7 @@ $btnScan.Add_Click({
             try {
                 $core = $script:scanBg.EndInvoke($script:scanHandle)
                 $script:scanBg.Dispose()
+                try { $script:scanBg.Runspace.Dispose() } catch {}
                 $raw = $core.raw
                 $roots = $core.roots
                 $records = [System.Collections.ArrayList]::new()
@@ -1137,10 +1188,10 @@ $btnScan.Add_Click({
                     Add-Log (Lmsg "Scan complete. Files: $($records.Count) (errors: $errCount). Manifest: $out" "\u626b\u63cf\u5b8c\u6210\u3002\u6587\u4ef6\u6570\uff1a$($records.Count)\uff08\u9519\u8bef\uff1a$errCount\uff09\u3002\u6e05\u5355\uff1a$out") 'Green'
                     [System.Windows.Forms.MessageBox]::Show((Lmsg $T[$lang].scanDone (Decode-Uni $T[$lang].scanDone)), (Lmsg $T[$lang].confirmTitle (Decode-Uni $T[$lang].confirmTitle)), 'OK', 'Information') | Out-Null
                 }
-                $script:lblSummary.Text = (Lmsg ($T[$lang].summary -f $records.Count) (Decode-Uni $T[$lang].summary -f $records.Count))
+                $script:lblSummary.Text = (Lmsg ($T[$lang].summary -f $records.Count) ((Decode-Uni $T[$lang].summary) -f $records.Count))
                 $scanTpl = $T[$lang].statusScanDone
                 $el = Format-Elapsed $script:scanState.Started
-                $lblStatus.Text = (Lmsg ($scanTpl -f $records.Count, $el) (Decode-Uni $scanTpl -f $records.Count, $el))
+                $lblStatus.Text = (Lmsg ($scanTpl -f $records.Count, $el) ((Decode-Uni $scanTpl) -f $records.Count, $el))
             } catch {
                 Add-Log (Lmsg "ERROR: $_" "\u9519\u8bef\uff1a$_") 'Red'
             } finally {
@@ -1169,7 +1220,7 @@ $btnApply.Add_Click({
     if (-not $chkPreview.Checked -and -not $chkForce.Checked) {
         $count = 0
         try { $count = @((Get-Content -Path $list -Raw -Encoding UTF8 | ConvertFrom-Json).files).Count } catch {}
-        $msg = (Lmsg ($T[$lang].applyConfirm -f $count) (Decode-Uni $T[$lang].applyConfirm -f $count))
+        $msg = (Lmsg ($T[$lang].applyConfirm -f $count) ((Decode-Uni $T[$lang].applyConfirm) -f $count))
         $ans = [System.Windows.Forms.MessageBox]::Show($msg, (Lmsg $T[$lang].applyTitle (Decode-Uni $T[$lang].applyTitle)), 'YesNo', 'Warning')
         if ($ans -ne 'Yes') {
             Add-Log (Lmsg 'Apply cancelled by user.' '\u5e94\u7528\u5df2\u88ab\u7528\u6237\u53d6\u6d88\u3002') 'Gray'
@@ -1188,28 +1239,67 @@ $btnApply.Add_Click({
         try { $script:applyBg.Dispose() } catch {}
         $script:applyBg = $null
     }
+    if ($null -ne $script:applyRs) {
+        try { $script:applyBg.Runspace.Dispose() } catch {}
+        $script:applyRs = $null
+    }
+    $script:applyState = $null
     $script:cancelFlag = $false
     $script:applyStarted = Get-Date
     $lblStatus.Text = (Lmsg $T[$lang].statusPrep (Decode-Uni $T[$lang].statusPrep))
     Add-Log (Lmsg '--- Starting apply ---' '--- \u5f00\u59cb\u5e94\u7528 ---') 'Blue'
-    # Run apply off the UI thread; progress is pushed via form.Invoke.
-    $script:applyBg = [powershell]::Create().AddCommand('Start-ApplyJob').AddArgument($list).AddArgument($StandardRuleSource).AddArgument($chkPreview.Checked).AddArgument($chkForce.Checked).AddArgument($chkBackupList.Checked).AddArgument($form)
+    # Run apply off the UI thread. The job writes progress / status / summary /
+    # log lines into the shared $script:applyState; the apply timer tick (UI
+    # thread) drains that state onto the controls. The job also references the
+    # script-scope $T and $lang, which are injected here via a wrapper that
+    # assigns them as locals before calling Start-ApplyJob (a SessionStateVariable
+    # Entry copy does not bind to the copied function's scope).
+    $script:applyState = New-ApplyState
+    $script:applyLogRendered = 0
+    $script:applyRs = New-BackgroundRunspace
+    $script:applyBg = [powershell]::Create($script:applyRs).AddScript({
+        param($list, $source, $whatif, $force, $backuplist, $stateVal, $langVal, $TVal)
+        $lang = $langVal; $T = $TVal
+        Start-ApplyJob -List $list -Source $source -WhatIf $whatif -Force $force -BackupList $backuplist -State $stateVal
+    }).AddArgument($list).AddArgument($StandardRuleSource).AddArgument($chkPreview.Checked).AddArgument($chkForce.Checked).AddArgument($chkBackupList.Checked).AddArgument($script:applyState).AddArgument($lang).AddArgument($T)
     $script:applyHandle = $script:applyBg.BeginInvoke()
     $script:applyTimer = New-Object System.Windows.Forms.Timer
     $script:applyTimer.Interval = 100
     $script:applyTimer.Add_Tick({
         [System.Windows.Forms.Application]::DoEvents()
         try {
-        # Mirror the live progress (driven by form.Invoke inside the job).
-        $lblPct.Visible = $true
-        $lblPct.Text = "$($progress.Value)%"
+        # Drain the shared Apply state written by the background job onto the
+        # controls. This runs on the UI thread only, so no cross-thread control
+        # access or PowerShell closure variable capture is involved.
+        $st = $script:applyState
+        if ($null -ne $st) {
+            if ($st.Log.Count -gt $script:applyLogRendered) {
+                for ($i = $script:applyLogRendered; $i -lt $st.Log.Count; $i++) {
+                    $e = $st.Log[$i]
+                    $col = [System.Drawing.Color]::Black
+                    try { $col = [System.Drawing.Color]::FromName($e.color) } catch {}
+                    if ($col.IsEmpty) { $col = [System.Drawing.Color]::Black }
+                    $txtLog.SelectionStart = $txtLog.Text.Length
+                    $txtLog.SelectionColor = $col
+                    $txtLog.AppendText("$($e.text)`r`n")
+                    $txtLog.ScrollToCaret()
+                }
+                $script:applyLogRendered = $st.Log.Count
+            }
+            if ($progress.Style -ne 'Marquee') { $progress.Value = [Math]::Max(0, [Math]::Min(100, $st.Progress)) }
+            $lblPct.Visible = $true
+            $lblPct.Text = "$($st.Progress)%"
+            if ($st.Status) { $lblStatus.Text = $st.Status }
+        }
         if ($script:cancelFlag) {
             $script:applyTimer.Stop()
             # Hard-abort the background job so no further files are written.
             try { $script:applyBg.Stop() } catch {}
             try { $script:applyBg.Dispose() } catch {}
+            try { $script:applyBg.Runspace.Dispose() } catch {}
+            $script:applyRs = $null
             $script:applyBg = $null; $script:applyHandle = $null
-            Add-Log (Lmsg 'Apply stopped by user. Background job aborted; no further files written.' '\u7528\u6237\u5df2\u505c\u6b62\u5e94\u7528\u3002\u540e\u53f0\u4efb\u52a1\u5df2\u4e2d\u65ad\uff1c\u4e0d\u518d\u5199\u5165\u6587\u4ef6\u3002') 'DarkOrange'
+            Add-Log (Lmsg 'Apply stopped by user. Background job aborted; no further files written.' '\u7528\u6237\u5df2\u505c\u6b62\u5e94\u7528\u3002\u540e\u53f0\u4efb\u52a1\u5df2\u4e2d\u65ad\uff1b\u4e0d\u518d\u5199\u5165\u6587\u4ef6\u3002') 'DarkOrange'
             $lblStatus.Text = (Lmsg $T[$lang].statusStopped (Decode-Uni $T[$lang].statusStopped))
             $progress.Visible = $false; $lblPct.Visible = $false
             Set-Busy $false
@@ -1221,6 +1311,7 @@ $btnApply.Add_Click({
             try {
                 $script:applyBg.EndInvoke($script:applyHandle)
                 $script:applyBg.Dispose()
+                try { $script:applyBg.Runspace.Dispose() } catch {}
                 $progress.Value = 100; $lblPct.Text = '100%'
             } catch {
                 $finished = $false
@@ -1239,13 +1330,13 @@ $btnApply.Add_Click({
                     try {
                         $m = Get-Content -Path $list -Raw -Encoding UTF8 | ConvertFrom-Json
                         $cnt = @($m.files).Count
-                        $script:lblSummary.Text = (Lmsg ($T[$lang].summary -f $cnt) (Decode-Uni $T[$lang].summary -f $cnt))
+                        $script:lblSummary.Text = (Lmsg ($T[$lang].summary -f $cnt) ((Decode-Uni $T[$lang].summary) -f $cnt))
                         # Populate the results list with manifest paths.
                         $script:lstResults.Items.Clear()
                         foreach ($f in $m.files) { [void]$script:lstResults.Items.Add($f.path) }
                         $applyTpl = $T[$lang].statusApplyDone
                         $el = Format-Elapsed $script:applyStarted
-                        $lblStatus.Text = (Lmsg ($applyTpl -f $cnt, $el) (Decode-Uni $applyTpl -f $cnt, $el))
+                        $lblStatus.Text = (Lmsg ($applyTpl -f $cnt, $el) ((Decode-Uni $applyTpl) -f $cnt, $el))
                     } catch {}
                 }
             }
@@ -1271,7 +1362,7 @@ $btnStop.Add_Click({
 })
 
 $btnAbout.Add_Click({
-    $msg = (Lmsg ($T[$lang].aboutText -f $ScriptVersion, $RepoUrl) (Decode-Uni $T[$lang].aboutText -f $ScriptVersion, $RepoUrl))
+    $msg = (Lmsg ($T[$lang].aboutText -f $ScriptVersion, $RepoUrl) ((Decode-Uni $T[$lang].aboutText) -f $ScriptVersion, $RepoUrl))
     [System.Windows.Forms.MessageBox]::Show($msg, (Lmsg $T[$lang].about (Decode-Uni $T[$lang].about)), 'OK', 'Information') | Out-Null
 })
 
@@ -1329,7 +1420,7 @@ if (Test-Path $initList -PathType Leaf) {
     try {
         $m = Get-Content -Path $initList -Raw -Encoding UTF8 | ConvertFrom-Json
         $cnt = @($m.files).Count
-        $lblSummary.Text = (Lmsg ($T[$lang].manifestLoaded -f $cnt) (Decode-Uni $T[$lang].manifestLoaded -f $cnt))
+        $lblSummary.Text = (Lmsg ($T[$lang].manifestLoaded -f $cnt) ((Decode-Uni $T[$lang].manifestLoaded) -f $cnt))
     } catch {
         $lblSummary.Text = (Lmsg $T[$lang].noManifest (Decode-Uni $T[$lang].noManifest))
     }

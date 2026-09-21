@@ -5,6 +5,27 @@
 
 ---
 
+## [v1.18.4] - 2026-09-21
+
+### 修复（GUI）
+- fix(gui): 后台作业由克隆会话状态的 runspace 运行（`InitialSessionState::CreateDefault` + 复制脚本函数），修复 Scan/Apply 因 runspace 隔离抛 `CommandNotFoundException`、脚本变量不可见，导致**两个核心功能完全不可用**的严重缺陷
+- fix(gui): Apply 进度/状态/摘要/日志改走 `Synchronized` 共享状态 + UI Timer 轮询；移除失效的 `Control.Invoke` 闭包（PowerShell 闭包无法跨 `Control.Invoke` 捕获脚本变量）
+- fix(gui): 中文 `Lmsg` 分支 `Decode-Uni $X -f ...` 运算符优先级错误，致中文状态/摘要/进度/确认框/关于框显示未替换模板字面量，改为 `((Decode-Uni $X) -f ...)`
+- fix(gui): `Write-LogLine` 的 `Color` 参数此前被忽略，日志框改用 `RichTextBox` 实现逐行着色
+- fix(gui): 语言下拉框项本地化（中文界面显示 英文/中文）；`Pick-File` 初始目录跟随当前清单路径；修正停止应用提示中误用的全角小于号 `\uff1c` → `\uff1b`
+
+### 文档
+- docs: 版本同步至 v1.18.4（脚本头 `//Version` / `$ScriptVersion` / `.stignore` 头 / README 徽章 / openspec）
+
+## [v1.18.3] - 2026-09-21
+
+### 新增（规则集）
+- feat(stignore): 新增第 21 类「AI 编码助手与 Vibecoding 临时文件」，覆盖 20 个 AI 结对编程工具的数据/缓存目录（`.codex/` `.gemini/` `.qwen/` `.codeium/` `.continue/` `.cline/` `.roo/` `.kilocode/` `.cody/` `.trae/` `.junie/` `.supermaven/` `.opencode/` `.goose/` `.openhands/` `.augment/` `.tabnine/` `.qoder/` `.workbuddy/` `.amp/`），规则总数 309 → 329
+- 仅忽略工具自有数据目录，不忽略 `CLAUDE.md` / `.cursorrules` / `AGENTS.md` / `GEMINI.md` 等项目指令文件
+
+### 文档
+- README / README_EN 分类概览新增第 21 类，徽章分类 20 → 21、规则数 309 → 329；版本同步至 v1.18.3
+
 ## [v1.18.2] - 2026-08-31
 
 ### 修复（GUI）

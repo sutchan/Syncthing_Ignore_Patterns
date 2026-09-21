@@ -1,11 +1,11 @@
 # Syncthing Ignore Patterns
 
-> A curated, ready-to-use `.stignore` rule set: 20 categories · 309 patterns that exclude system files, caches, build artifacts, and app data.
+> A curated, ready-to-use `.stignore` rule set: 21 categories · 329 patterns that exclude system files, caches, build artifacts, and app data.
 
-![Version](https://img.shields.io/badge/version-v1.18.2-blue)
-![Updated](https://img.shields.io/badge/updated-2026--08--31-brightgreen)
+![Version](https://img.shields.io/badge/version-v1.18.4-blue)
+![Updated](https://img.shields.io/badge/updated-2026--09--21-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Categories](https://img.shields.io/badge/categories-20-blueviolet)
+![Categories](https://img.shields.io/badge/categories-21-blueviolet)
 
 [English](#english) | [中文](README.md)
 
@@ -13,12 +13,12 @@
 
 ## English
 
-- ✅ **20 categories / 309 patterns** covering system files, caches, build artifacts, databases, and more
+- ✅ **21 categories / 329 patterns** covering system files, caches, build artifacts, databases, and more
 - ✅ **Zero-config**: drop it at the sync folder root and it works
 - ✅ **Bilingual docs** plus a batch-sync GUI tool
 - ✅ **Actively maintained** as the ecosystem evolves
 
-> The `Updated` date in the `.stignore` header (`2026-08-31`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.18.2`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
+> The `Updated` date in the `.stignore` header (`2026-09-21`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.18.4`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
 
 ### Quick Start
 
@@ -72,6 +72,7 @@ See the `.stignore` file for the full rule set:
 | 18 | Cache & Temp Directories | `(?i)**/cache/`, `temp/`, `tmp/`, `.cache/`, `thumbnails/`, `.eslintcache` |
 | 19 | Browser & Electron Caches | `Code Cache/`, `GPUCache/`, `ShaderCache/`, `IndexedDB/`, `blob_storage/` |
 | 20 | OS Temp & Cache Locations | `/tmp/`, `/var/tmp/`, `/var/cache/`, `/Windows/Temp/` (root-anchored) |
+| 21 | AI Coding Assistants & Vibecoding | `.codex/`, `.gemini/`, `.qwen/`, `.codeium/`, `.continue/`, `.cline/`, `.roo/`, `.kilocode/`, `.cody/`, `.trae/`, `.junie/`, `.supermaven/`, `.opencode/`, `.goose/`, `.openhands/`, `.augment/`, `.tabnine/`, `.qoder/`, `.workbuddy/`, `.amp/` (tool data dirs only; not CLAUDE.md etc.) |
 
 > Heads-up 1: `dist/`, `build/`, `bin/`, `target/`, `cache/`, `temp/` in categories 17–18 are generic names. If you need to sync a folder with one of those names, delete the matching line.
 > Heads-up 2: category 18 uses `(?i)` for case-insensitive matching and matches **whole directory names only**, so `MyCacheFolder/`, `Template/` and `Tempura/` are safe.

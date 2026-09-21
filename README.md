@@ -1,11 +1,11 @@
 # Syncthing 忽略模式
 
-> 开箱即用的 `.stignore` 规则集：20 个分类 · 309 条规则，自动排除系统文件、缓存、构建产物与应用数据。
+> 开箱即用的 `.stignore` 规则集：21 个分类 · 329 条规则，自动排除系统文件、缓存、构建产物与应用数据。
 
-![Version](https://img.shields.io/badge/version-v1.18.2-blue)
-![Updated](https://img.shields.io/badge/updated-2026--08--31-brightgreen)
+![Version](https://img.shields.io/badge/version-v1.18.4-blue)
+![Updated](https://img.shields.io/badge/updated-2026--09--21-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Categories](https://img.shields.io/badge/categories-20-blueviolet)
+![Categories](https://img.shields.io/badge/categories-21-blueviolet)
 
 [中文](#中文说明) | [English](README_EN.md)
 
@@ -13,12 +13,12 @@
 
 ## 中文说明
 
-- ✅ **20 分类 / 309 条规则**，覆盖系统、缓存、构建产物、数据库等噪音文件
+- ✅ **21 分类 / 329 条规则**，覆盖系统、缓存、构建产物、数据库等噪音文件
 - ✅ **开箱即用**：复制到同步根目录即可生效
 - ✅ **中英双语文档**，附批量同步 GUI 工具
 - ✅ **持续维护**，随生态更新规则
 
-> `.stignore` 文件头 `Updated`（`2026-08-31`）是规则集修订日；工具发布版本见 CHANGELOG（当前 `v1.18.2`）。两者分别对应"规则集修订"与"工具发布"，不同步属正常。
+> `.stignore` 文件头 `Updated`（`2026-09-21`）是规则集修订日；工具发布版本见 CHANGELOG（当前 `v1.18.4`）。两者分别对应"规则集修订"与"工具发布"，不同步属正常。
 
 ### 快速开始
 
@@ -72,6 +72,7 @@
 | 18 | 缓存与临时目录 | `(?i)**/cache/`、`temp/`、`tmp/`、`.cache/`、`thumbnails/`、`.eslintcache` |
 | 19 | 浏览器与 Electron 缓存 | `Code Cache/`、`GPUCache/`、`ShaderCache/`、`IndexedDB/`、`blob_storage/` |
 | 20 | 系统临时与缓存位置 | `/tmp/`、`/var/tmp/`、`/var/cache/`、`/Windows/Temp/`（根锚定） |
+| 21 | AI 编码助手与 Vibecoding | `.codex/`、`.gemini/`、`.qwen/`、`.codeium/`、`.continue/`、`.cline/`、`.roo/`、`*.iml`、`.cody/`、`.trae/`、`.junie/`、`.supermaven/`、`.opencode/`、`.goose/`、`.openhands/`、`.augment/`、`.tabnine/`、`.qoder/`、`.workbuddy/`、`.amp/`（仅工具数据目录，不含 `CLAUDE.md` 等指令文件） |
 
 > 提示一：第 17、18 类的 `dist/`、`build/`、`bin/`、`target/`、`cache/`、`temp/` 等是通用目录名，若需同步同名目录请删除对应行。
 > 提示二：第 18 类用 `(?i)` 大小写不敏感，且只匹配**完整目录名**，`MyCacheFolder/`、`Template/`、`Tempura/` 不会被误伤。
