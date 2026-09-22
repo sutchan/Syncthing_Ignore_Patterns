@@ -5,6 +5,12 @@
 
 ---
 
+## [v1.18.5] - 2026-09-22
+
+### 文档
+- docs: 将 `openspec/` 规范文档迁移至 `docs/`（`docs/project.md` 与 `docs/specs/stignore-gui/spec.md`），更新目录结构树与内部引用
+- docs: 同步版本号至 v1.18.5（脚本头 `//Version` / `$ScriptVersion` / `.stignore` 头 / README 徽章）
+
 ## [v1.18.4] - 2026-09-21
 
 ### 修复（GUI）
@@ -15,7 +21,7 @@
 - fix(gui): 语言下拉框项本地化（中文界面显示 英文/中文）；`Pick-File` 初始目录跟随当前清单路径；修正停止应用提示中误用的全角小于号 `\uff1c` → `\uff1b`
 
 ### 文档
-- docs: 版本同步至 v1.18.4（脚本头 `//Version` / `$ScriptVersion` / `.stignore` 头 / README 徽章 / openspec）
+- docs: 版本同步至 v1.18.4（脚本头 `//Version` / `$ScriptVersion` / `.stignore` 头 / README 徽章 / docs）
 
 ## [v1.18.3] - 2026-09-21
 

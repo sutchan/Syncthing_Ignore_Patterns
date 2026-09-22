@@ -1,6 +1,6 @@
 # Project Specification: SyncthingIgnorePatterns
 
-> 标准化 `.stignore` 规则集 + 配套批量管理 GUI 工具的项目规范（OpenSpec 风格）。
+> 标准化 `.stignore` 规则集 + 配套批量管理 GUI 工具的项目规范（规范文档）。
 
 ## 1. 项目背景
 
@@ -38,7 +38,7 @@ SyncthingIgnorePatterns/
 ├── config/                   # 运行时配置与产物目录
 │   ├── stignore-paths.json   # 扫描清单输出（运行时生成，已被 .gitignore 忽略）
 │   └── *.bak.*               # 清单备份（轮转 ≤3，已被忽略）
-├── openspec/                 # 本规范目录
+├── docs/                     # 文档目录（原 openspec/）
 │   ├── project.md
 │   └── specs/stignore-gui/spec.md
 └── SyncthingIgnorePatterns.code-workspace
@@ -96,7 +96,7 @@ SyncthingIgnorePatterns/
 - fix(gui): `Lmsg` 中文分支 `Decode-Uni $X -f ...` 运算符优先级错误，导致中文状态/摘要/进度/确认框/关于框显示未替换的模板字面量（如 `已找到 {0}`），改为 `((Decode-Uni $X) -f ...)`
 - fix(gui): `Write-LogLine` 的 `Color` 参数此前被忽略，日志框改用 `RichTextBox` 实现逐行着色
 - fix(gui): 语言下拉框项已本地化（中文界面显示 英文/中文）；`Pick-File` 初始目录跟随当前清单路径；修正停止应用提示中误用的全角小于号 `\uff1c` → `\uff1b`
-- docs: 版本同步至 v1.18.4（脚本头 / `$ScriptVersion` / `.stignore` 头 / README 徽章 / openspec）
+- docs: 版本同步至 v1.18.4（脚本头 / `$ScriptVersion` / `.stignore` 头 / README 徽章 / docs）
 
 ### v1.18.3 (2026-09-21)
 - feat(stignore): 新增第 21 类「AI 编码助手与 Vibecoding 临时文件」，覆盖 20 个 AI 结对编程工具数据/缓存目录（.codex/ .gemini/ .qwen/ .codeium/ .continue/ .cline/ .roo/ .kilocode/ .cody/ .trae/ .junie/ .supermaven/ .opencode/ .goose/ .openhands/ .augment/ .tabnine/ .qoder/ .workbuddy/ .amp/），规则总数 310 → 330
