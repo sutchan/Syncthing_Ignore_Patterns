@@ -32,7 +32,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 
 ```
 SyncthingIgnorePatterns/
-├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.6，独立演进）
+├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
 ├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.18.8）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
@@ -111,6 +111,7 @@ SyncthingIgnorePatterns/
 ### v1.18.8 (2026-09-22)
 - ci: 完善 CI（手动触发、最小权限、作业超时、覆盖率与 LCOV 产物、规则集副本漂移报告、Release 说明取自 CHANGELOG）；新增 `.github/dependabot.yml` 与 README CI 徽章
 - chore: 同步版本至 v1.18.8（VERSION / pubspec / `AppState.version` / `manifest.dart` 示例 / README 徽章）
+- docs: 修正 `docs/project.md` §3 规则集版本标注（1.18.6→1.18.5）；更新 `docs/development-tasks.md` 与 Flutter 规格状态（`flutter analyze` 零告警已达成、CI `build-windows` 已落地产出 exe/zip）
 
 ### v1.18.7 (2026-09-22)
 - chore(gitignore): 新增 coding 临时文件/目录忽略规则（`*.log` `*.swp` `.DS_Store` `app/.dart_tool/` `app/build/` 等），注释明确编程工具配置目录放行（保持跟踪）

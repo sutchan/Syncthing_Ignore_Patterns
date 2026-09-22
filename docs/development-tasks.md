@@ -27,7 +27,7 @@
 | 项 | 状态 | 说明 |
 |----|------|------|
 | 纯逻辑单测 `scanner_test` / `applier_test` | ✅ | `app/test/` |
-| `flutter analyze` 零 warning（flutter_lints 4） | 🔧 | 构建流水线中校验 |
+| `flutter analyze` 零 warning（flutter_lints 4） | ✅ | v1.18.7 清零 52 项，CI `build-windows` 强制校验 |
 | 测试覆盖率 ≥80%（dart-collect-coverage） | 🔧 | CI 已采集 LCOV 并输出覆盖率摘要，暂未设门禁 |
 | UI 部件测试（flutter_test + mockito） | 🔲 | 规划项 |
 | 覆盖率忽略指令校验（`--check-ignore`） | 🔲 | 可选 |
@@ -36,7 +36,7 @@
 
 | 项 | 状态 | 说明 |
 |----|------|------|
-| 构建 Windows exe（`flutter build windows`） | 🔧 | 依赖外网 `pub get`，本机会话触发 |
+| 构建 Windows exe（`flutter build windows`） | ✅ | 由 CI `build-windows` 在 windows-latest 构建并发布 zip，无需本机 |
 | GitHub Actions CI：构建并打包命名归档 | ✅ | `SyncthingIgnoreGUI-v1.18.8-windows-x64.zip`（`.github/workflows/ci.yml`） |
 | 发布包说明（VC++ 运行库 / Flutter AOT 运行时） | 🔲 | 或 Inno Setup 安装包 |
 | 自动更新 | 🔲 | 可选，未规划 |
