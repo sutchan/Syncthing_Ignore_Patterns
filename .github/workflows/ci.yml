@@ -5,6 +5,12 @@
 # - build-windows: 在 windows-latest 构建 Flutter Windows 桌面 exe，跑测试与覆盖率并打包产物
 # - release:       仅在推送 v* 标签时创建 GitHub Release（说明取自 CHANGELOG）并上传产物
 #
+# 构建产物命名规范（与全局约定一致，见 docs/project.md §9.5）：
+#   <产品名>-v<语义版本>-<os>-<arch>.<扩展名>
+#   产品名 = env.APP_NAME（PascalCase 无空格）；os ∈ windows|macos|linux；arch ∈ x64|arm64；
+#   Windows/macOS 用 zip、Linux 用 tar.gz；版本取自根 VERSION（needs.version.outputs.version），
+#   禁止硬编码；Release 仅上传归档（不上传构建目录树）；预发布以 Release prerelease 标记区分。
+#
 # 版本三轨独立（见 docs/project.md §4）：
 #   Flutter 主实现  = VERSION（pubspec / AppState.version / manifest 示例 / README 徽章）
 #   PowerShell 遗留 = SyncthingIgnoreGUI.ps1（//Version 与 $ScriptVersion 内部一致）
@@ -208,6 +214,7 @@ jobs:
       - name: Package artifact
         shell: pwsh
         run: |
+          # 命名规范：<产品名>-v<版本>-<os>-<arch>.<扩展名>（docs/project.md §9.5）
           $ver = "${{ needs.version.outputs.version }}"
           $zip = "${{ env.APP_NAME }}-v$ver-windows-x64.zip"
           $src = "app/build/windows/x64/runner/Release"
@@ -216,7 +223,7 @@ jobs:
       - name: Upload app artifact
         uses: actions/upload-artifact@v7
         with:
-          name: windows-x64-release
+          name: ${{ env.APP_NAME }}-v${{ needs.version.outputs.version }}-windows-x64
           path: ${{ env.APP_NAME }}-v*-windows-x64.zip
           if-no-files-found: error
       - name: Upload coverage artifact
@@ -241,7 +248,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v8
         with:
-          name: windows-x64-release
+          name: ${{ env.APP_NAME }}-v${{ needs.version.outputs.version }}-windows-x64
           path: dist
       - name: Extract release notes from CHANGELOG
         shell: pwsh
@@ -269,3 +276,5 @@ jobs:
           body_path: release_notes.md
           generate_release_notes: false
           fail_on_unmatched_files: true
+          # 预发布（版本号含 '-'，如 1.19.0-rc.1）以 prerelease 标记区分，不在文件名加后缀
+          prerelease: ${{ contains(needs.version.outputs.version, '-') }}

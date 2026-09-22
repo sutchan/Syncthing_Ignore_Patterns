@@ -34,7 +34,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 SyncthingIgnorePatterns/
 ├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
-├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.18.10）
+├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.18.11）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
 │   ├── lib/
 │   │   ├── main.dart         # 入口，注入 AppState
@@ -63,7 +63,7 @@ SyncthingIgnorePatterns/
 
 - 语义化版本 `MAJOR.MINOR.PATCH`；文档/配置类变更默认升级 `PATCH`，新功能升级 `MINOR`。
 - **主实现（Flutter 桌面版）版本单一来源**：
-  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.18.10+1`）
+  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.18.11+1`）
   - `app/lib/state/app_state.dart` 的 `AppState.version`（关于框 / 日志展示）
   - `README.md` / `README_EN.md` 版本徽章
   - 根目录 `VERSION` 文件（CI 读取的主实现版本单一来源）
@@ -107,6 +107,10 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.18.11 (2026-09-22)
+- ci: 规范化构建产物命名（对齐全局约定）——新增 §9.5「构建产物命名规范」（`<产品名>-v<语义版本>-<os>-<arch>.<扩展名>`，产品名取 `env.APP_NAME`、版本取根 `VERSION`）；CI 头补注该规则；Actions 产物名由 `windows-x64-release` 改为 `SyncthingIgnoreGUI-v<版本>-windows-x64`；`release` 作业补 `prerelease` 标记（版本含 `-` 时自动标预发布）
+- chore: 同步版本至 v1.18.11（VERSION / pubspec / `AppState.version` / `manifest.dart` 示例 / README 徽章）
 
 ### v1.18.10 (2026-09-22)
 - fix(app): 适配 `file_picker` 13.1.0 / `win32` 6.4.0 破坏性变更（`GetLogicalDrives()` 返回 `Win32Result<int>` 需取 `.value`、`GetDriveType()` 用 `PCWSTR` 包装、`FilePicker.saveFile()` 返回 `Uri?` 且需必填 `bytes`），恢复 `flutter analyze` 通过
@@ -283,7 +287,7 @@ SyncthingIgnorePatterns/
 - [ ] Flutter 版相较 PowerShell 版仍缺：应用前安全确认框、实时状态行（当前扫描目录）、拖拽填入、双击打开文件、启动时「已加载清单」提示
 - [ ] 应用阶段 `Stop` 取消尚未接入 `applyRules` 循环
 - [ ] 测试覆盖率门禁（≥80%）、UI 部件测试（flutter_test + mockito）未建立
-- [x] GitHub Actions CI：构建并打包命名归档 `SyncthingIgnoreGUI-v1.18.10-windows-x64.zip`（`.github/workflows/ci.yml`）
+- [x] GitHub Actions CI：构建并打包命名归档 `SyncthingIgnoreGUI-v1.18.11-windows-x64.zip`（`.github/workflows/ci.yml`）
 - [ ] 发布包说明（VC++ 运行库 / Flutter AOT 运行时）或 Inno Setup 安装包
 - [ ] 规则更新后须同步 `app/assets/.stignore` 副本
 
@@ -340,6 +344,28 @@ dart run coverage:format_coverage --packages=.dart_tool/package_config.json \
 ### 9.4 实现分工
 
 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
-**Dart + Flutter 桌面版（v1.18.10）为主实现**，构建为独立 `.exe` 分发。两者共享同一
+**Dart + Flutter 桌面版（v1.18.11）为主实现**，构建为独立 `.exe` 分发。两者共享同一
 `.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等项与工程化待办，
 见 [开发任务清单](development-tasks.md)。
+
+### 9.5 构建产物命名规范
+
+CI 构建的发布包统一命名（与全局约定一致）：
+
+```
+<产品名>-v<语义版本>-<os>-<arch>.<扩展名>
+```
+
+| 占位 | 取值 |
+|------|------|
+| `<产品名>` | PascalCase、无空格；由 workflow 常量 `env.APP_NAME` 统一定义（当前 `SyncthingIgnoreGUI`） |
+| `<语义版本>` | 取自根 `VERSION`，经 `version` 作业以 `needs.version.outputs.version` 注入（禁止硬编码） |
+| `<os>` | `windows` / `macos` / `linux`（小写） |
+| `<arch>` | `x64` / `arm64` |
+| `<扩展名>` | Windows / macOS 用 `zip`；Linux 用 `tar.gz` |
+
+- 构建后必须打包为上述命名归档再上传；Release 资产**仅上传归档**（`*.zip` / `*.tar.gz`），
+  不上传构建目录树（多平台同名文件会互相覆盖）。
+- 预发布版本以 GitHub Release 的 `prerelease` 标记区分，**不在文件名加后缀**。
+
+示例：`SyncthingIgnoreGUI-v1.18.11-windows-x64.zip`

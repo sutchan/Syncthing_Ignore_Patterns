@@ -5,6 +5,15 @@
 
 ---
 
+## [v1.18.11] - 2026-09-22
+
+### CI / 规范
+- ci: 规范化构建产物的命名（对齐全局约定，见 `docs/project.md` §9.5「构建产物命名规范」）
+  - 规范：`<产品名>-v<语义版本>-<os>-<arch>.<扩展名>`；产品名由 workflow 常量 `env.APP_NAME` 统一定义，版本取自根 `VERSION`（`needs.version.outputs.version` 注入，禁止硬编码）
+  - CI 工作流头补注该命名规则；Actions 产物名由 `windows-x64-release` 改为 `SyncthingIgnoreGUI-v<版本>-windows-x64`（与归档名一致）
+  - `release` 作业补 `prerelease` 标记：版本号含 `-`（如 `1.19.0-rc.1`）自动标预发布，不在文件名加后缀
+- chore: 同步版本至 v1.18.11（VERSION / pubspec `1.18.11+1` / `AppState.version` / `manifest.dart` 示例 / README 徽章）
+
 ## [v1.18.10] - 2026-09-22
 
 ### 依赖 / 修复
