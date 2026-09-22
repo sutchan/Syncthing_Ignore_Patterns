@@ -120,7 +120,7 @@
 //Version Control Systems
 // NOTE: ignoring .git means repository history is not synced - remove this
 // line if you intend to mirror working git repositories.
-**/.git/
+//**/.git/
 **/.svn/
 **/.hg/
 

@@ -29,7 +29,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 
 ```
 SyncthingIgnorePatterns/
-├── .stignore                 # 标准规则源文件（Apply 依赖，版本 v1.18.4）
+├── .stignore                 # 标准规则源文件（Apply 依赖，版本 v1.18.5）
 ├── SyncthingIgnoreGUI.ps1    # 主工具（GUI + 扫描/应用逻辑，纯 ASCII）
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档

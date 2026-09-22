@@ -7,8 +7,9 @@
 
 ## 项目约定（SyncthingIgnorePatterns）
 - 提交信息遵循 Git 规范（type: 描述，首字母小写、动词开头、≤50字）。
-- 版本管理：构建默认升级 MINOR 版本，同步所有文件头/脚本变量/.stignore/README/openspec 版本号。同步清单（易漏）：`SyncthingIgnoreGUI.ps1` 头 `//Version` 与 `$ScriptVersion`、`.stignore` 头 `//Version`、两份 README 徽章+正文版本引用、openspec/project.md（目录结构注记 + 第 7 节）、CHANGELOG.md。
-- CHANGELOG 双副本：根 `CHANGELOG.md` 与 `openspec/project.md` §7 必须同时写，历史上多次只写一处（v1.16.0 曾漏根 CHANGELOG）。
+- 版本管理：构建默认升级 MINOR 版本，同步所有文件头/脚本变量/.stignore/README/docs 版本号。同步清单（易漏）：`SyncthingIgnoreGUI.ps1` 头 `//Version` 与 `$ScriptVersion`、`.stignore` 头 `//Version`、两份 README 徽章+正文版本引用、docs/project.md（目录结构注记 + 第 7 节）、CHANGELOG.md。
+- CHANGELOG 双副本：根 `CHANGELOG.md` 与 `docs/project.md` §7 必须同时写，历史上多次只写一处（v1.16.0 曾漏根 CHANGELOG）。
+- **文档目录**：规范文档原存于 `openspec/`，已于 v1.18.5 迁移至 `docs/`（`docs/project.md` + `docs/specs/stignore-gui/spec.md`）。后续引用一律用 `docs/`。
 - 中文存储用纯 ASCII + `\u` 转义，规避 GBK 乱码；GUI 字典 en/zh 分离。
 - 后台任务用 runspace + Timer 轮询 `DoEvents`。
 - **后台 runspace 必须自包含**（v1.18.4 实测结论，此前 Scan/Apply 因此完全不可用）：
