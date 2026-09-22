@@ -24,13 +24,28 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
   作为发布交付物须保持单文件自包含，不因行数拆分（见 CHANGELOG v0.1.0 设计决策）。
 - **PowerShell 5.1（Windows PowerShell）** 目标运行时；不依赖 PowerShell 7
   专有语法（如 `ForEach-Object -Parallel`）。并行改用 runspace 线程池实现。
+- **GUI 正向 Dart + Flutter 桌面版迁移（见 §9）**，新实现位于 `app/`，构建为独立
+  `.exe`；纯 ASCII 与单文件自包含两条红线**仅适用于旧版 `.ps1`**，Flutter 版
+  按 Dart 模块拆分（单一职责），不沿用 200 行单文件约束。
 
 ## 3. 目录结构
 
 ```
 SyncthingIgnorePatterns/
 ├── .stignore                 # 标准规则源文件（Apply 依赖，版本 v1.18.5）
-├── SyncthingIgnoreGUI.ps1    # 主工具（GUI + 扫描/应用逻辑，纯 ASCII）
+├── SyncthingIgnoreGUI.ps1    # 旧版实现（PowerShell WinForms，纯 ASCII，维护中）
+├── app/                      # Dart + Flutter 桌面版（目标实现，构建为 exe）
+│   ├── pubspec.yaml          # 依赖与 windows 桌面配置
+│   ├── lib/
+│   │   ├── main.dart         # 入口，注入 AppState
+│   │   ├── app.dart          # MaterialApp + 明暗主题
+│   │   ├── i18n.dart         # 中英双语字典（键对齐 $T）
+│   │   ├── models/manifest.dart
+│   │   ├── services/         # scanner / applier / rules_source / platform_io
+│   │   ├── state/app_state.dart  # 扫描/应用编排 + 日志/进度状态
+│   │   └── ui/home_page.dart
+│   ├── assets/.stignore      # 标准规则集（运行时 rootBundle 加载）
+│   └── test/                 # scanner_test / applier_test（覆盖率基线）
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档
 ├── CHANGELOG.md              # 独立变更日志（Keep a Changelog 风格）
@@ -235,3 +250,56 @@ SyncthingIgnorePatterns/
 - [ ] 多驱动器并行度固定 4 线程，未根据驱动器数量自适应
 - [ ] 未做 git push 远程（需用户手动操作）
 - [ ] 无自动化测试（PowerShell GUI 测试成本高，暂以语法解析 + 最小复现验证）
+
+## 9. Dart + Flutter 桌面版重写（目标实现）
+
+原 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms）正被重写为 **Dart + Flutter Windows 桌面应用**，位于 `app/`，目标构建为独立 `.exe` 分发。功能与行为对齐原脚本（扫描 / 应用 / 备份轮转 / 中英双语 / 明暗主题）。
+
+### 9.1 模块拆分（单一职责）
+
+| 模块 | 职责 |
+|------|------|
+| `lib/main.dart` | 入口，`ChangeNotifierProvider` 注入 `AppState` |
+| `lib/app.dart` | `MaterialApp` + 明暗主题（`ThemeMode` 跟随设置） |
+| `lib/i18n.dart` | 中英双语字典，键与 PowerShell `$T` 一致；`t(key, args)` 支持 `{0}` 占位 |
+| `lib/models/manifest.dart` | `StignoreRecord` / `Manifest`，对齐 PowerShell manifest JSON 结构 |
+| `lib/services/scanner.dart` | DFS 遍历找 `.stignore`（跳过 `.git` 与规则源目录），每根目录一个 isolate 并行（默认 4）；纯函数 `findStignoreFiles` 可单测 |
+| `lib/services/applier.dart` | 应用标准规则：SHA-256 比对跳过一致文件、写前 `.bak.<时间戳>` 备份、`<base>.bak.*` 轮转保留 ≤3、仅 `force` 清理失效路径 |
+| `lib/services/rules_source.dart` | 从 `assets/.stignore` 加载标准规则并计算 SHA-256 |
+| `lib/services/platform_io.dart` | Windows 固定驱动器枚举（win32 `GetLogicalDrives` / `GetDriveType`） |
+| `lib/state/app_state.dart` | 扫描/应用编排，进度/状态/日志/结果状态，Stop 取消 |
+| `lib/ui/home_page.dart` | 主界面：根目录/清单路径输入、选项勾选、扫描/应用/停止/清空、进度条、结果与日志列表 |
+
+### 9.2 构建为 exe
+
+```bash
+cd app
+flutter config --enable-windows-desktop
+flutter pub get
+flutter build windows        # 产物：build/windows/x64/runner/Release/syncthing_ignore_gui.exe
+```
+
+> 标准规则集随资源打包（`assets/.stignore`），运行时由 `rootBundle` 加载；
+> 更新规则后需同步该副本（见 §4 版本同步）。exe 分发需目标机具备 Visual C++
+> 运行库与 Flutter AOT 运行时（发布包已自带）。
+
+### 9.3 测试与覆盖率（dart-collect-coverage）
+
+`app/test/` 覆盖纯逻辑：`scanner_test.dart`（遍历/跳过/并行）、`applier_test.dart`
+（替换/跳过/预览/备份轮转）。生成 LCOV：
+
+```bash
+cd app
+flutter test --coverage                 # 生成 coverage/lcov.info
+# 或用 coverage 包格式化 + 校验忽略指令
+dart run coverage:format_coverage --packages=.dart_tool/package_config.json \
+    --lcov -i coverage/coverage.json -o coverage/lcov.info --check-ignore
+```
+
+忽略指令：`// coverage:ignore-line` / `ignore-start..end` / `ignore-file`，
+可用 `--check-ignore` 强制校验。UI 部件测试后续补 `flutter_test` + `mockito`。
+
+### 9.4 PowerShell 版弃用计划
+
+`SyncthingIgnoreGUI.ps1` 保留为维护态；Flutter 版达到功能对等（含拖拽填入、
+双击打开、实时状态行等）后，可标记为弃用。两者共享同一 `.stignore` 规则集与文档。
