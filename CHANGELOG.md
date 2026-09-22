@@ -18,6 +18,13 @@
 - docs: README / README_EN 新增 CI 状态徽章
 - chore: 同步版本至 v1.18.8（VERSION / pubspec `1.18.8+1` / `AppState.version` / `manifest.dart` 示例 / README 徽章）
 
+## [v1.18.8] - 2026-09-22
+
+### 文档
+- docs: 修正文档与代码版本不一致（规则集版本标注 1.18.6→1.18.5；README_EN 预写 1.18.8 补全同步其余单一来源位置）
+- docs: 更新 `docs/development-tasks.md` 与 Flutter 规格状态（CI `build-windows` 与 `flutter analyze` 零告警已落地、exe 由 CI 构建发布）
+- chore: 同步版本至 v1.18.8（VERSION / pubspec `1.18.8+1` / `AppState.version` / `manifest.dart` 示例 / README 徽章）
+
 ## [v1.18.7] - 2026-09-22
 
 ### 构建
