@@ -248,25 +248,18 @@
 // These hold conversation history, tool logs and local indexes - never real
 // project data. Project instructions (CLAUDE.md, .cursorrules, AGENTS.md,
 // GEMINI.md) are NOT ignored - only the tool's own data folders.
-**/.codex/
-**/.gemini/
-**/.qwen/
 **/.codeium/
 **/.continue/
 **/.cline/
 **/.roo/
 **/.kilocode/
 **/.cody/
-**/.trae/
 **/.junie/
 **/.supermaven/
-**/.opencode/
 **/.goose/
 **/.openhands/
 **/.augment/
 **/.tabnine/
-**/.qoder/
-**/.workbuddy/
 **/.amp/
 
 //Archives & Partial Downloads

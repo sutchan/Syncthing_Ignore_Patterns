@@ -34,7 +34,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 SyncthingIgnorePatterns/
 ├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.6，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
-├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.18.6）
+├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.18.7）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
 │   ├── lib/
 │   │   ├── main.dart         # 入口，注入 AppState
@@ -107,6 +107,10 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.18.7 (2026-09-22)
+- chore(gitignore): 新增 coding 临时文件/目录忽略规则（`*.log` `*.swp` `.DS_Store` `app/.dart_tool/` `app/build/` 等），注释明确编程工具配置目录放行（保持跟踪）
+- chore: 同步版本至 v1.18.7（VERSION / pubspec / `AppState.version` / README 徽章）
 
 ### v1.18.6 (2026-09-22)
 - fix(stignore): 移除 `.git` 过滤规则（含注释行），使同步目录中的 Git 仓库完整同步、跨设备保留分支信息；`.svn/` `.hg/` 维持忽略

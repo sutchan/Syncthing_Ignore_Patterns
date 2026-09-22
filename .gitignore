@@ -15,3 +15,26 @@ _pubget.log
 
 # 本地临时校验脚本
 __*_tmp.ps1
+
+# --- 编程工具配置目录：放行（保持跟踪，不忽略） ---
+# .codebuddy/ .github/ .vscode/ .cursor/ .claude/ .idea/ 等工具配置目录
+# 刻意不忽略，保留入库（含共享规则、AI 记忆、工作区设置等）。
+
+# --- Coding 临时产生的文件与目录 ---
+# 日志
+*.log
+*.log.*
+
+# 编辑器/系统临时文件
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Flutter/Dart 构建缓存与生成物
+app/.dart_tool/
+app/build/
+app/.flutter-plugins-dependencies
+app/coverage/
