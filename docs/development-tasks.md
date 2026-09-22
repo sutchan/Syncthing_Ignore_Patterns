@@ -1,6 +1,6 @@
 # 开发任务清单（剩余未完成任务）
 
-> 跟踪 Flutter 桌面版（主实现，v1.18.7）相较 PowerShell 遗留版（v1.18.5）的
+> 跟踪 Flutter 桌面版（主实现，v1.18.8）相较 PowerShell 遗留版（v1.18.5）的
 > 功能对等项与工程化待办。已完成项亦列出以便追溯。
 > 状态图例：✅ 已完成 · 🔲 待办 · 🔧 进行中
 
@@ -28,7 +28,7 @@
 |----|------|------|
 | 纯逻辑单测 `scanner_test` / `applier_test` | ✅ | `app/test/` |
 | `flutter analyze` 零 warning（flutter_lints 4） | 🔧 | 构建流水线中校验 |
-| 测试覆盖率 ≥80%（dart-collect-coverage） | 🔲 | `flutter test --coverage` 已可用，未设门禁 |
+| 测试覆盖率 ≥80%（dart-collect-coverage） | 🔧 | CI 已采集 LCOV 并输出覆盖率摘要，暂未设门禁 |
 | UI 部件测试（flutter_test + mockito） | 🔲 | 规划项 |
 | 覆盖率忽略指令校验（`--check-ignore`） | 🔲 | 可选 |
 
@@ -37,7 +37,7 @@
 | 项 | 状态 | 说明 |
 |----|------|------|
 | 构建 Windows exe（`flutter build windows`） | 🔧 | 依赖外网 `pub get`，本机会话触发 |
-| GitHub Actions CI：构建并打包命名归档 | ✅ | `SyncthingIgnoreGUI-v1.18.7-windows-x64.zip`（`.github/workflows/ci.yml`） |
+| GitHub Actions CI：构建并打包命名归档 | ✅ | `SyncthingIgnoreGUI-v1.18.8-windows-x64.zip`（`.github/workflows/ci.yml`） |
 | 发布包说明（VC++ 运行库 / Flutter AOT 运行时） | 🔲 | 或 Inno Setup 安装包 |
 | 自动更新 | 🔲 | 可选，未规划 |
 
@@ -49,6 +49,6 @@
 | 规则集版本（`.stignore` 头 `//Version`）独立演进 | ✅ | 当前 v1.18.5，与工具版本解耦 |
 
 ## 版本说明
-- Flutter 桌面版：v1.18.7（pubspec `1.18.7+1`，`AppState.version`）
+- Flutter 桌面版：v1.18.8（pubspec `1.18.8+1`，`AppState.version`）
 - PowerShell 遗留版：v1.18.5（独立演进）
 - 规则集 `.stignore`：v1.18.5（独立版本，`Updated` 为规则集修订日）

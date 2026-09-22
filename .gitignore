@@ -13,9 +13,10 @@ _cnt.ps1
 # Flutter pub get 日志（构建临时产物）
 _pubget.log
 
-# 本地临时校验脚本
+# 本地临时脚本与校验产物（本机一次性文件，勿入库）
 __*_tmp.ps1
-_elevate.ps1
+_*.ps1
+sdk_msi_codes.txt
 
 # --- 编程工具配置目录：放行（保持跟踪，不忽略） ---
 # .codebuddy/ .github/ .vscode/ .cursor/ .claude/ .idea/ 等工具配置目录

@@ -1,12 +1,12 @@
 # .github/workflows/ci.yml
 # SyncthingIgnorePatterns CI/CD
-# - version:     从根 VERSION 读取主实现版本，校验 v* 标签与 VERSION 一致
-# - validate:    校验 PowerShell GUI 语法、.stignore 规则集、分三轨校验版本一致性
-# - build-windows: 在 windows-latest 构建 Flutter Windows 桌面 exe 并打包
-# - release:     仅在推送 v* 标签时创建 GitHub Release 并上传产物
+# - version:       从根 VERSION 读取主实现版本，校验 v* 标签与 VERSION 一致
+# - validate:      校验 PowerShell GUI 语法、.stignore 规则集、规则副本漂移、分三轨校验版本一致性
+# - build-windows: 在 windows-latest 构建 Flutter Windows 桌面 exe，跑测试与覆盖率并打包产物
+# - release:       仅在推送 v* 标签时创建 GitHub Release（说明取自 CHANGELOG）并上传产物
 #
 # 版本三轨独立（见 docs/project.md §4）：
-#   Flutter 主实现  = VERSION（pubspec / AppState.version / README 徽章）
+#   Flutter 主实现  = VERSION（pubspec / AppState.version / manifest 示例 / README 徽章）
 #   PowerShell 遗留 = SyncthingIgnoreGUI.ps1（//Version 与 $ScriptVersion 内部一致）
 #   规则集 .stignore = 独立于工具发布的版本（.stignore 与 app/assets/.stignore 内部一致）
 name: CI
@@ -17,13 +17,16 @@ on:
     tags: ['v*']
   pull_request:
     branches: [main, dev]
+  workflow_dispatch: {}
 
+# 默认最小权限（只读）；仅 release 作业按需提权为 contents: write
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # 标签（发布）运行不取消，避免打断进行中的 Release；分支运行可被新提交取消
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 env:
   APP_NAME: SyncthingIgnoreGUI
@@ -32,6 +35,7 @@ jobs:
   version:
     name: Resolve version
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
@@ -61,6 +65,7 @@ jobs:
   validate:
     name: Validate scripts & ruleset
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - name: PowerShell syntax check (SyncthingIgnoreGUI.ps1)
@@ -92,6 +97,26 @@ jobs:
             Write-Host "No duplicate rule patterns"
           }
           if ($rules.Count -eq 0) { Write-Error ".stignore has no rules"; exit 1 }
+      - name: Ruleset copy drift report (.stignore vs app/assets/.stignore)
+        shell: pwsh
+        run: |
+          # 报告型检查：根 .stignore（标准源）与 app/assets/.stignore（运行时打包副本）
+          # 应保持一致。仓库当前存在已知差异（见 docs/development-tasks.md §D），
+          # 故仅输出告警与摘要，不阻断构建；差异消除后可改为阻断。
+          $root = (Get-Content .stignore -Raw) -replace "`r`n", "`n"
+          $copy = (Get-Content app/assets/.stignore -Raw) -replace "`r`n", "`n"
+          if ($root -eq $copy) {
+            Write-Host "Ruleset copies are identical"
+            exit 0
+          }
+          $onlyRoot = Compare-Object ($root -split "`n") ($copy -split "`n") |
+            Where-Object SideIndicator -eq '<=' | ForEach-Object InputObject
+          $onlyCopy = Compare-Object ($root -split "`n") ($copy -split "`n") |
+            Where-Object SideIndicator -eq '=>' | ForEach-Object InputObject
+          $msg = "Ruleset copies differ. Only in .stignore: [$($onlyRoot -join ', ')] | " +
+                 "Only in app/assets/.stignore: [$($onlyCopy -join ', ')]"
+          Write-Warning $msg
+          Write-Host "::warning title=Ruleset drift::$msg"
       - name: Version consistency check (three independent tracks)
         shell: pwsh
         run: |
@@ -140,6 +165,7 @@ jobs:
     name: Build Flutter Windows (exe)
     needs: [version]
     runs-on: windows-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -154,9 +180,28 @@ jobs:
       - name: Analyze
         working-directory: app
         run: flutter analyze
-      - name: Test
+      - name: Test (with coverage)
         working-directory: app
-        run: flutter test
+        run: flutter test --coverage
+      - name: Coverage summary
+        if: always()
+        shell: pwsh
+        working-directory: app
+        run: |
+          $f = 'coverage/lcov.info'
+          if (-not (Test-Path $f)) { Write-Host "No coverage file found"; exit 0 }
+          $lf = 0; $lh = 0
+          foreach ($line in Get-Content $f) {
+            if ($line.StartsWith('LF:')) { $lf += [int]$line.Substring(3) }
+            elseif ($line.StartsWith('LH:')) { $lh += [int]$line.Substring(3) }
+          }
+          if ($lf -gt 0) {
+            $pct = [math]::Round($lh * 100 / $lf, 2)
+            $msg = "Flutter line coverage: $pct% ($lh/$lf)"
+            Write-Host $msg
+            Write-Host "::notice title=Coverage::$msg"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Coverage`n`n$msg"
+          }
       - name: Build Windows release
         working-directory: app
         run: flutter build windows --release
@@ -168,27 +213,59 @@ jobs:
           $src = "app/build/windows/x64/runner/Release"
           Compress-Archive -Path "$src/*" -DestinationPath $zip -Force
           Write-Host "Created $zip"
-      - name: Upload artifact
+      - name: Upload app artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-x64-release
           path: ${{ env.APP_NAME }}-v*-windows-x64.zip
           if-no-files-found: error
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: app/coverage/lcov.info
+          if-no-files-found: warn
+          retention-days: 7
 
   release:
     name: Publish GitHub Release
     needs: [version, build-windows]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
     steps:
+      - uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: windows-x64-release
           path: dist
+      - name: Extract release notes from CHANGELOG
+        shell: pwsh
+        run: |
+          $ver = "${{ needs.version.outputs.version }}"
+          $header = "## [v$ver]"
+          $out = New-Object System.Collections.Generic.List[string]
+          $capturing = $false
+          foreach ($line in (Get-Content CHANGELOG.md)) {
+            if (-not $capturing) {
+              if ($line.StartsWith($header)) { $capturing = $true }
+              continue
+            }
+            if ($line.StartsWith('## ')) { break }
+            $out.Add($line)
+          }
+          while ($out.Count -gt 0 -and $out[0].Trim() -eq '') { $out.RemoveAt(0) }
+          if ($out.Count -eq 0) { $out.Add("(CHANGELOG.md 中未找到 v$ver 小节)") }
+          Set-Content -Path release_notes.md -Value ($out -join "`n") -Encoding utf8
+          Write-Host "Extracted $($out.Count) lines for v$ver"
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           files: dist/${{ env.APP_NAME }}-v*-windows-x64.zip
-          generate_release_notes: true
+          body_path: release_notes.md
+          generate_release_notes: false
           fail_on_unmatched_files: true

@@ -5,6 +5,19 @@
 
 ---
 
+## [v1.18.8] - 2026-09-22
+
+### CI
+- ci: 完善 GitHub Actions 工作流 `.github/workflows/ci.yml`
+  - 新增手动触发 `workflow_dispatch`；标签（发布）运行不再被 `concurrency` 取消
+  - 顶层权限收敛为最小权限 `contents: read`，仅 `release` 作业提权 `contents: write`
+  - 各作业新增 `timeout-minutes`；`build-windows` 增加 `flutter test --coverage`、覆盖率摘要（写入 Step Summary）与 LCOV 产物上传
+  - `validate` 新增规则集副本身份报告（`.stignore` vs `app/assets/.stignore` 漂移，当前仅告警不阻断）
+  - `release` 的发布说明改为从 `CHANGELOG.md` 提取对应版本小节（`body_path`），替代默认提交列表
+- ci: 新增 `.github/dependabot.yml`（每周检查 `github-actions` 与 `pub` 依赖更新）
+- docs: README / README_EN 新增 CI 状态徽章
+- chore: 同步版本至 v1.18.8（VERSION / pubspec `1.18.8+1` / `AppState.version` / `manifest.dart` 示例 / README 徽章）
+
 ## [v1.18.7] - 2026-09-22
 
 ### 构建

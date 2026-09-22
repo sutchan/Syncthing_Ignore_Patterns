@@ -8,11 +8,13 @@
 ## 项目约定（SyncthingIgnorePatterns）
 - 提交信息遵循 Git 规范（type: 描述，首字母小写、动词开头、≤50字）。
 - **版本三轨独立**（docs/project.md §4，v1.18.6 确立；文档/配置变更升 PATCH、新功能升 MINOR）：
-  - ① **Flutter 主实现轨**（当前 v1.18.7）= 根 `VERSION` 文件（CI 单一来源）↔ `app/pubspec.yaml` `version:` ↔ `app/lib/state/app_state.dart` `AppState.version` ↔ `app/lib/models/manifest.dart` 示例值 ↔ `README.md`/`README_EN.md` 徽章与正文版本引用。**须彼此一致**。
+  - ① **Flutter 主实现轨**（当前 v1.18.8）= 根 `VERSION` 文件（CI 单一来源）↔ `app/pubspec.yaml` `version:` ↔ `app/lib/state/app_state.dart` `AppState.version` ↔ `app/lib/models/manifest.dart` 示例值 ↔ `README.md`/`README_EN.md` 徽章与正文版本引用。**须彼此一致**。
   - ② **PowerShell 遗留轨**（当前 v1.18.5）= `SyncthingIgnoreGUI.ps1` 头 `//Version` 与 `$ScriptVersion`，**独立演进**。
   - ③ **`.stignore` 规则集轨**（当前 v1.18.5）= 根 `.stignore` 与 `app/assets/.stignore` 头 `//Version` **须内部一致**，`//Updated` 为修订日。改规则集必须同步打包副本。
-  - 跨轨版本不同步属正常（如 Flutter 1.18.7 vs 遗留/规则集 1.18.5）。
-- **CI/CD**（`.github/workflows/ci.yml`，4 作业，随 v1.18.7 生效）：`version`（读根 `VERSION`，校验 `v*` 标签 == VERSION）/`validate`（ps1 语法 `Parser::ParseFile` + `.stignore` 规则集 + **三轨版本一致性**）/`build-windows`（windows-latest：flutter pub get/analyze/test/build windows --release）/`release`（仅 `v*` 标签，softprops/action-gh-release）。触发：push main/dev + tags `v*`、PR main/dev；`env.APP_NAME=SyncthingIgnoreGUI`；产物 `SyncthingIgnoreGUI-v<版本>-windows-x64.zip`（版本取自根 `VERSION`）。注意 `flutter analyze` 对 error/warning/info 任一即 exit 1，须全部清零（v1.18.7 已修 52 项）。
+  - 跨轨版本不同步属正常（如 Flutter 1.18.8 vs 遗留/规则集 1.18.5）。
+- **CI/CD**（`.github/workflows/ci.yml`，4 作业）：`version`（读根 `VERSION`，校验 `v*` 标签 == VERSION）/`validate`（ps1 语法 `Parser::ParseFile` + `.stignore` 规则集 + **规则副本漂移报告** + **三轨版本一致性**）/`build-windows`（windows-latest：flutter pub get / analyze / test --coverage / build windows --release；上传 LCOV 并输出覆盖率摘要）/`release`（仅 `v*` 标签；softprops/action-gh-release，发布说明取自 `CHANGELOG.md` 对应小节 `body_path`）。触发：push main/dev + tags `v*`、PR main/dev、手动 `workflow_dispatch`；顶层最小权限 `contents: read`（release 作业提权 `contents: write`）；各作业 `timeout-minutes`；`concurrency` 对标签运行不取消。`env.APP_NAME=SyncthingIgnoreGUI`；产物 `SyncthingIgnoreGUI-v<版本>-windows-x64.zip`（版本取自根 `VERSION`）。注意 `flutter analyze` 对 error/warning/info 任一即 exit 1，须全部清零（v1.18.7 已修 52 项）。
+- **CI 依赖更新**：`.github/dependabot.yml` 每周检查 `github-actions` 与 `pub`（目录 `/app`）依赖；README/README_EN 已加 CI 徽章（仓库 `github.com/sutchan/Syncthing_Ignore_Patterns`）。
+- **已知规则副本身份漂移（待裁决）**：根 `.stignore` 与 `app/assets/.stignore` 内容不一致——`13e0d94` 从根删除 7 条 AI 工具规则（`**/.codex/` `**/.gemini/` `**/.qwen/` `**/.trae/` `**/.opencode/` `**/.qoder/` `**/.workbuddy/`），副本仍保留；两文件 `//Version` 均为 1.18.5。CI 漂移步骤当前**仅告警不阻断**，待用户决定同步方向后再改为阻断。
 - **多 agent 并发提交风险**：本仓库会话间隙会被其他会话/agent（作者 Sut）提交，未提交改动会被其 `git add -A` 扫入他人提交（本会话临时文件 `__check_ver_tmp.ps1`、`app/_pubget.log` 曾被误提交）。故：临时脚本勿放仓库根；动版本/规则集前必先 `git show HEAD:<file>` 核对已提交真值（勿凭本会话记忆）；`.gitignore` 已加 `_pubget.log`、`__*_tmp.ps1`、`_elevate.ps1`。
 - CHANGELOG 双副本：根 `CHANGELOG.md` 与 `docs/project.md` §7 必须同时写，历史上多次只写一处（v1.16.0 曾漏根 CHANGELOG）。
 - **文档目录**：规范文档原存于 `openspec/`，已于 v1.18.5 迁移至 `docs/`（`docs/project.md` + `docs/specs/stignore-gui/spec.md`）。后续引用一律用 `docs/`。

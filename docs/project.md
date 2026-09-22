@@ -34,7 +34,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 SyncthingIgnorePatterns/
 ├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.6，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
-├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.18.7）
+├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.18.8）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
 │   ├── lib/
 │   │   ├── main.dart         # 入口，注入 AppState
@@ -63,7 +63,7 @@ SyncthingIgnorePatterns/
 
 - 语义化版本 `MAJOR.MINOR.PATCH`；文档/配置类变更默认升级 `PATCH`，新功能升级 `MINOR`。
 - **主实现（Flutter 桌面版）版本单一来源**：
-  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.18.7+1`）
+  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.18.8+1`）
   - `app/lib/state/app_state.dart` 的 `AppState.version`（关于框 / 日志展示）
   - `README.md` / `README_EN.md` 版本徽章
   - 根目录 `VERSION` 文件（CI 读取的主实现版本单一来源）
@@ -107,6 +107,10 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.18.8 (2026-09-22)
+- ci: 完善 CI（手动触发、最小权限、作业超时、覆盖率与 LCOV 产物、规则集副本漂移报告、Release 说明取自 CHANGELOG）；新增 `.github/dependabot.yml` 与 README CI 徽章
+- chore: 同步版本至 v1.18.8（VERSION / pubspec / `AppState.version` / `manifest.dart` 示例 / README 徽章）
 
 ### v1.18.7 (2026-09-22)
 - chore(gitignore): 新增 coding 临时文件/目录忽略规则（`*.log` `*.swp` `.DS_Store` `app/.dart_tool/` `app/build/` 等），注释明确编程工具配置目录放行（保持跟踪）
@@ -270,7 +274,7 @@ SyncthingIgnorePatterns/
 - [ ] Flutter 版相较 PowerShell 版仍缺：应用前安全确认框、实时状态行（当前扫描目录）、拖拽填入、双击打开文件、启动时「已加载清单」提示
 - [ ] 应用阶段 `Stop` 取消尚未接入 `applyRules` 循环
 - [ ] 测试覆盖率门禁（≥80%）、UI 部件测试（flutter_test + mockito）未建立
-- [x] GitHub Actions CI：构建并打包命名归档 `SyncthingIgnoreGUI-v1.18.7-windows-x64.zip`（`.github/workflows/ci.yml`）
+- [x] GitHub Actions CI：构建并打包命名归档 `SyncthingIgnoreGUI-v1.18.8-windows-x64.zip`（`.github/workflows/ci.yml`）
 - [ ] 发布包说明（VC++ 运行库 / Flutter AOT 运行时）或 Inno Setup 安装包
 - [ ] 规则更新后须同步 `app/assets/.stignore` 副本
 
@@ -327,6 +331,6 @@ dart run coverage:format_coverage --packages=.dart_tool/package_config.json \
 ### 9.4 实现分工
 
 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
-**Dart + Flutter 桌面版（v1.18.7）为主实现**，构建为独立 `.exe` 分发。两者共享同一
+**Dart + Flutter 桌面版（v1.18.8）为主实现**，构建为独立 `.exe` 分发。两者共享同一
 `.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等项与工程化待办，
 见 [开发任务清单](development-tasks.md)。
