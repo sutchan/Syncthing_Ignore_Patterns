@@ -9,3 +9,9 @@ config/*.bak.*
 config.json
 *.mjs
 _cnt.ps1
+
+# Flutter pub get 日志（构建临时产物）
+_pubget.log
+
+# 本地临时校验脚本
+__*_tmp.ps1
