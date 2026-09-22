@@ -59,4 +59,4 @@ Dart + Flutter Windows 桌面应用，提供 `.stignore` 规则的批量扫描�
 ## 状态
 - 代码已完成：扫描 / 应用 / 备份轮转 / 中英双语 / 明暗主题 / 清单 manifest
 - 构建为 exe、测试覆盖率门禁、UI 部件测试、GitHub Actions CI、发布包：进行中
-- 详见 [开发任务清单](../development-tasks.md)
+- 详见 [开发任务清单](../../development-tasks.md)

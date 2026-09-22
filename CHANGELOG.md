@@ -5,6 +5,17 @@
 
 ---
 
+## [v1.18.6] - 2026-09-22
+
+### 文档
+- docs: 将主实现说明从 PowerShell 版切换为 Dart + Flutter 桌面版（README / README_EN 批量同步工具改为双方案：Flutter 主实现 + PowerShell 遗留）
+- docs: 更新 `docs/project.md` §2/§3/§4/§8/§9/§9.4，明确实现分工与版本单一来源（Flutter 主实现 v1.18.6、PowerShell 遗留 v1.18.5、规则集独立版本）
+- docs: 标记 `docs/specs/stignore-gui/spec.md` 为遗留实现，新增 Flutter 版规格 `docs/specs/stignore-gui-flutter/spec.md`
+- docs: 新增开发任务清单 `docs/development-tasks.md`（剩余未完成任务跟踪）
+
+### 构建
+- chore: 同步版本至 v1.18.6（pubspec `1.18.6+1`、`AppState.version`、README 徽章）
+
 ## [v1.18.5] - 2026-09-22
 
 ### 文档
