@@ -1,0 +1,178 @@
+# .github/workflows/ci.yml
+# SyncthingIgnorePatterns CI/CD
+# - version:     从根 VERSION 文件读取版本，校验 v* 标签与 VERSION 一致
+# - validate:    校验 PowerShell GUI 语法、.stignore 规则集、全源版本一致性
+# - build-windows: 在 windows-latest 构建 Flutter Windows 桌面 exe 并打包
+# - release:     仅在推送 v* 标签时创建 GitHub Release 并上传产物
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+    tags: ['v*']
+  pull_request:
+    branches: [main, dev]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  APP_NAME: SyncthingIgnoreGUI
+
+jobs:
+  version:
+    name: Resolve version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: version
+        name: Read VERSION
+        shell: bash
+        run: |
+          if [ ! -f VERSION ]; then
+            echo "::error::VERSION file is missing"
+            exit 1
+          fi
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: $VERSION"
+      - name: Verify tag matches VERSION
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          ver="$(tr -d '[:space:]' < VERSION)"
+          if [ "$tag" != "$ver" ]; then
+            echo "::error::Git tag v$tag does not match VERSION ($ver)"
+            exit 1
+          fi
+
+  validate:
+    name: Validate scripts & ruleset
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PowerShell syntax check (SyncthingIgnoreGUI.ps1)
+        shell: pwsh
+        run: |
+          $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile(
+            "SyncthingIgnoreGUI.ps1", [ref]$null, [ref]$errors)
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
+          Write-Host "PowerShell syntax OK"
+      - name: Validate .stignore ruleset
+        shell: pwsh
+        run: |
+          $lines = Get-Content .stignore
+          $rules = for ($i = 0; $i -lt $lines.Count; $i++) {
+            $t = $lines[$i].Trim()
+            if ($t -eq '' -or $t.StartsWith('//') -or $t.StartsWith('#')) { continue }
+            $t
+          }
+          Write-Host "Non-comment rule lines: $($rules.Count)"
+          $dups = $rules | Group-Object | Where-Object { $_.Count -gt 1 } |
+            Select-Object -ExpandProperty Name
+          if ($dups) {
+            Write-Warning "Duplicate rule patterns: $($dups -join ', ')"
+          } else {
+            Write-Host "No duplicate rule patterns"
+          }
+          if ($rules.Count -eq 0) { Write-Error ".stignore has no rules"; exit 1 }
+      - name: Version consistency check
+        shell: pwsh
+        run: |
+          $src = @(
+            @{ file = 'app/pubspec.yaml';             pat = 'version:\s*([0-9.]+)' }
+            @{ file = '.stignore';                    pat = '//Version:\s*([0-9.]+)' }
+            @{ file = 'README.md';                    pat = 'version-v([0-9.]+)' }
+            @{ file = 'README_EN.md';                 pat = 'version-v([0-9.]+)' }
+            @{ file = 'app/lib/state/app_state.dart'; pat = "this\.version = '([0-9.]+)'" }
+            @{ file = 'app/lib/models/manifest.dart'; pat = '"version":\s*"([0-9.]+)"' }
+            @{ file = 'app/assets/.stignore';         pat = '//Version:\s*([0-9.]+)' }
+            @{ file = 'VERSION';                      pat = '([0-9.]+)' }
+          )
+          $versions = @()
+          foreach ($s in $src) {
+            if (-not (Test-Path $s.file)) {
+              Write-Error "Missing version source: $($s.file)"; exit 1
+            }
+            $content = Get-Content $s.file -Raw
+            if ($content -match $s.pat) {
+              $versions += [PSCustomObject]@{ file = $s.file; ver = $Matches[1] }
+            } else {
+              Write-Error "Could not find version in $($s.file)"; exit 1
+            }
+          }
+          $versions | ForEach-Object { Write-Host "$($_.file) = $($_.ver)" }
+          $uniq = $versions.ver | Sort-Object -Unique
+          if ($uniq.Count -ne 1) {
+            Write-Error "Version mismatch: $($versions.ver -join ' | ')"
+            exit 1
+          }
+          Write-Host "All version sources consistent: $($uniq[0])"
+
+  build-windows:
+    name: Build Flutter Windows (exe)
+    needs: [version]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Enable Windows desktop
+        run: flutter config --enable-windows-desktop
+      - name: Pub get
+        working-directory: app
+        run: flutter pub get
+      - name: Analyze
+        working-directory: app
+        run: flutter analyze
+      - name: Test
+        working-directory: app
+        run: flutter test
+      - name: Build Windows release
+        working-directory: app
+        run: flutter build windows --release
+      - name: Package artifact
+        shell: pwsh
+        run: |
+          $ver = "${{ needs.version.outputs.version }}"
+          $zip = "${{ env.APP_NAME }}-v$ver-windows-x64.zip"
+          $src = "app/build/windows/x64/runner/Release"
+          Compress-Archive -Path "$src/*" -DestinationPath $zip -Force
+          Write-Host "Created $zip"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64-release
+          path: ${{ env.APP_NAME }}-v*-windows-x64.zip
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: [version, build-windows]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-x64-release
+          path: dist
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/${{ env.APP_NAME }}-v*-windows-x64.zip
+          generate_release_notes: true
+          fail_on_unmatched_files: true
