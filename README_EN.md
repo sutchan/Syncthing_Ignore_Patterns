@@ -2,7 +2,7 @@
 
 > A curated, ready-to-use `.stignore` rule set: 21 categories · 329 patterns that exclude system files, caches, build artifacts, and app data.
 
-![Version](https://img.shields.io/badge/version-v1.18.8-blue)
+![Version](https://img.shields.io/badge/version-v1.18.9-blue)
 ![CI](https://github.com/sutchan/Syncthing_Ignore_Patterns/actions/workflows/ci.yml/badge.svg)
 ![Updated](https://img.shields.io/badge/updated-2026--09--22-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -19,7 +19,7 @@
 - ✅ **Bilingual docs** plus a batch-sync GUI tool
 - ✅ **Actively maintained** as the ecosystem evolves
 
-> The `Updated` date in the `.stignore` header (`2026-09-22`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.18.8`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
+> The `Updated` date in the `.stignore` header (`2026-09-22`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.18.9`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
 
 ### Quick Start
 
@@ -92,7 +92,7 @@ Use the "Ignore Patterns" preview in the Web UI to verify matches before saving.
 
 The project ships two implementations with identical behavior (scan / apply / backup rotation / bilingual UI / light & dark themes):
 
-#### Option 1: Dart + Flutter Desktop (recommended, primary · v1.18.8)
+#### Option 1: Dart + Flutter Desktop (recommended, primary · v1.18.9)
 
 Located in `app/`, built into a standalone `.exe` — no PowerShell required on the target machine:
 

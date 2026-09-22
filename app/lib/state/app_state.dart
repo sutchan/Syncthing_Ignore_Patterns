@@ -27,7 +27,7 @@ class LogEntry {
 }
 
 class AppState extends ChangeNotifier {
-  AppState({this.version = '1.18.8'});
+  AppState({this.version = '1.18.9'});
 
   final String version;
   final AppLocalizations _en = AppLocalizations('en');
@@ -92,7 +92,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> pickRoot() async {
-    final dir = await FilePicker.platform.getDirectoryPath(
+    final dir = await FilePicker.getDirectoryPath(
       dialogTitle: loc.t('folderTitle'),
     );
     if (dir != null) {
@@ -102,7 +102,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> pickManifest() async {
-    final result = await FilePicker.platform.saveFile(
+    final result = await FilePicker.saveFile(
       dialogTitle: loc.t('fileTitle'),
       fileName: 'stignore-paths.json',
     );

@@ -5,6 +5,13 @@
 
 ---
 
+## [v1.18.9] - 2026-09-22
+
+### 依赖 / 修复
+- fix: 升级 `file_picker` 至 `^11.0.0` 并改用其静态 API（`FilePicker.getDirectoryPath()` / `FilePicker.saveFile()`），移除已废弃的 `FilePicker.platform` getter 调用（`lib/state/app_state.dart`）
+  - 原 `^8.0.0` 约束在解析到 11+ 版本时 `FilePicker.platform` getter 已被移除，导致 `flutter analyze` 报 `undefined_getter` 失败
+- chore: 同步版本至 v1.18.9（VERSION / pubspec `1.18.9+1` / `AppState.version` / `manifest.dart` 示例 / README 徽章）
+
 ## [v1.18.8] - 2026-09-22
 
 ### CI
