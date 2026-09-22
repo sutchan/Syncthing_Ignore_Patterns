@@ -27,7 +27,7 @@ class LogEntry {
 }
 
 class AppState extends ChangeNotifier {
-  AppState({this.version = '1.18.9'});
+  AppState({this.version = '1.18.10'});
 
   final String version;
   final AppLocalizations _en = AppLocalizations('en');
@@ -102,12 +102,15 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> pickManifest() async {
-    final result = await FilePicker.saveFile(
+    // file_picker 13+ 的 saveFile 会写入 bytes 并返回 Uri；此处写入占位空字节，
+    // 实际清单内容由 scan()/apply() 覆盖写入。
+    final uri = await FilePicker.saveFile(
       dialogTitle: loc.t('fileTitle'),
       fileName: 'stignore-paths.json',
+      bytes: Uint8List(0),
     );
-    if (result != null) {
-      manifestPath = result;
+    if (uri != null) {
+      manifestPath = uri.toFilePath();
       notifyListeners();
     }
   }

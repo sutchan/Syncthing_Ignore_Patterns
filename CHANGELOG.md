@@ -5,6 +5,14 @@
 
 ---
 
+## [v1.18.10] - 2026-09-22
+
+### 依赖 / 修复
+- fix(app): 适配 `file_picker` `13.1.0` 与 `win32` `6.4.0` 的破坏性 API 变更，恢复 `flutter analyze` 通过
+  - `lib/services/platform_io.dart`：`GetLogicalDrives()` 现返回 `Win32Result<int>`，改取 `.value`；`GetDriveType()` 参数类型改为 `PCWSTR`，用 `PCWSTR(ptr)` 包装原生指针
+  - `lib/state/app_state.dart`：`FilePicker.saveFile()` 改为写入字节并返回 `Uri?`（新增必填 `bytes`），`pickManifest` 改传占位空字节并取 `uri.toFilePath()`
+- chore: 同步版本至 v1.18.10（VERSION / pubspec `1.18.10+1` / `AppState.version` / `manifest.dart` 示例 / README 徽章）
+
 ## [v1.18.9] - 2026-09-22
 
 ### 依赖 / 修复

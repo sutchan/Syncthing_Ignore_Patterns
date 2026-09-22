@@ -11,7 +11,7 @@ import 'package:win32/win32.dart';
 /// Returns the list of fixed (local) drive roots, e.g. `['C:\\', 'D:\\']`.
 List<String> listFixedDrives() {
   if (!Platform.isWindows) return [Directory.current.path];
-  final mask = GetLogicalDrives();
+  final mask = GetLogicalDrives().value;
   final drives = <String>[];
   for (var i = 0; i < 26; i++) {
     if ((mask & (1 << i)) != 0) {
@@ -19,7 +19,7 @@ List<String> listFixedDrives() {
       final ptr = root.toNativeUtf16();
       try {
         // DRIVE_FIXED == 3
-        if (GetDriveType(ptr) == 3) drives.add(root);
+        if (GetDriveType(PCWSTR(ptr)) == 3) drives.add(root);
       } finally {
         free(ptr);
       }
