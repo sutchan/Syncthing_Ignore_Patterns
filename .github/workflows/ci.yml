@@ -214,14 +214,14 @@ jobs:
           Compress-Archive -Path "$src/*" -DestinationPath $zip -Force
           Write-Host "Created $zip"
       - name: Upload app artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: windows-x64-release
           path: ${{ env.APP_NAME }}-v*-windows-x64.zip
           if-no-files-found: error
       - name: Upload coverage artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-lcov
           path: app/coverage/lcov.info
