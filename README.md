@@ -1,9 +1,9 @@
 # Syncthing 忽略模式
 
-> 开箱即用的 `.stignore` 规则集：21 个分类 · 330 条规则，自动排除系统文件、缓存、构建产物与应用数据。
+> 开箱即用的 `.stignore` 规则集：21 个分类 · 329 条规则，自动排除系统文件、缓存、构建产物与应用数据。
 
 ![Version](https://img.shields.io/badge/version-v1.18.6-blue)
-![Updated](https://img.shields.io/badge/updated-2026--09--21-brightgreen)
+![Updated](https://img.shields.io/badge/updated-2026--09--22-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-21-blueviolet)
 
@@ -13,12 +13,12 @@
 
 ## 中文说明
 
-- ✅ **21 分类 / 330 条规则**，覆盖系统、缓存、构建产物、数据库等噪音文件
+- ✅ **21 分类 / 329 条规则**，覆盖系统、缓存、构建产物、数据库等噪音文件
 - ✅ **开箱即用**：复制到同步根目录即可生效
 - ✅ **中英双语文档**，附批量同步 GUI 工具
 - ✅ **持续维护**，随生态更新规则
 
-> `.stignore` 文件头 `Updated`（`2026-09-21`）是规则集修订日；工具发布版本见 CHANGELOG（当前 `v1.18.5`）。两者分别对应"规则集修订"与"工具发布"，不同步属正常。
+> `.stignore` 文件头 `Updated`（`2026-09-22`）是规则集修订日；工具发布版本见 CHANGELOG（当前 `v1.18.6`）。两者分别对应"规则集修订"与"工具发布"，不同步属正常。
 
 ### 快速开始
 
@@ -56,7 +56,7 @@
 | 2 | 数据库文件 | `ibdata1`、`*.ibd`、`pg_wal/`、`*.sqlite3`、`*.db-wal`（不含通配 `*.db`） |
 | 3 | 备份与临时文件 | `*.tmp`、`*.bak`、`.delete/`、`Backup_of_*`、`.stignore.bak.*` |
 | 4 | 应用数据与缓存 | `.dropbox.cache/`、`WeChat Files/`、`BaiduNetdiskDownload/`、`SteamLibrary/`（保留 `.stfolder/`、`.stversions`） |
-| 5 | 版本控制系统 | `.git/`、`.svn/`、`.hg/` |
+| 5 | 版本控制系统 | `.svn/`、`.hg/`（`.git/` 默认同步，保留分支信息） |
 | 6 | 包管理器缓存 | `node_modules/`、`.npm/`、`.venv/`、`.cargo/`、`.gradle/`、`.m2/`、`vendor/`、`.conda/`、`.uv/`、`.opam/` |
 | 7 | 前端构建缓存 | `.next/`、`.nuxt/`、`.svelte-kit/`、`.vite/`、`.turbo/`、`.vercel/` |
 | 8 | Python 与测试缓存 | `.pytest_cache/`、`.mypy_cache/`、`.ruff_cache/`、`.tox/`、`.ipynb_checkpoints/`、`.cypress/`、`.playwright/`、`.allure/` |
@@ -80,7 +80,7 @@
 ### 自定义建议
 
 ```text
-!**/.git/          // 白名单：.git 继续同步
+!**/keep-this/     // 白名单：强制同步某目录（覆盖上方忽略规则）
 (?i)**.jpg         // 忽略大小写
 (?d)**/temp/**     // 父目录删除时同步删除
 ```

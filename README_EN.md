@@ -1,9 +1,9 @@
 # Syncthing Ignore Patterns
 
-> A curated, ready-to-use `.stignore` rule set: 21 categories · 330 patterns that exclude system files, caches, build artifacts, and app data.
+> A curated, ready-to-use `.stignore` rule set: 21 categories · 329 patterns that exclude system files, caches, build artifacts, and app data.
 
 ![Version](https://img.shields.io/badge/version-v1.18.6-blue)
-![Updated](https://img.shields.io/badge/updated-2026--09--21-brightgreen)
+![Updated](https://img.shields.io/badge/updated-2026--09--22-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-21-blueviolet)
 
@@ -13,12 +13,12 @@
 
 ## English
 
-- ✅ **21 categories / 330 patterns** covering system files, caches, build artifacts, databases, and more
+- ✅ **21 categories / 329 patterns** covering system files, caches, build artifacts, databases, and more
 - ✅ **Zero-config**: drop it at the sync folder root and it works
 - ✅ **Bilingual docs** plus a batch-sync GUI tool
 - ✅ **Actively maintained** as the ecosystem evolves
 
-> The `Updated` date in the `.stignore` header (`2026-09-21`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.18.5`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
+> The `Updated` date in the `.stignore` header (`2026-09-22`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.18.6`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
 
 ### Quick Start
 
@@ -56,7 +56,7 @@ See the `.stignore` file for the full rule set:
 | 2 | Database Files | `ibdata1`, `*.ibd`, `pg_wal/`, `*.sqlite3`, `*.db-wal` (no blanket `*.db`) |
 | 3 | Backup & Temp Files | `*.tmp`, `*.bak`, `.delete/`, `Backup_of_*`, `.stignore.bak.*` |
 | 4 | App Data & Caches | `.dropbox.cache/`, `WeChat Files/`, `BaiduNetdiskDownload/`, `SteamLibrary/` (keeps `.stfolder/`, `.stversions`) |
-| 5 | Version Control | `.git/`, `.svn/`, `.hg/` |
+| 5 | Version Control | `.svn/`, `.hg/` (`.git/` synced by default, keeps branch info) |
 | 6 | Package Manager Caches | `node_modules/`, `.npm/`, `.venv/`, `.cargo/`, `.gradle/`, `.m2/`, `vendor/`, `.conda/`, `.uv/`, `.opam/` |
 | 7 | Frontend Build Caches | `.next/`, `.nuxt/`, `.svelte-kit/`, `.vite/`, `.turbo/`, `.vercel/` |
 | 8 | Python & Test Caches | `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.tox/`, `.ipynb_checkpoints/`, `.cypress/`, `.playwright/`, `.allure/` |
@@ -80,7 +80,7 @@ See the `.stignore` file for the full rule set:
 ### Customization Tips
 
 ```text
-!**/.git/          // whitelist: keep .git in sync
+!**/keep-this/     // whitelist: force-sync a folder (overrides ignore rules)
 (?i)**.jpg         // case-insensitive
 (?d)**/temp/**     // allow deletion with parent dir
 ```

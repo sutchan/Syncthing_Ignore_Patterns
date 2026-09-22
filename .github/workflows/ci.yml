@@ -1,9 +1,14 @@
 # .github/workflows/ci.yml
 # SyncthingIgnorePatterns CI/CD
-# - version:     从根 VERSION 文件读取版本，校验 v* 标签与 VERSION 一致
-# - validate:    校验 PowerShell GUI 语法、.stignore 规则集、全源版本一致性
+# - version:     从根 VERSION 读取主实现版本，校验 v* 标签与 VERSION 一致
+# - validate:    校验 PowerShell GUI 语法、.stignore 规则集、分三轨校验版本一致性
 # - build-windows: 在 windows-latest 构建 Flutter Windows 桌面 exe 并打包
 # - release:     仅在推送 v* 标签时创建 GitHub Release 并上传产物
+#
+# 版本三轨独立（见 docs/project.md §4）：
+#   Flutter 主实现  = VERSION（pubspec / AppState.version / README 徽章）
+#   PowerShell 遗留 = SyncthingIgnoreGUI.ps1（//Version 与 $ScriptVersion 内部一致）
+#   规则集 .stignore = 独立于工具发布的版本（.stignore 与 app/assets/.stignore 内部一致）
 name: CI
 
 on:
@@ -87,38 +92,49 @@ jobs:
             Write-Host "No duplicate rule patterns"
           }
           if ($rules.Count -eq 0) { Write-Error ".stignore has no rules"; exit 1 }
-      - name: Version consistency check
+      - name: Version consistency check (three independent tracks)
         shell: pwsh
         run: |
-          $src = @(
+          # 1) Flutter 主实现版本（单一来源 = VERSION）必须全部一致
+          $ver = (Get-Content VERSION | Out-String).Trim()
+          $flutter = @(
             @{ file = 'app/pubspec.yaml';             pat = 'version:\s*([0-9.]+)' }
-            @{ file = '.stignore';                    pat = '//Version:\s*([0-9.]+)' }
             @{ file = 'README.md';                    pat = 'version-v([0-9.]+)' }
             @{ file = 'README_EN.md';                 pat = 'version-v([0-9.]+)' }
             @{ file = 'app/lib/state/app_state.dart'; pat = "this\.version = '([0-9.]+)'" }
             @{ file = 'app/lib/models/manifest.dart'; pat = '"version":\s*"([0-9.]+)"' }
-            @{ file = 'app/assets/.stignore';         pat = '//Version:\s*([0-9.]+)' }
-            @{ file = 'VERSION';                      pat = '([0-9.]+)' }
           )
-          $versions = @()
-          foreach ($s in $src) {
-            if (-not (Test-Path $s.file)) {
-              Write-Error "Missing version source: $($s.file)"; exit 1
-            }
-            $content = Get-Content $s.file -Raw
-            if ($content -match $s.pat) {
-              $versions += [PSCustomObject]@{ file = $s.file; ver = $Matches[1] }
-            } else {
-              Write-Error "Could not find version in $($s.file)"; exit 1
-            }
+          $fv = @($ver)
+          foreach ($s in $flutter) {
+            $c = Get-Content $s.file -Raw
+            if ($c -match $s.pat) { $fv += $Matches[1] }
+            else { Write-Error "No version found in $($s.file)"; exit 1 }
           }
-          $versions | ForEach-Object { Write-Host "$($_.file) = $($_.ver)" }
-          $uniq = $versions.ver | Sort-Object -Unique
-          if ($uniq.Count -ne 1) {
-            Write-Error "Version mismatch: $($versions.ver -join ' | ')"
+          $fu = $fv | Sort-Object -Unique
+          if ($fu.Count -ne 1) {
+            Write-Error "Flutter track version mismatch: $($fv -join ' | ')"
             exit 1
           }
-          Write-Host "All version sources consistent: $($uniq[0])"
+          Write-Host "Flutter track consistent: $ver"
+
+          # 2) PowerShell 遗留版（独立演进，内部须一致）
+          $ps1 = Get-Content SyncthingIgnoreGUI.ps1 -Raw
+          $head = if ($ps1 -match '//Version:\s*([0-9.]+)') { $Matches[1] } else { $null }
+          $scriptv = if ($ps1 -match '[$]ScriptVersion = ''([0-9.]+)''') { $Matches[1] } else { $null }
+          if ($head -ne $scriptv) {
+            Write-Error "PowerShell legacy version mismatch: //Version=$head `$ScriptVersion=$scriptv"
+            exit 1
+          }
+          Write-Host "PowerShell legacy track consistent: $head (independent)"
+
+          # 3) 规则集（独立版本，.stignore 与打包副本须一致）
+          $rv  = if ((Get-Content .stignore -Raw) -match '//Version:\s*([0-9.]+)') { $Matches[1] } else { $null }
+          $rav = if ((Get-Content app/assets/.stignore -Raw) -match '//Version:\s*([0-9.]+)') { $Matches[1] } else { $null }
+          if ($rv -ne $rav) {
+            Write-Error "Ruleset version mismatch: .stignore=$rv app/assets/.stignore=$rav"
+            exit 1
+          }
+          Write-Host "Ruleset track consistent: $rv (independent)"
 
   build-windows:
     name: Build Flutter Windows (exe)

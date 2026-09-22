@@ -32,7 +32,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 
 ```
 SyncthingIgnorePatterns/
-├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
+├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.6，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
 ├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.18.6）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
@@ -66,6 +66,7 @@ SyncthingIgnorePatterns/
   - `app/pubspec.yaml` 的 `version:` 字段（如 `1.18.6+1`）
   - `app/lib/state/app_state.dart` 的 `AppState.version`（关于框 / 日志展示）
   - `README.md` / `README_EN.md` 版本徽章
+  - 根目录 `VERSION` 文件（CI 读取的主实现版本单一来源）
   - 根目录 `CHANGELOG.md`（与本文档第 7 节一致）
 - **遗留实现（PowerShell 版）** 版本独立演进：`SyncthingIgnoreGUI.ps1` 文件头 `//Version` 与 `$ScriptVersion`。
 - **规则集 `.stignore`** 拥有独立版本（文件头 `//Version`），与工具发布版本可能不同步属正常（其 `Updated` 为规则集修订日）。
@@ -106,6 +107,16 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.18.6 (2026-09-22)
+- fix(stignore): 移除 `.git` 过滤规则（含注释行），使同步目录中的 Git 仓库完整同步、跨设备保留分支信息；`.svn/` `.hg/` 维持忽略
+- fix(stignore): 同步打包副本 `app/assets/.stignore`，规则集头版本统一至 v1.18.6
+- fix(docs): 修正 README / README_EN 规则计数 330 → 329（历史 off-by-one）；分类表第 5 类移除 `.git/`
+- note: v1.18.6 同时对应 Dart + Flutter 桌面版（主实现），详见 README §9
+
+### v1.18.5 (2026-09-22)
+- docs: 将 `openspec/` 规范文档迁移至 `docs/`（`docs/project.md` 与 `docs/specs/stignore-gui/spec.md`），更新目录结构树与内部引用
+- docs: 同步版本号至 v1.18.5（脚本头 `//Version` / `$ScriptVersion` / `.stignore` 头 / README 徽章）
 
 ### v1.18.4 (2026-09-21)
 - fix(gui): 后台作业改由克隆会话状态的 runspace 运行（`CreateDefault` + 复制脚本函数），修复 Scan/Apply 因 runspace 隔离抛 `CommandNotFoundException`、且 `$T`/`$lang` 等脚本变量不可见导致的**两个核心功能完全不可用**
@@ -289,6 +300,8 @@ flutter build windows        # 产物：build/windows/x64/runner/Release/syncthi
 > 标准规则集随资源打包（`assets/.stignore`），运行时由 `rootBundle` 加载；
 > 更新规则后需同步该副本（见 §4 版本同步）。exe 分发需目标机具备 Visual C++
 > 运行库与 Flutter AOT 运行时（发布包已自带）。
+> CI 自动构建：推送 `v*` 标签时由 `.github/workflows/ci.yml` 的 `build-windows` 作业
+> 产出并发布 `SyncthingIgnoreGUI-vX.Y.Z-windows-x64.zip`（版本取自根 `VERSION`）。
 
 ### 9.3 测试与覆盖率（dart-collect-coverage）
 

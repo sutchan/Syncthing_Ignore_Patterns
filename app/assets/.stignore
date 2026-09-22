@@ -1,6 +1,6 @@
 //Syncthing Ignore Patterns Lists
-//Version: 1.18.6
-//Updated: 2026-09-21
+//Version: 1.18.5
+//Updated: 2026-09-22
 
 //System & OS Files
 **/$RECYCLE.BIN/
@@ -118,9 +118,9 @@
 **/config/index-v2/**
 
 //Version Control Systems
-// NOTE: ignoring .git means repository history is not synced - remove this
-// line if you intend to mirror working git repositories.
-//**/.git/
+// NOTE: .git is intentionally NOT ignored - syncing it keeps full repo history
+// and branch info intact across devices. .svn/ and .hg/ stay ignored; remove
+// them too if you also mirror Subversion / Mercurial working copies.
 **/.svn/
 **/.hg/
 

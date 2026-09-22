@@ -1,7 +1,7 @@
 # 变更日志 (Changelog)
 
-> 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/) `MAJOR.MINOR.PATCH`，构建默认升级 `MINOR`。
-> 版本号同步位置：脚本头 `//Version`、变量 `$ScriptVersion`、`.stignore` 头、`README.md` / `README_EN.md` 徽章与功能引用。
+> 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/) `MAJOR.MINOR.PATCH`；文档/配置类变更默认升级 `PATCH`，新功能升级 `MINOR`。
+> 版本号同步位置：主实现（Flutter）以 `app/pubspec.yaml` `version:` 与 `app/lib/state/app_state.dart` `AppState.version` 为单一来源，并同步 `README.md` / `README_EN.md` 徽章；遗留 PowerShell 版（`SyncthingIgnoreGUI.ps1` 头 `//Version` / `$ScriptVersion`）与规则集（`.stignore` 头 `//Version`）独立演进。
 
 ---
 
@@ -15,6 +15,15 @@
 
 ### 构建
 - chore: 同步版本至 v1.18.6（pubspec `1.18.6+1`、`AppState.version`、README 徽章）
+
+### CI
+- ci: 新增 GitHub Actions 工作流 `.github/workflows/ci.yml`
+  - `version` 作业从根 `VERSION` 读取主实现版本，校验 `v*` 标签与 `VERSION` 一致
+  - `validate` 作业校验 `SyncthingIgnoreGUI.ps1` 语法、`.stignore` 规则集，并分三轨校验版本一致性
+    （Flutter 主实现 == VERSION / PowerShell 遗留内部一致 / 规则集内部一致）
+  - `build-windows` 作业在 `windows-latest` 执行 `flutter pub get` / `analyze` / `test` / `build windows --release`
+  - `release` 作业仅在 `v*` 标签推送时创建 GitHub Release 并上传 `SyncthingIgnoreGUI-vX.Y.Z-windows-x64.zip`
+- chore: 新增根 `VERSION` 文件（v1.18.6），作为主实现版本单一来源供 CI 读取
 
 ## [v1.18.5] - 2026-09-22
 
