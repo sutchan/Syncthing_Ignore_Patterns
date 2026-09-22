@@ -263,7 +263,7 @@ jobs:
           Set-Content -Path release_notes.md -Value ($out -join "`n") -Encoding utf8
           Write-Host "Extracted $($out.Count) lines for v$ver"
       - name: Create release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: dist/${{ env.APP_NAME }}-v*-windows-x64.zip
           body_path: release_notes.md
