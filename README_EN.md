@@ -2,7 +2,7 @@
 
 > A curated, ready-to-use `.stignore` rule set: 21 categories · 330 patterns that exclude system files, caches, build artifacts, and app data.
 
-![Version](https://img.shields.io/badge/version-v1.18.5-blue)
+![Version](https://img.shields.io/badge/version-v1.18.6-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--09--21-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-21-blueviolet)
@@ -89,24 +89,43 @@ Use the "Ignore Patterns" preview in the Web UI to verify matches before saving.
 
 ### Batch Sync Tool
 
-`SyncthingIgnoreGUI.ps1` is a single self-contained WinForms script that applies the standard rules to every Syncthing folder on the machine — **without scanning the whole disk every time**:
+The project ships two implementations with identical behavior (scan / apply / backup rotation / bilingual UI / light & dark themes):
+
+#### Option 1: Dart + Flutter Desktop (recommended, primary · v1.18.6)
+
+Located in `app/`, built into a standalone `.exe` — no PowerShell required on the target machine:
+
+```bash
+cd app
+flutter config --enable-windows-desktop
+flutter pub get
+flutter build windows        # output: build/windows/x64/runner/Release/syncthing_ignore_gui.exe
+```
+
+- **UI**: root / manifest-path inputs, Preview / Force / Backup toggles, Scan / Apply / Stop / Clear-log buttons, progress bar, results & log lists
+- **Language / Theme**: switch `English` / `中文` and `Light` / `Dark` at the top-right, applied instantly
+- **Scan**: one isolate per root (4 by default), skips `.git` and the rules-source dir, tolerates access-denied folders
+- **Apply**: SHA-256 compare skips identical files, `.bak.<timestamp>` backup before writing, `<base>.bak.*` rotation ≤3, `Force` cleans stale paths
+- **Standard rules**: bundled as `assets/.stignore`, loaded via `rootBundle` at runtime; sync that copy when rules change
+
+#### Option 2: PowerShell WinForms (legacy · maintenance · v1.18.5)
+
+`SyncthingIgnoreGUI.ps1` is a single self-contained script for environments without Flutter:
 
 ```powershell
 .\SyncthingIgnoreGUI.ps1                                   # auto-restarts on an STA thread (required by WinForms)
 powershell -STA -NoProfile -File .\SyncthingIgnoreGUI.ps1   # equivalent
 ```
 
-- **Language**: switch `English` / `中文` at the top-left; applies live and persists to `config.json` (Chinese stored as `\u` escapes, script stays pure ASCII)
-- **Theme**: `Light` / `Dark`, instant and persisted
-- **Scan**: runspace pool (≤4 threads) with `-Filter .stignore`; leave the root blank to scan all fixed drives, or drag & drop a folder
-- **Options**: `Preview` (write nothing), `Force` (skip per-file confirmation), `Back up manifest`
-- **Manifest**: defaults to `config/stignore-paths.json`, storing path/size/mtime; already-matching files are skipped, stale paths are cleaned only with `Force`
-- **Live status**: while scanning, the status line shows roots done, files found, the **directory currently being scanned** and elapsed time; results stream in as they are found (a single root switches the bar to marquee mode instead of a fake percentage)
-- **More**: background execution keeps the UI responsive, double-click a result to open it, **Stop** aborts the background job, and the status bar shows the version plus a project link
+- **Language / Theme**: top-left switch, applied live and persisted to `config.json`
+- **Scan**: runspace pool (≤4 threads) with `-Filter .stignore`; blank root scans all fixed drives, drag & drop supported
+- **Options / Manifest**: Preview / Force / Back-up; manifest defaults to `config/stignore-paths.json`
+- **Live status**: while scanning, the status line shows roots done, files found, the **current directory** and elapsed time; results stream in
+- **More**: background execution keeps the UI responsive, double-click a result to open it, **Stop** aborts the background job
 
 ```mermaid
 flowchart LR
-    A[Scan<br/>parallel multi-drive] --> B[Manifest stignore-paths.json<br/>backup rotate ≤3]
+    A[Scan<br/>parallel drives / isolates] --> B[Manifest stignore-paths.json<br/>backup rotate ≤3]
     B --> C[Apply<br/>write rules, per-file backup ≤3]
 ```
 

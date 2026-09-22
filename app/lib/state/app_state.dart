@@ -25,7 +25,7 @@ class LogEntry {
 }
 
 class AppState extends ChangeNotifier {
-  AppState({this.version = '1.18.5'});
+  AppState({this.version = '1.18.6'});
 
   final String version;
   final AppLocalizations _en = AppLocalizations('en');

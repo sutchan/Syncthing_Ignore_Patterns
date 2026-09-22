@@ -1,5 +1,8 @@
 # Spec: SyncthingIgnoreGUI.ps1
 
+> ⚠️ 本文档描述**遗留（legacy）** PowerShell 5.1 WinForms 实现。主实现已迁移至
+> Dart + Flutter 桌面版，规格见 [stignore-gui-flutter/spec.md](stignore-gui-flutter/spec.md)。
+
 ## 功能范围
 
 单一自包含 PowerShell 5.1 WinForms 脚本，提供 `.stignore` 规则的批量扫描与

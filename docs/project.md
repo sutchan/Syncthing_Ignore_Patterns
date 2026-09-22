@@ -24,7 +24,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
   作为发布交付物须保持单文件自包含，不因行数拆分（见 CHANGELOG v0.1.0 设计决策）。
 - **PowerShell 5.1（Windows PowerShell）** 目标运行时；不依赖 PowerShell 7
   专有语法（如 `ForEach-Object -Parallel`）。并行改用 runspace 线程池实现。
-- **GUI 正向 Dart + Flutter 桌面版迁移（见 §9）**，新实现位于 `app/`，构建为独立
+- **GUI 已迁移至 Dart + Flutter 桌面版（主实现，见 §9）**，新实现位于 `app/`，构建为独立
   `.exe`；纯 ASCII 与单文件自包含两条红线**仅适用于旧版 `.ps1`**，Flutter 版
   按 Dart 模块拆分（单一职责），不沿用 200 行单文件约束。
 
@@ -32,9 +32,9 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 
 ```
 SyncthingIgnorePatterns/
-├── .stignore                 # 标准规则源文件（Apply 依赖，版本 v1.18.5）
-├── SyncthingIgnoreGUI.ps1    # 旧版实现（PowerShell WinForms，纯 ASCII，维护中）
-├── app/                      # Dart + Flutter 桌面版（目标实现，构建为 exe）
+├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
+├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
+├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.18.6）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
 │   ├── lib/
 │   │   ├── main.dart         # 入口，注入 AppState
@@ -61,13 +61,15 @@ SyncthingIgnorePatterns/
 
 ## 4. 版本管理
 
-- 语义化版本 `MAJOR.MINOR.PATCH`；构建默认升级 `MINOR`。
-- 版本号同步位置（必须一致）：
-  - `SyncthingIgnoreGUI.ps1` 文件头 `//Version: x.y.z`
-  - `SyncthingIgnoreGUI.ps1` 变量 `$ScriptVersion = 'x.y.z'`
-  - `.stignore` 文件头 `//Version: x.y.z`（规则集独立版本，随工具同步）
-  - `README.md` / `README_EN.md` 版本徽章与界面功能版本号引用
-- 每次版本变更需同步更新 CHANGELOG（根目录 `CHANGELOG.md`，与第 7 节内容一致）与 README 的"版本与项目地址"。
+- 语义化版本 `MAJOR.MINOR.PATCH`；文档/配置类变更默认升级 `PATCH`，新功能升级 `MINOR`。
+- **主实现（Flutter 桌面版）版本单一来源**：
+  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.18.6+1`）
+  - `app/lib/state/app_state.dart` 的 `AppState.version`（关于框 / 日志展示）
+  - `README.md` / `README_EN.md` 版本徽章
+  - 根目录 `CHANGELOG.md`（与本文档第 7 节一致）
+- **遗留实现（PowerShell 版）** 版本独立演进：`SyncthingIgnoreGUI.ps1` 文件头 `//Version` 与 `$ScriptVersion`。
+- **规则集 `.stignore`** 拥有独立版本（文件头 `//Version`），与工具发布版本可能不同步属正常（其 `Updated` 为规则集修订日）。
+- 每次版本变更须同步上述对应位置并追加 CHANGELOG 条目。
 
 ## 5. GUI 功能规格
 
@@ -247,11 +249,16 @@ SyncthingIgnorePatterns/
 
 ## 8. 待办 / 已知限制
 
-- [ ] 多驱动器并行度固定 4 线程，未根据驱动器数量自适应
-- [ ] 未做 git push 远程（需用户手动操作）
-- [ ] 无自动化测试（PowerShell GUI 测试成本高，暂以语法解析 + 最小复现验证）
+完整任务跟踪见 [开发任务清单](development-tasks.md)。要点：
 
-## 9. Dart + Flutter 桌面版重写（目标实现）
+- [ ] Flutter 版相较 PowerShell 版仍缺：应用前安全确认框、实时状态行（当前扫描目录）、拖拽填入、双击打开文件、启动时「已加载清单」提示
+- [ ] 应用阶段 `Stop` 取消尚未接入 `applyRules` 循环
+- [ ] 测试覆盖率门禁（≥80%）、UI 部件测试（flutter_test + mockito）未建立
+- [ ] GitHub Actions CI：构建并打包命名归档 `SyncthingIgnorePatterns-v1.18.6-windows-x64.zip`
+- [ ] 发布包说明（VC++ 运行库 / Flutter AOT 运行时）或 Inno Setup 安装包
+- [ ] 规则更新后须同步 `app/assets/.stignore` 副本
+
+## 9. Dart + Flutter 桌面版（主实现）
 
 原 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms）正被重写为 **Dart + Flutter Windows 桌面应用**，位于 `app/`，目标构建为独立 `.exe` 分发。功能与行为对齐原脚本（扫描 / 应用 / 备份轮转 / 中英双语 / 明暗主题）。
 
@@ -299,7 +306,9 @@ dart run coverage:format_coverage --packages=.dart_tool/package_config.json \
 忽略指令：`// coverage:ignore-line` / `ignore-start..end` / `ignore-file`，
 可用 `--check-ignore` 强制校验。UI 部件测试后续补 `flutter_test` + `mockito`。
 
-### 9.4 PowerShell 版弃用计划
+### 9.4 实现分工
 
-`SyncthingIgnoreGUI.ps1` 保留为维护态；Flutter 版达到功能对等（含拖拽填入、
-双击打开、实时状态行等）后，可标记为弃用。两者共享同一 `.stignore` 规则集与文档。
+`SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
+**Dart + Flutter 桌面版（v1.18.6）为主实现**，构建为独立 `.exe` 分发。两者共享同一
+`.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等项与工程化待办，
+见 [开发任务清单](development-tasks.md)。

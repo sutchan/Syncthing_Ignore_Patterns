@@ -2,7 +2,7 @@
 
 > 开箱即用的 `.stignore` 规则集：21 个分类 · 330 条规则，自动排除系统文件、缓存、构建产物与应用数据。
 
-![Version](https://img.shields.io/badge/version-v1.18.5-blue)
+![Version](https://img.shields.io/badge/version-v1.18.6-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--09--21-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-21-blueviolet)
@@ -89,24 +89,43 @@
 
 ### 批量同步工具
 
-`SyncthingIgnoreGUI.ps1` 是单一自包含脚本（WinForms），把标准规则批量应用到全机所有 Syncthing 目录，**无需每次全盘扫描**：
+项目提供两种实现，功能与行为一致（扫描 / 应用 / 备份轮转 / 中英双语 / 明暗主题）：
+
+#### 方案一：Dart + Flutter 桌面版（推荐，主实现 · v1.18.6）
+
+位于 `app/`，构建为独立 `.exe` 分发，目标机无需安装 PowerShell：
+
+```bash
+cd app
+flutter config --enable-windows-desktop
+flutter pub get
+flutter build windows        # 产物：build/windows/x64/runner/Release/syncthing_ignore_gui.exe
+```
+
+- **界面**：根目录 / 清单路径输入、仅预览 / 强制 / 备份三项勾选、扫描 / 应用 / 停止 / 清空日志、进度条、结果与日志列表
+- **语言 / 主题**：右上角切换 `English` / `中文` 与 `浅色` / `深色`，即时生效
+- **扫描**：每根目录一个 isolate 并行（默认 4），跳过 `.git` 与规则源目录，无权限目录跳过并累计
+- **应用**：SHA-256 比对跳过一致文件、写前 `.bak.<时间戳>` 备份、`<base>.bak.*` 轮转 ≤3、`force` 才清理失效路径
+- **标准规则**：随 `assets/.stignore` 资源打包，运行时 `rootBundle` 加载；更新规则须同步该副本
+
+#### 方案二：PowerShell WinForms（遗留 · 维护态 · v1.18.5）
+
+`SyncthingIgnoreGUI.ps1` 单一自包含脚本，适用于未安装 Flutter 的环境：
 
 ```powershell
 .\SyncthingIgnoreGUI.ps1                                   # 自动以 STA 线程重启（WinForms 必需）
 powershell -STA -NoProfile -File .\SyncthingIgnoreGUI.ps1   # 等价写法
 ```
 
-- **语言**：左上角切换 `English` / `中文`，实时生效并记忆到 `config.json`（中文以 `\u` 转义内嵌，脚本保持纯 ASCII）
-- **主题**：`浅色` / `深色` 即时换肤，选择持久化
-- **扫描**：runspace 线程池（≤4 线程）+ `-Filter .stignore`；根目录留空则扫描所有固定驱动器，支持拖拽填充
-- **选项**：`仅预览`（不写文件）、`强制`（跳过逐文件确认）、`写回清单前备份`
-- **清单**：默认 `config/stignore-paths.json`，记录路径/大小/修改时间；规则一致自动跳过，失效路径需 `强制` 才清理
-- **实时状态**：扫描时底部状态行实时显示「已完成根目录数 / 已找到文件数 / **当前正在扫描的目录** / 耗时」，结果边扫边出（单根目录时进度条转为滚动模式，避免假百分比）
-- **其他**：后台执行不卡顿、结果列表双击打开文件、「停止」可中止后台任务、底部状态栏显示版本与项目链接
+- **语言 / 主题**：左上角切换，实时生效并记忆到 `config.json`
+- **扫描**：runspace 线程池（≤4 线程）+ `-Filter .stignore`；根目录留空扫描所有固定驱动器，支持拖拽填充
+- **选项 / 清单**：仅预览 / 强制 / 写回前备份；清单默认 `config/stignore-paths.json`
+- **实时状态**：扫描时显示「已完成根目录数 / 已找到文件数 / 当前目录 / 耗时」，结果边扫边出
+- **其他**：后台执行不卡顿、双击结果打开文件、「停止」中止后台任务
 
 ```mermaid
 flowchart LR
-    A[扫描 Scan<br/>并行多驱动器] --> B[清单 stignore-paths.json<br/>备份轮转≤3]
+    A[扫描 Scan<br/>并行多驱动器/isolate] --> B[清单 stignore-paths.json<br/>备份轮转≤3]
     B --> C[应用 Apply<br/>写入标准规则<br/>逐文件备份≤3]
 ```
 
