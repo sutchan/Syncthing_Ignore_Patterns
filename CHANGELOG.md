@@ -10,7 +10,7 @@
 ### 构建
 - chore(gitignore): 新增 coding 临时文件/目录忽略规则（`*.log` `*.log.*` `*.swp` `*.swo` `*~` `.DS_Store` `Thumbs.db` `desktop.ini` `app/.dart_tool/` `app/build/` `app/.flutter-plugins-dependencies` `app/coverage/`）
 - chore(gitignore): 注释明确编程工具配置目录（`.codebuddy/` `.github/` `.vscode/` `.cursor/` `.claude/` `.idea/`）放行——保持跟踪、不忽略
-- chore: 同步版本至 v1.18.7（VERSION / pubspec `1.18.7+1` / `AppState.version` / README 徽章）
+- chore: 同步版本至 v1.18.7（VERSION / pubspec `1.18.7+1` / `AppState.version` / `manifest.dart` 示例 / README 徽章）
 
 ## [v1.18.6] - 2026-09-22
 

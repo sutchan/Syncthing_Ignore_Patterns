@@ -15,6 +15,7 @@ _pubget.log
 
 # 本地临时校验脚本
 __*_tmp.ps1
+_elevate.ps1
 
 # --- 编程工具配置目录：放行（保持跟踪，不忽略） ---
 # .codebuddy/ .github/ .vscode/ .cursor/ .claude/ .idea/ 等工具配置目录

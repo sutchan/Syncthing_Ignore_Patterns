@@ -91,7 +91,7 @@ Use the "Ignore Patterns" preview in the Web UI to verify matches before saving.
 
 The project ships two implementations with identical behavior (scan / apply / backup rotation / bilingual UI / light & dark themes):
 
-#### Option 1: Dart + Flutter Desktop (recommended, primary · v1.18.6)
+#### Option 1: Dart + Flutter Desktop (recommended, primary · v1.18.7)
 
 Located in `app/`, built into a standalone `.exe` — no PowerShell required on the target machine:
 

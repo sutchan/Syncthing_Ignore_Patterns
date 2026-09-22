@@ -8,15 +8,15 @@
 ## 项目约定（SyncthingIgnorePatterns）
 - 提交信息遵循 Git 规范（type: 描述，首字母小写、动词开头、≤50字）。
 - **版本三轨独立**（docs/project.md §4，v1.18.6 确立；文档/配置变更升 PATCH、新功能升 MINOR）：
-  - ① **Flutter 主实现轨**（当前 v1.18.6）= 根 `VERSION` 文件（CI 单一来源）↔ `app/pubspec.yaml` `version:` ↔ `app/lib/state/app_state.dart` `AppState.version` ↔ `app/lib/models/manifest.dart` 示例值 ↔ `README.md`/`README_EN.md` 徽章与正文版本引用。**须彼此一致**。
+  - ① **Flutter 主实现轨**（当前 v1.18.7）= 根 `VERSION` 文件（CI 单一来源）↔ `app/pubspec.yaml` `version:` ↔ `app/lib/state/app_state.dart` `AppState.version` ↔ `app/lib/models/manifest.dart` 示例值 ↔ `README.md`/`README_EN.md` 徽章与正文版本引用。**须彼此一致**。
   - ② **PowerShell 遗留轨**（当前 v1.18.5）= `SyncthingIgnoreGUI.ps1` 头 `//Version` 与 `$ScriptVersion`，**独立演进**。
   - ③ **`.stignore` 规则集轨**（当前 v1.18.5）= 根 `.stignore` 与 `app/assets/.stignore` 头 `//Version` **须内部一致**，`//Updated` 为修订日。改规则集必须同步打包副本。
-  - 跨轨版本不同步属正常（如 Flutter 1.18.6 vs 遗留/规则集 1.18.5）。
-- **CI/CD**（`.github/workflows/ci.yml`，v1.18.6 新增，4 作业）：`version`（读根 `VERSION`，校验 `v*` 标签 == VERSION）/`validate`（ps1 语法 `Parser::ParseFile` + `.stignore` 规则集 + **三轨版本一致性**）/`build-windows`（windows-latest：flutter pub get/analyze/test/build windows --release）/`release`（仅 `v*` 标签，softprops/action-gh-release）。触发：push main/dev + tags `v*`、PR main/dev；`env.APP_NAME=SyncthingIgnoreGUI`；产物 `SyncthingIgnoreGUI-v<版本>-windows-x64.zip`（版本取自根 `VERSION`）。
-- **多 agent 并发提交风险**：本仓库会话间隙会被其他会话/agent（作者 Sut）提交，未提交改动会被其 `git add -A` 扫入他人提交（本会话临时文件 `__check_ver_tmp.ps1`、`app/_pubget.log` 曾被误提交）。故：临时脚本勿放仓库根；动版本/规则集前必先 `git show HEAD:<file>` 核对已提交真值（勿凭本会话记忆）；`.gitignore` 已加 `_pubget.log`、`__*_tmp.ps1`。
+  - 跨轨版本不同步属正常（如 Flutter 1.18.7 vs 遗留/规则集 1.18.5）。
+- **CI/CD**（`.github/workflows/ci.yml`，4 作业，随 v1.18.7 生效）：`version`（读根 `VERSION`，校验 `v*` 标签 == VERSION）/`validate`（ps1 语法 `Parser::ParseFile` + `.stignore` 规则集 + **三轨版本一致性**）/`build-windows`（windows-latest：flutter pub get/analyze/test/build windows --release）/`release`（仅 `v*` 标签，softprops/action-gh-release）。触发：push main/dev + tags `v*`、PR main/dev；`env.APP_NAME=SyncthingIgnoreGUI`；产物 `SyncthingIgnoreGUI-v<版本>-windows-x64.zip`（版本取自根 `VERSION`）。注意 `flutter analyze` 对 error/warning/info 任一即 exit 1，须全部清零（v1.18.7 已修 52 项）。
+- **多 agent 并发提交风险**：本仓库会话间隙会被其他会话/agent（作者 Sut）提交，未提交改动会被其 `git add -A` 扫入他人提交（本会话临时文件 `__check_ver_tmp.ps1`、`app/_pubget.log` 曾被误提交）。故：临时脚本勿放仓库根；动版本/规则集前必先 `git show HEAD:<file>` 核对已提交真值（勿凭本会话记忆）；`.gitignore` 已加 `_pubget.log`、`__*_tmp.ps1`、`_elevate.ps1`。
 - CHANGELOG 双副本：根 `CHANGELOG.md` 与 `docs/project.md` §7 必须同时写，历史上多次只写一处（v1.16.0 曾漏根 CHANGELOG）。
 - **文档目录**：规范文档原存于 `openspec/`，已于 v1.18.5 迁移至 `docs/`（`docs/project.md` + `docs/specs/stignore-gui/spec.md`）。后续引用一律用 `docs/`。
-- **Dart+Flutter 重写（进行中）**：`SyncthingIgnoreGUI.ps1` 正重构为 `app/` 下 Flutter Windows 桌面应用，构建为独立 `.exe`；纯逻辑拆为 `lib/services/*` + `lib/state/app_state.dart` 等可单测模块；规则集作为 `app/assets/.stignore` 资源打包。详见 `docs/project.md` §9。本机有 flutter/dart 但无外网，pub get/构建需在有网环境执行。
+- **Dart+Flutter 重写（主实现，v1.18.7 起 `flutter analyze` 零告警）**：`SyncthingIgnoreGUI.ps1` 正重构为 `app/` 下 Flutter Windows 桌面应用，构建为独立 `.exe`；纯逻辑拆为 `lib/services/*` + `lib/state/app_state.dart` 等可单测模块；规则集作为 `app/assets/.stignore` 资源打包；依赖含 `ffi`（`toNativeUtf16`）。详见 `docs/project.md` §9。本机无外网 + Flutter SDK 树只读，pub get/analyze/build 须在 CI 执行。
 - 中文存储用纯 ASCII + `\u` 转义，规避 GBK 乱码；GUI 字典 en/zh 分离。
 - 后台任务用 runspace + Timer 轮询 `DoEvents`。
 - **后台 runspace 必须自包含**（v1.18.4 实测结论，此前 Scan/Apply 因此完全不可用）：
@@ -31,3 +31,4 @@
 
 ## 环境约束
 - 本机可运行 `powershell -File`，但 GUI 脚本不实跑（会弹窗）；git 提交由用户本地执行。
+- **本机 Flutter 不可用**：SDK 树 `E:\Program Files\Flutter` 对当前用户只读，`flutter pub get` 无法重建 tool snapshot 而失败；且无外网。故 Flutter analyze/test/build 一律在 GitHub Actions（windows-latest）验证；纯文本校验（三轨版本一致性、`dart format --output=none` 语法解析）本地可跑。
