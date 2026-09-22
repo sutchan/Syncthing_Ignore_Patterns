@@ -1,6 +1,6 @@
 # Syncthing Ignore Patterns
 
-> A curated, ready-to-use `.stignore` rule set: 21 categories · 329 patterns that exclude system files, caches, build artifacts, and app data.
+> A curated, ready-to-use `.stignore` rule set: 21 categories · 330 patterns that exclude system files, caches, build artifacts, and app data.
 
 ![Version](https://img.shields.io/badge/version-v1.18.4-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--09--21-brightgreen)
@@ -13,7 +13,7 @@
 
 ## English
 
-- ✅ **21 categories / 329 patterns** covering system files, caches, build artifacts, databases, and more
+- ✅ **21 categories / 330 patterns** covering system files, caches, build artifacts, databases, and more
 - ✅ **Zero-config**: drop it at the sync folder root and it works
 - ✅ **Bilingual docs** plus a batch-sync GUI tool
 - ✅ **Actively maintained** as the ecosystem evolves

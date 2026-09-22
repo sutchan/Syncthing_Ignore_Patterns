@@ -99,8 +99,8 @@ SyncthingIgnorePatterns/
 - docs: 版本同步至 v1.18.4（脚本头 / `$ScriptVersion` / `.stignore` 头 / README 徽章 / openspec）
 
 ### v1.18.3 (2026-09-21)
-- feat(stignore): 新增第 21 类「AI 编码助手与 Vibecoding 临时文件」，覆盖 20 个 AI 结对编程工具数据/缓存目录（.codex/ .gemini/ .qwen/ .codeium/ .continue/ .cline/ .roo/ .kilocode/ .cody/ .trae/ .junie/ .supermaven/ .opencode/ .goose/ .openhands/ .augment/ .tabnine/ .qoder/ .workbuddy/ .amp/），规则总数 309 → 329
-- docs: README / README_EN 分类概览同步新增第 21 类，徽章分类 20→21、规则数 309→329；版本同步至 v1.18.3
+- feat(stignore): 新增第 21 类「AI 编码助手与 Vibecoding 临时文件」，覆盖 20 个 AI 结对编程工具数据/缓存目录（.codex/ .gemini/ .qwen/ .codeium/ .continue/ .cline/ .roo/ .kilocode/ .cody/ .trae/ .junie/ .supermaven/ .opencode/ .goose/ .openhands/ .augment/ .tabnine/ .qoder/ .workbuddy/ .amp/），规则总数 310 → 330
+- docs: README / README_EN 分类概览同步新增第 21 类，徽章分类 20→21、规则数 310→330；版本同步至 v1.18.3
 
 ### v1.18.2 (2026-08-31)
 - fix(gui): 扫描/应用后台 job 升脚本作用域 + 点击清理并行竞争；取消分支置 handles `$null` 守卫；apply 失败不再误报完成；`Get-FileHash` 锁文件容错；进度推送去 `Controls.Find`；日志去 `DoEvents` 重入

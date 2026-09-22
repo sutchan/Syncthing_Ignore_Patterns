@@ -20,11 +20,11 @@
 ## [v1.18.3] - 2026-09-21
 
 ### 新增（规则集）
-- feat(stignore): 新增第 21 类「AI 编码助手与 Vibecoding 临时文件」，覆盖 20 个 AI 结对编程工具的数据/缓存目录（`.codex/` `.gemini/` `.qwen/` `.codeium/` `.continue/` `.cline/` `.roo/` `.kilocode/` `.cody/` `.trae/` `.junie/` `.supermaven/` `.opencode/` `.goose/` `.openhands/` `.augment/` `.tabnine/` `.qoder/` `.workbuddy/` `.amp/`），规则总数 309 → 329
+- feat(stignore): 新增第 21 类「AI 编码助手与 Vibecoding 临时文件」，覆盖 20 个 AI 结对编程工具的数据/缓存目录（`.codex/` `.gemini/` `.qwen/` `.codeium/` `.continue/` `.cline/` `.roo/` `.kilocode/` `.cody/` `.trae/` `.junie/` `.supermaven/` `.opencode/` `.goose/` `.openhands/` `.augment/` `.tabnine/` `.qoder/` `.workbuddy/` `.amp/`），规则总数 310 → 330
 - 仅忽略工具自有数据目录，不忽略 `CLAUDE.md` / `.cursorrules` / `AGENTS.md` / `GEMINI.md` 等项目指令文件
 
 ### 文档
-- README / README_EN 分类概览新增第 21 类，徽章分类 20 → 21、规则数 309 → 329；版本同步至 v1.18.3
+- README / README_EN 分类概览新增第 21 类，徽章分类 20 → 21、规则数 310 → 330；版本同步至 v1.18.3
 
 ## [v1.18.2] - 2026-08-31
 
