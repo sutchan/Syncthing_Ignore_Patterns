@@ -112,6 +112,7 @@ SyncthingIgnorePatterns/
 - fix(stignore): 移除 `.git` 过滤规则（含注释行），使同步目录中的 Git 仓库完整同步、跨设备保留分支信息；`.svn/` `.hg/` 维持忽略
 - fix(stignore): 同步打包副本 `app/assets/.stignore`，规则集头版本统一至 v1.18.6
 - fix(docs): 修正 README / README_EN 规则计数 330 → 329（历史 off-by-one）；分类表第 5 类移除 `.git/`
+- fix(app): 修复 Flutter 桌面版编译错误使 `flutter analyze` 通过（platform_io 补 `ffi`、scanner 的 `p.basename`/`Isolate.run`、测试改 `flutter_test`、清理 8 处 dangling library doc comment 与未用导入/字段/变量）
 - note: v1.18.6 同时对应 Dart + Flutter 桌面版（主实现），详见 README §9
 
 ### v1.18.5 (2026-09-22)

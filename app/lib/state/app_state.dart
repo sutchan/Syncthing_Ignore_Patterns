@@ -3,6 +3,8 @@
 /// Mirrors the PowerShell script's shared UI state. Uses [ChangeNotifier] so
 /// widgets rebuild on changes. Long operations run off the UI thread; a
 /// [_cancelled] flag provides Stop support.
+library;
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -64,7 +66,6 @@ class AppState extends ChangeNotifier {
 
   final List<String> results = [];
   final List<LogEntry> logs = [];
-  List<StignoreRecord> _records = [];
 
   void stop() {
     _cancelled = true;
@@ -139,7 +140,6 @@ class AppState extends ChangeNotifier {
         log(loc.t('stopped'), 'warn');
         return;
       }
-      _records = records;
       final manifest = Manifest(
         version: version,
         scannedAt: DateTime.now().toUtc().toIso8601String(),
@@ -189,7 +189,7 @@ class AppState extends ChangeNotifier {
     try {
       final json = jsonDecode(await File(manifestPath).readAsString()) as Map<String, dynamic>;
       manifest = Manifest.fromJson(json);
-    } on Exception catch (e) {
+    } on Exception {
       _finish();
       log(loc.t('manifestParseFailed', [manifestPath]), 'error');
       return;

@@ -149,8 +149,8 @@ class AppLocalizations {
   String t(String key, [List<Object> args = const []]) {
     var s = _strings[locale]?[key] ?? _strings['en']?[key] ?? key;
     for (var i = 0; i < args.length; i++) {
-      s = s!.replaceAll('{$i}', args[i].toString());
+      s = s.replaceAll('{$i}', args[i].toString());
     }
-    return s!;
+    return s;
   }
 }

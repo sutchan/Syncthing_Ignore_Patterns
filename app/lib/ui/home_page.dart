@@ -1,12 +1,12 @@
 /// Main screen: controls for scan/apply plus live status, results and log.
+library;
+
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
-import '../i18n.dart';
 import '../state/app_state.dart';
 
 class HomePage extends StatelessWidget {
@@ -87,7 +87,6 @@ class _LanguageMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final loc = state.loc;
     return DropdownButton<String>(
       value: state.lang,
       items: const [

@@ -6,6 +6,8 @@
 ///  - back up with `<path>.bak.<timestamp>` before writing when backup is on,
 ///  - rotate `<path>.bak.*` to keep at most 3 newest,
 ///  - clean stale (source-deleted) paths only when [force] is set.
+library;
+
 import 'dart:io';
 
 import '../models/manifest.dart';

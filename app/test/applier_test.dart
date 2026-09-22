@@ -4,7 +4,7 @@ import 'package:path/path.dart' as p;
 import 'package:syncthing_ignore_gui/models/manifest.dart';
 import 'package:syncthing_ignore_gui/services/applier.dart';
 import 'package:syncthing_ignore_gui/services/rules_source.dart';
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('applyRules replaces targets, skips identical, backs up', () async {

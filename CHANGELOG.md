@@ -25,6 +25,13 @@
   - `release` 作业仅在 `v*` 标签推送时创建 GitHub Release 并上传 `SyncthingIgnoreGUI-vX.Y.Z-windows-x64.zip`
 - chore: 新增根 `VERSION` 文件（v1.18.6），作为主实现版本单一来源供 CI 读取
 
+### 修复（Flutter）
+- fix(app): 修复 Flutter 桌面版编译错误，使 `flutter analyze` 通过（52 项 → 0）
+  - `services/platform_io.dart`：补 `package:ffi` 导入并新增 `ffi` 依赖（`toNativeUtf16` / `free` 未定义）
+  - `services/scanner.dart`：`Directory` / `File` 无 `name` getter → 改用 `p.basename(e.path)`；`Isolate.run` 误用双类型参数与双位置参数 → 改为 `Isolate.run<R>(() => _scanRoot(...))`
+  - `test/scanner_test.dart` / `test/applier_test.dart`：`package:test/test.dart` → `package:flutter_test/flutter_test.dart`
+  - 清理 8 处 dangling library doc comment（补 `library;`）及未用 import / 字段 / 局部变量 / 多余非空断言 / 未用 catch 变量
+
 ## [v1.18.5] - 2026-09-22
 
 ### 文档

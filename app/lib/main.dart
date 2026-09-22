@@ -1,4 +1,6 @@
 /// Entry point for the Syncthing .stignore Manager (Flutter Windows desktop).
+library;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

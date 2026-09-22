@@ -2,9 +2,10 @@
 ///
 /// By default the bundled asset `assets/.stignore` is used. A custom file path
 /// can be supplied to keep the GUI in sync with an external rules file.
+library;
+
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -20,6 +21,6 @@ Future<String> loadStandardRules({String? path}) async {
 
 /// SHA-256 hex digest of [content] (UTF-8 bytes).
 String sha256OfString(String content) {
-  final bytes = utf8.encode(content) as Uint8List;
+  final bytes = utf8.encode(content);
   return sha256.convert(bytes).toString();
 }

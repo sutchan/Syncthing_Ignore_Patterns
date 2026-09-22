@@ -4,10 +4,14 @@
 /// explicit depth-first walk via `listSync` (publishable current directory),
 /// skipping `.git` and the tool's own script directory, tolerating access-denied
 /// folders, and running one isolate per root for parallelism (default 4).
+library;
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
+
+import 'package:path/path.dart' as p;
 
 import '../models/manifest.dart';
 
@@ -33,11 +37,11 @@ List<Map<String, dynamic>> findStignoreFilesRaw(
 
     for (final e in entries) {
       if (e is Directory) {
-        if (e.name == '.git') continue;
+        if (p.basename(e.path) == '.git') continue;
         if (skip != null && e.path.toLowerCase() == skip) continue;
         stack.add(e.path);
       } else if (e is File) {
-        if (e.name == '.stignore') {
+        if (p.basename(e.path) == '.stignore') {
           final stat = e.statSync();
           records.add({
             'path': e.path,
@@ -76,9 +80,8 @@ Future<List<StignoreRecord>> scanRoots(
     final batch =
         roots.sublist(i, min(i + maxThreads, roots.length));
     final tasks = batch.map(
-      (r) => Isolate.run<List<Map<String, dynamic>>, Map<String, String?>>(
-        _scanRoot,
-        {'root': r, 'skipDir': skipDir},
+      (r) => Isolate.run<List<Map<String, dynamic>>>(
+        () => _scanRoot({'root': r, 'skipDir': skipDir}),
       ),
     );
     final results = await Future.wait(tasks);
