@@ -335,14 +335,7 @@ SyncthingIgnorePatterns/
 
 ## 8. 待办 / 已知限制
 
-完整任务跟踪见 [开发任务清单](development-tasks.md)。要点：
-
-- [ ] Flutter 版相较 PowerShell 版仍缺：应用前安全确认框、实时状态行（当前扫描目录）、拖拽填入、双击打开文件、启动时「已加载清单」提示
-- [ ] 应用阶段 `Stop` 取消尚未接入 `applyRules` 循环
-- [ ] 测试覆盖率门禁（≥80%）、UI 部件测试（flutter_test + mockito）未建立
-- [x] GitHub Actions CI：构建并打包命名归档 `SyncthingIgnoreGUI-v1.22.0-windows-x64.zip`（`.github/workflows/ci.yml`）
-- [ ] 发布包说明（VC++ 运行库 / Flutter AOT 运行时）或 Inno Setup 安装包
-- [ ] 规则更新后须同步 `app/assets/.stignore` 副本
+完整任务跟踪（功能对等 / 工程化 / 构建发布 / 规则集维护，含已完成与待办及版本说明）统一见 [开发任务清单](development-tasks.md)，本文档不再重复列出待办，避免多处漂移。
 
 ## 9. Dart + Flutter 桌面版（主实现）
 

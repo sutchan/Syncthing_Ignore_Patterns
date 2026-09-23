@@ -1,52 +1,41 @@
 # 长期记忆（MEMORY.md）
 
 ## 用户偏好
-- 对话必须始终使用简体中文，不因任务类型/上下文语言（英文文件、英文输入）而改变。
-- 输出必须精简：结论先行，省略冗余解释，避免长篇铺陈与重复。能用表格/短列表就不写大段文字。
-- 大批量分批任务（如全站 SEO、PO 翻译）自动继续分批，无需每批询问确认，直到全部完成。
-- （用户重申）保持中文对话、精简输出——见上两条。
-- 模型请求（工具调用/网络请求）失败后，等待 30 秒自动重试并继续，不中断任务、不卡死。
-- 代码里所有容器（UI 主区域、卡片、区块根节点等）加语义化 id（kebab-case），便于调试/测试/无障碍。
+- 始终简体中文对话；输出精简，结论先行，表格/短列表优先，避免冗余铺垫。
+- 大批量分批任务（SEO/翻译等）自动继续，无需每批确认。
+- 模型/网络请求失败 → 等 30s 自动重试继续，不中断。
+- 代码容器/区块加语义化 id（kebab-case）便于调试/测试/无障碍。
 
 ## 项目约定（SyncthingIgnorePatterns）
-- 提交信息遵循 Git 规范（type: 描述，首字母小写、动词开头、≤50字）。
-- **版本三轨独立**（docs/project.md §4，v1.18.6 确立；文档/配置变更升 PATCH、新功能升 MINOR）：
-  - ① **Flutter 主实现轨**（当前 v1.22.0，随开发快速演进，动版本前务必 `cat VERSION` + `git log` 实查，勿凭记忆）= 根 `VERSION` 文件（CI 单一来源）↔ `app/pubspec.yaml` `version:` ↔ `app/lib/state/app_state.dart` `AppState.version` ↔ `app/lib/models/manifest.dart` 示例值 ↔ `README.md`/`README_EN.md` 徽章与正文版本引用。**须彼此一致**。
-  - ② **PowerShell 遗留轨**（当前 v1.18.5）= `SyncthingIgnoreGUI.ps1` 头 `//Version` 与 `$ScriptVersion`，**独立演进**。
-  - ③ **`.stignore` 规则集轨**（当前 v1.18.5）= 根 `.stignore` 与 `app/assets/.stignore` 头 `//Version` **须内部一致**，`//Updated` 为修订日。改规则集必须同步打包副本。
-  - 跨轨版本不同步属正常（如 Flutter 1.18.10 vs 遗留/规则集 1.18.5）。
-- **CI/CD**（`.github/workflows/ci.yml`，4 作业）：`version`（读根 `VERSION`，校验 `v*` 标签 == VERSION）/`validate`（ps1 语法 `Parser::ParseFile` + `.stignore` 规则集 + **规则副本漂移报告** + **三轨版本一致性**）/`build-windows`（windows-latest：flutter pub get / analyze / test --coverage / build windows --release；上传 LCOV 并输出覆盖率摘要）/`release`（仅 `v*` 标签；softprops/action-gh-release，发布说明取自 `CHANGELOG.md` 对应小节 `body_path`）。触发：push main/dev + tags `v*`、PR main/dev、手动 `workflow_dispatch`；顶层最小权限 `contents: read`（release 作业提权 `contents: write`）；各作业 `timeout-minutes`；`concurrency` 对标签运行不取消。`env.APP_NAME=SyncthingIgnoreGUI`；产物 `SyncthingIgnoreGUI-v<版本>-windows-x64.zip`（版本取自根 `VERSION`）。注意 `flutter analyze` 对 error/warning/info 任一即 exit 1，须全部清零（v1.18.7 已修 52 项）。`validate` 的 Flutter 轨版本校验固定 6 处：`VERSION` + `app/pubspec.yaml`(`version:`)/`README.md`/`README_EN.md`(`version-v`)/`app/lib/state/app_state.dart`(`this.version = '...'`)/`app/lib/models/manifest.dart`(`"version": "..."`)，正则提取后须全部相等。v1.20.2+：构建加 `--tree-shake-icons`；打包改用 .NET `SmallestSize` 高压缩并剔除 `*.pdb/*.exp/*.lib`；**CI 产物改为「目录」传递**（`build-windows` 的 `Stage release files` → `Upload app artifact` 上传 `app/build/package` 目录），归档仅在 `release` 作业的 `Package release archive` 步骤压缩生成（避免 `upload-artifact` 自带压缩叠加成「zip 套 zip」）。`release` 在 ubuntu 上跑 `shell: pwsh`（有 .NET8，`SmallestSize` 可用）。
-- **CI 依赖更新**：`.github/dependabot.yml` 每周检查 `github-actions` 与 `pub`（目录 `/app`）依赖；README/README_EN 已加 CI 徽章（仓库 `github.com/sutchan/Syncthing_Ignore_Patterns`）。
-- **已知规则副本身份漂移（待裁决）**：根 `.stignore` 与 `app/assets/.stignore` 内容不一致——`13e0d94` 从根删除 7 条 AI 工具规则（`**/.codex/` `**/.gemini/` `**/.qwen/` `**/.trae/` `**/.opencode/` `**/.qoder/` `**/.workbuddy/`），副本仍保留；两文件 `//Version` 均为 1.18.5。CI 漂移步骤当前**仅告警不阻断**，待用户决定同步方向后再改为阻断。
-- **多 agent 并发提交风险**：本仓库会话间隙会被其他会话/agent（作者 Sut）提交，未提交改动会被其 `git add -A` 扫入他人提交（本会话临时文件 `__check_ver_tmp.ps1`、`app/_pubget.log` 曾被误提交）。故：临时脚本勿放仓库根；动版本/规则集前必先 `git show HEAD:<file>` 核对已提交真值（勿凭本会话记忆）；`.gitignore` 已加 `_pubget.log`、`__*_tmp.ps1`、`_elevate.ps1`。
-- **构建产物命名规范**（`docs/project.md` §9.5，v1.18.11 确立；与全局约定一致）：`<产品名>-v<语义版本>-<os>-<arch>.<扩展名>`。产品名取 workflow 常量 `env.APP_NAME`（PascalCase、无空格，当前 `SyncthingIgnoreGUI`）；版本取根 `VERSION` 经 `needs.version.outputs.version` 注入（**禁硬编码**）；`os` ∈ `windows|macos|linux`、`arch` ∈ `x64|arm64`；Windows/macOS 用 `zip`、Linux 用 `tar.gz`。Release **仅上传归档**（不上传构建目录树）；预发布以 Release `prerelease` 标记区分（`contains(needs.version.outputs.version, '-')`），**不在文件名加后缀**。Actions 产物名与归档名保持一致（`SyncthingIgnoreGUI-v<版本>-windows-x64`，upload/download 两处须同值）。当前归档示例 `SyncthingIgnoreGUI-v1.21.0-windows-x64.zip`；v1.20.4 起 Actions 产物内容为**目录**（非 zip），避免二次压缩。已知未统一：产物内 exe 名为 `syncthing_ignore_gui.exe`（源自 pubspec `name:`）。
-- CHANGELOG 双副本：根 `CHANGELOG.md` 与 `docs/project.md` §7 必须同时写，历史上多次只写一处（v1.16.0 曾漏根 CHANGELOG）。
-- **品牌资产（v1.21.1 起）**：唯一生成器 `tools/generate-brand-assets.ps1`（纯 .NET `System.Drawing`，本机离线可跑，无 Python/ImageMagick）→ 产出 `docs/assets/logo.svg`（矢量母版，手工同步）、`logo-512.png`、`logo-128.png`，并打包 16/24/32/48/64/128/256 七帧为 `app/windows/runner/resources/app_icon.ico`（PNG 载荷，`runner.rc` 的 `IDI_APP_ICON` 编译进 exe）。标志 = teal 垂直渐变圆角底板（`#22C6B4 → #08665C`，圆角 0.22×边长）+ 白色同步环（两段 130° 圆弧，缺口居中 135°/315°）+ 粗斜杠（斜杠正好穿过两个缺口）；`< 32 px` 自动简化为整环。规范（最小尺寸/留白/禁用项/再生成）见 `docs/assets/BRAND.md`；`docs/project.md` §10 为摘要。**改色/改几何须同时改 SVG + 脚本 + BRAND.md**（三处几何常量须一致）。坑：① PS 5.1 在 `param()` 默认值阶段 `$PSScriptRoot` 为空，须在脚本主体解析；② `LinearGradientBrush` 的渐变矩形必须与实际填充区域一致，否则出现可见硬边（曾把 gloss 填到 55% 却让渐变跨全高，留下接缝）；③ PowerShell 函数返回 `byte[]` 会被 pipeline 拆成 `Object[]`，写入前须 `[byte[]](...)` 强转。
-- **用户偏好持久化（v1.19.0 起）**：语言/主题存 `%APPDATA%\SyncthingIgnoreGUI\settings.json`（`app/lib/services/settings_store.dart`，纯 `dart:io` JSON，**刻意不用 `shared_preferences`**——不在本机 pub 缓存、离线无法验证）；`AppState.loadSettings()` 启动恢复，`setLanguage()`/`setTheme()` 变更即写盘（best-effort）；`main.dart` 在 `runApp` 前 `await` 加载以保证首帧即恢复。UI 侧重：语言/主题已从 AppBar 的语言下拉 + 主题按钮**收敛为单一齿轮按钮的 `_SettingsDialog`**，改动这两处 UI 时须同步 `app/test/widget_test.dart` 的语言切换用例（它通过点齿轮进入对话框）。
-- **窗口大小/位置记忆（v1.21.0 起）**：`models/window_bounds.dart`（纯数据 `WindowBounds`，含 JSON 往返与可用性校验）+ `services/window_bounds.dart`（win32：`FindWindow('FLUTTER_RUNNER_WIN32_WINDOW')` 定位宿主窗口，`GetWindowRect`/`SetWindowPos`，**无新增依赖**）；几何写入 `settings.json` 的 `window` 字段，`main.dart` 首帧后 `restoreWindowBounds()` + `startWindowTracking()`（每 2s 采样，仅变更落盘）；过小(<320×240)或落在虚拟屏幕外的几何忽略。**坑**：`package:ffi` 2.x 的 `calloc` 是 `Allocator` 实例而非泛型函数 → 必须 `calloc.allocate<RECT>(sizeOf<RECT>())` / `calloc.free(p)`（`sizeOf` 来自 `dart:ffi`）。
-- **v1.21.0 代码结构（≤200 行拆分）**：`state/app_state.dart` 仅做组合 + `version`/`appDirectory`/`stop()`/`rulesPathLabel`；其余拆为 mixin：`preferences_state`(语言/主题/窗口几何)、`scan_options_state`(预览/强制/备份+扫描选项)、`log_state`(`LogEntry`+日志+`logTranslated`)、`progress_state`(isBusy/cancelled/progress/status/summary/results + `begin()`/`finish()`/`elapsed()`)、`pickers_state`(`rootText`/`manifestPath`+`pickRoot`/`pickManifest`)、`scan_flow`(`scan()`)、`apply_flow`(`apply()`)。mixin 之间用 `on <多个 mixin>` 约束以直接访问彼此成员（避免大量抽象声明）；`AppState` 须为覆写 mixin 抽象成员（`version`/`appDirectory`）加 `@override`。UI：`ui/home_page.dart` 仅装配，子组件拆到同目录 `settings_dialog`/`root_field`/`options_row`/`scan_options`/`action_row`/`results_list`/`log_list`；主要容器与交互控件带语义化 `Key`（kebab-case，如 `preview-checkbox`）。
-- **选项不刷新的坑（v1.21.0 修）**：`preview`/`force`/`backup` 原为 ChangeNotifier 上的裸字段，直接赋值不触发 `notifyListeners` → 界面不刷新；改为 `setPreview`/`setForce`/`setBackup`。同类隐患：凡 UI 可写入的通知型状态，必须走会 notify 的 setter。`root_field` 亦由 `initialValue` 改为 `TextEditingController` + 监听 `AppState`，否则「浏览」结果不显示。
-- **偏好写入必须串行化（v1.22.0 修）**：`SettingsStore.save` 曾为裸 `unawaited(writeAsString)`，语言/主题与窗口几何采样会在同一 tick 并发写同一 JSON → **较旧快照最后落盘**或半截 JSON（回退默认值），偏好丢失。现为写队列（`_queue.then(...)`）+ `flush: true`，并新增回归用例。**排查启示**：`flutter test --coverage` 下 `settings_store_test` 偶发 `Expected: 'zh' Actual: 'en'`（CI 用 `--coverage` → 间歇红灯）；纯 `flutter test` 连跑通过而 `--coverage` 失败 ⇒ 是调度/时间敏感竞态，优先查并发写/未 await 的 Future。
-- **忽略清单在线更新（v1.22.0 起）**：清单版本来自 `.stignore` 头 `//Version`（与应用版本 `VERSION` **相互独立**）。清单来源优先级：**exe 同目录 `.stignore`**（`windows/runner/CMakeLists.txt` 的 `POST_BUILD` 复制 `app/assets/.stignore`）→ `%APPDATA%\SyncthingIgnoreGUI\.stignore` → 内置资源 `assets/.stignore`；更新优先写回 exe 同目录，不可写则回退（`services/ruleset_store.dart`）。仓库 raw 地址常量 `rulesetRepoUrl = https://raw.githubusercontent.com/sutchan/Syncthing_Ignore_Patterns/main/.stignore`（owner `sutchan`，默认分支 **main**）。模块：`models/ruleset_info.dart`（头解析 + `compareRulesetVersions`）、`services/{app_paths,ruleset_store,ruleset_update}.dart`、`state/ruleset_state.dart`（`loadRulesetInfo()` 不联网 / `effectiveRules()` 供 Apply / `checkRulesetUpdate()` 下载采纳）、`ui/ruleset_card.dart`。下载用 `dart:io HttpClient`（15 s 超时 / 5 MiB 上限，**无新增依赖**）；下载器与内置加载器经 `AppState(rulesetStore:/rulesetFetcher:/rulesetBundled:)` 注入，测试**不触网**。
-- **覆盖率基线（v1.22.0）**：`lib/` 62.5%（523/837 行）。新模块 80–96%，但 `state/scan_flow`/`apply_flow`/`progress_state`/`pickers_state` 与 `services/platform_io`/`window_bounds` 仍 **0%**（审计清单 A/B 项）。
-- **覆盖率工具坑**：`dart-collect-coverage` 技能的 `dart run coverage:test_with_coverage` 在 **Flutter 包不可用**（它去跑 `dart run test`，而本项目只有 `flutter_test`）；须用 `flutter test --coverage`。后者只产 `coverage/lcov.info`（无 `coverage.json`），故 `format_coverage --check-ignore` 流程不适用；且该 lcov 用**相对路径**并**不含 `LF/LH` 行**，统计须从 `DA:行号,命中数` 汇总。
-- **扫描/替换跳过应用自身目录（v1.19.1 起）**：`scanner.dart` 始终把 `p.dirname(Platform.resolvedExecutable)` 加入跳过集、`skipDir` 为「目录+全部子目录」整体跳过（`_isWithinOrEquals` 大小写不敏感）；`applier.dart` 的 `applyRules` 新增可选 `skipRoots` 兜底，命中即静默跳过（`skippedAppDir`，不写不备份）。`app_state.scan()`/`apply()` 分别注入 `appDirectory` getter。`app_state.apply()` 的 `sourcePath` 仅作 SHA 比对占位（指向 `manifestPath`），真正的规则源由 rootBundle 加载、靠 exe 目录跳过保护。改这两处服务时须同步 `app/test/scanner_test.dart`/`applier_test.dart`。
-- **扫描深度 + 大目录过滤（v1.20.0 起）**：`scanner.dart` 的 `findStignoreFilesRaw` 现为 `async`，参数 `maxDepth`(默认3, 根=1级)/`skipLargeDirs`(默认true)/`maxFilesPerDir`(默认100)；大目录用 `Directory(dir).list().take(threshold+1).length` 流式提前判定（避免巨目录卡死），不可读目录按「大」跳过。`app_state` 对应 `_maxDepth`/`_filterLargeDirs`/`_maxFilesPerDir`（**会话内、未持久化**），`scan()` 传参；`home_page` 的 `_ScanOptions` 卡片提供 UI（深度 Slider 1–10、阈值 Slider 10–1000）。`findStignoreFiles` 现返回 `Future`——测试中须 `await`。
-- **文档目录**：规范文档原存于 `openspec/`，已于 v1.18.5 迁移至 `docs/`（`docs/project.md` + `docs/specs/stignore-gui/spec.md`）。后续引用一律用 `docs/`。
-- **Dart+Flutter 重写（主实现，v1.18.7 起 `flutter analyze` 零告警）**：`SyncthingIgnoreGUI.ps1` 正重构为 `app/` 下 Flutter Windows 桌面应用，构建为独立 `.exe`；纯逻辑拆为 `lib/services/*` + `lib/state/app_state.dart` 等可单测模块；规则集作为 `app/assets/.stignore` 资源打包；依赖含 `ffi`（`toNativeUtf16`）。详见 `docs/project.md` §9。**本机可离线验证**（v1.18.10 实测）：`flutter pub get --offline`（用 pub 缓存）→ `flutter analyze`（0 问题）/ `flutter test`（7/7）均可本机跑；`flutter build windows` 交 CI。
-- **依赖升级破坏性变更（v1.18.10 实测，升级 `file_picker`/`win32` 须同步改调用点）**：`file_picker 13.1.0` 的 `saveFile` 改为写入字节并返回 `Uri?`（新增必填 `bytes`，无 `getSavePath`）→ 用占位空字节 + `uri.toFilePath()`；`win32 6.4.0` 的 `GetLogicalDrives()` 返回 `Win32Result<int>`（取 `.value`）、`GetDriveType()` 参数为扩展类型 `PCWSTR`（须 `PCWSTR(ptr)` 包装 `Pointer<Utf16>`）。`Uint8List` 由 `package:flutter/foundation.dart` 提供，勿另加 `dart:typed_data`（否则 info 失败）。
-- 中文存储用纯 ASCII + `\u` 转义，规避 GBK 乱码；GUI 字典 en/zh 分离。
-- 后台任务用 runspace + Timer 轮询 `DoEvents`。
-- **后台 runspace 必须自包含**（v1.18.4 实测结论，此前 Scan/Apply 因此完全不可用）：
-  - `[powershell]::Create()` 新 runspace **看不到脚本作用域函数与变量**；`AddCommand('MyFunc')` 抛 `CommandNotFoundException`。须用 `InitialSessionState::CreateDefault()`（**不可用 `Create()`，它无 FileSystem 提供程序，`Get-Content` 读文件返回空**）+ `SessionStateFunctionEntry` 复制所需函数。
-  - `[InitialSessionState]::CreateFromSessionState()` 在本机 PowerShell **不存在**；`SessionStateVariableEntry` 复制的变量**不绑定到复制函数的作用域**。因此作业所需变量（`$T`/`$lang` 等）须经「包装 scriptblock 用 `AddScript`+`AddArgument` 注入后再调用函数」。
-  - `[powershell]::Create()` **无接收 Runspace 的重载**，只能传 `InitialSessionState`；释放用 `$ps.Runspace.Dispose()`。
-- **`Control.Invoke` 闭包不可靠**：PowerShell 闭包经 `form.Invoke([Action]{...})` 执行时**无法捕获脚本变量**（改控件/属性均不生效）。UI 更新一律用「`Synchronized` 共享状态 + UI Timer 轮询」，禁止用 `form.Invoke` 回调传值。
-- `ProgressBar` 在 `Style=Marquee` 时赋值 `Value` 会抛异常，切模式/赋值须先回 Blocks。
-- **中文 `Lmsg` 格式化坑**：`(Decode-Uni $X -f $a)` 中 `-f` 会被解析为 `Decode-Uni` 的参数而非格式化运算符，导致显示未替换的字面量（如 `已找到 {0}`）。必须写 `((Decode-Uni $X) -f $a)`。
-- 校验 `.ps1` 语法用临时脚本调 `[System.Management.Automation.Language.Parser]::ParseFile`；本机 shell 会吞 `$`，需写临时 `.ps1` 文件执行（勿用 `powershell -Command` 内联含 `$` 的代码）。
-- 验证 GUI 脚本逻辑（不弹窗）的有效手段：用 AST `FindAll(FunctionDefinitionAst)` 抽取真实函数定义 `Invoke-Expression` 进测试会话，再在后台 runspace 端到端跑。
+- 提交遵循 Git 规范：`type: 描述`（首字母小写、动词开头、≤50字）。
+- **版本三轨独立**（docs/project.md §4）：
+  - ① Flutter 主轨（当前 **v1.22.0**，CI 单一来源 `VERSION`）= `VERSION` ↔ `app/pubspec.yaml` ↔ `app/lib/state/app_state.dart` `AppState.version` ↔ `app/lib/models/manifest.dart` 示例 ↔ `README*` 徽章/正文。动版本前必 `cat VERSION`+`git log` 实查。
+  - ② PowerShell 遗留轨（v1.18.5）= `SyncthingIgnoreGUI.ps1` 头 `//Version`+`$ScriptVersion`，独立演进。
+  - ③ `.stignore` 规则集轨（v1.18.5，头 `//Version: 1.18.5`）= 根与 `app/assets/.stignore` 须内部一致，`//Updated` 为修订日。跨轨不同步属正常。
+- **CI/CD**（`.github/workflows/ci.yml`，4 作业，ubuntu `release` 用 `shell: pwsh` 有 .NET8）：
+  - `version`：读根 `VERSION`，校验 `v*` 标签==VERSION。
+  - `validate`：ps1 语法 `Parser::ParseFile` + `.stignore` 规则集 + **规则副本漂移报告（仅告警不阻断）** + **三轨版本一致性**（Flutter 轨固定 6 处正则须全等）。
+  - `build-windows`（windows-latest）：pub get / analyze（error/warning/info 任一即 exit 1，须清零）/ test --coverage / build windows --release（`--tree-shake-icons`）；上传 LCOV+摘要。
+  - `release`（仅 `v*` 标签）：softprops/action-gh-release，说明取自 `CHANGELOG.md` 对应小节。
+  - 产物：CI 不再产 zip（v1.20.4 起 `build-windows` 上传 `app/build/package` **目录**），归档仅在 `release` 的 `Package release archive` 用 .NET `SmallestSize` 压缩一次（避 zip 套 zip），剔除 `*.pdb/*.exp/*.lib`；命名 `SyncthingIgnoreGUI-v<版本>-windows-x64.zip`，版本取自 `needs.version.outputs.version`（禁硬编码）。
+- **已知规则副本身份漂移（待裁决）**：根与 bundle 的 `.stignore` 是否一致曾告警，CI 当前仅告警不阻断，待用户定同步方向再改阻断。
+- **多 agent 并发提交风险**：会话间隙会被他人 `git add -A` 扫入提交；临时脚本勿放仓库根；动版本/规则集前 `git show HEAD:<file>` 核对真值。`.gitignore` 已加 `_pubget.log`/`__*_tmp.ps1`/`_elevate.ps1`。
+- **CHANGELOG 双副本**：根 `CHANGELOG.md` + `docs/project.md` §7 必须同写。
+- **构建产物命名规范**（`docs/project.md` §9.5）：`<产品名>-v<语义版本>-<os>-<arch>.<扩展名>`，`env.APP_NAME=SyncthingIgnoreGUI`，Windows/macOS=zip、Linux=tar.gz；预发布用 Release `prerelease` 标记区分（文件名不加后缀）。
+- **品牌资产**（v1.21.1，`tools/generate-brand-assets.ps1`，纯 .NET `System.Drawing` 离线可跑）：产 `docs/assets/logo.svg`+PNG+`BRAND.md` 与 `app/windows/runner/resources/app_icon.ico`（16/24/32/48/64/128/256 七帧 PNG 载荷）。标志=teal 垂直渐变圆角底板 `#22C6B4→#08665C`+白色同步环（两 130° 弧，缺口 135°/315°）+粗斜杠穿缺口；`<32px` 简化整环。改色/几何须同步 SVG+脚本+BRAND.md 三处。坑：PS5.1 `param()` 阶段 `$PSScriptRoot` 空须主体解析；`LinearGradientBrush` 渐变矩形须与填充区一致；函数返 `byte[]` 会被 pipeline 拆 `Object[]`，写前 `[byte[]](...)` 强转。
+- **用户偏好持久化**（v1.19.0）：语言/主题存 `%APPDATA%\SyncthingIgnoreGUI\settings.json`（`settings_store.dart` 纯 `dart:io` JSON，刻意不用 shared_preferences）；`main.dart` `runApp` 前 `await` 加载。`_SettingsDialog`（齿轮按钮）收敛语言+主题 UI；改这两处须同步 `widget_test.dart` 语言切换用例。
+- **窗口几何记忆**（v1.21.0，无新依赖）：`models/window_bounds.dart`+`services/window_bounds.dart`（win32 `FindWindow('FLUTTER_RUNNER_WIN32_WINDOW')`→`GetWindowRect`/`SetWindowPos`），写入 `settings.json.window`，启动恢复+每 2s 采样。坑：`ffi` 2.x `calloc` 是 `Allocator` 实例 → `calloc.allocate<RECT>(sizeOf<RECT>())`/`calloc.free(p)`。
+- **偏好写入须串行化**（v1.22.0 修）：`SettingsStore.save` 原裸 `unawaited` 致并发写竞态（较旧快照最后落盘/半截 JSON）→ 改写队列+`flush:true`，新增回归用例。排查启示：`--coverage` 间歇红灯多为调度/时间敏感竞态，优先查并发写/未 await 的 Future。
+- **忽略清单在线更新**（v1.22.0）：清单版本来自 `.stignore` 头 `//Version`，与应用版本独立。来源优先级 exe 同目录→APPDATA→内置资源；更新优先写回 exe 同目录。仓库 raw `https://raw.githubusercontent.com/sutchan/Syncthing_Ignore_Patterns/main/.stignore`（main 分支）。模块 `models/ruleset_info.dart`+`services/{app_paths,ruleset_store,ruleset_update}.dart`+`state/ruleset_state.dart`+`ui/ruleset_card.dart`；`dart:io HttpClient`（15s/5MiB，无新依赖）；下载器经 `AppState(rulesetStore:/rulesetFetcher:/rulesetBundled:)` 注入，测试不触网。
+- **覆盖率基线**（v1.22.0）：`lib/` 62.5%（523/837）；新模块 80–96%，`state/scan_flow`/`apply_flow`/`progress_state`/`pickers_state`+`services/platform_io`/`window_bounds` 仍 0%。
+- **覆盖率工具坑**：`dart-collect-coverage` 的 `test_with_coverage` 对 Flutter 包不可用（跑 `dart run test`），须 `flutter test --coverage`；lcov 用相对路径且无 `LF/LH` 行，须从 `DA:行号,命中` 汇总。
+- **扫描/替换跳过应用自身目录**（v1.19.1）：`scanner.dart` 始终跳 `p.dirname(Platform.resolvedExecutable)`+`applier.dart` `skipRoots` 兜底（`skippedAppDir` 静默跳过）；改这两处须同步 `scanner_test`/`applier_test`。
+- **扫描深度+大目录过滤**（v1.20.0）：`findStignoreFilesRaw` 改 `async`，增 `maxDepth`(默认3)/`skipLargeDirs`(默认true)/`maxFilesPerDir`(默认100)，大目录流式 `list().take(threshold+1).length` 提前判定；`home_page` `_ScanOptions` 提供 UI。测试须 `await`。
+- **v1.21.0 结构**（≤200 行）：`app_state.dart` 拆 7 个 mixin（`on <多 mixin>` 互访；`version`/`appDirectory` 加 `@override`），`home_page.dart` 拆 7 个 `ui/` 子组件，主要容器/控件带语义化 `Key`。**选项不刷新坑**：UI 可写通知态须走会 notify 的 setter（`setPreview`/`setForce`/`setBackup`），`root_field` 改 `TextEditingController`+监听 `AppState`。
+- **Dart+Flutter 重写**（主实现，v1.18.7 起 `flutter analyze` 零告警）；本机可 `flutter pub get --offline`/`analyze`/`test` 离线验证，但**非 offline 的 pub get 会失败**，`flutter build windows` 交 CI。`dart format` 新版对 >80 列重排，勿全量套用。
+- **依赖升级破坏性**（v1.18.10）：`file_picker 13.1.0` 的 `saveFile` 改写字节返 `Uri?`（用占位空字节+`uri.toFilePath()`）；`win32 6.4.0` `GetLogicalDrives()` 返 `Win32Result<int>`（取 `.value`）、`GetDriveType()` 参数须 `PCWSTR(ptr)` 包装。`Uint8List` 取自 `package:flutter/foundation.dart`。
+- 中文存储用纯 ASCII+`\u` 转义；GUI 字典 en/zh 分离。
 
 ## 环境约束
-- 本机可运行 `powershell -File`，但 GUI 脚本不实跑（会弹窗）；git 提交由用户本地执行。
-- **本机 Flutter 现状（v1.18.10 复核，已推翻旧"不可用"结论）**：SDK 写权限问题已由 UAC `icacls` 修复；`flutter pub get --offline` 借 `C:\Users\Admin\AppData\Local\Pub\Cache` 缓存可离线解析依赖，`flutter analyze`（0 问题）与 `flutter test`（7/7）均可本机跑。仍无外网，故**非 `--offline` 的 pub get 会失败**；`flutter build windows` 交 CI。`dart format --output=none` 可做语法解析，但 Dart 3.11 新版 formatter 会对 >80 列既有行重排——勿全量套用，以免产生无关 diff。
+- 本机可 `powershell -File`，但 GUI 脚本不实跑（弹窗）；git 提交由用户本地执行。
+- 本机 Flutter SDK 经 UAC `icacls` 修复写权限，借 pub 缓存可离线 `pub get`/`analyze`/`test`；无外网，非 offline 的 pub get 失败；`flutter build windows` 交 CI。

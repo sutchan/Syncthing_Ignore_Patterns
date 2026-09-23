@@ -232,6 +232,27 @@ jobs:
               New-Item -ItemType Directory -Force -Path (Split-Path $target -Parent) | Out-Null
               Copy-Item -LiteralPath $_.FullName -Destination $target
             }
+          # 附带 Visual C++ 运行库（vcruntime140/msvcp140/vcruntime140_1）。Flutter
+          # Windows release 默认动态链接 CRT，flutter_windows.dll 依赖它们；干净
+          # Windows 若未装 VC++ 2015-2022 Redistributable，exe 会在引擎加载阶段
+          # 直接退出（无窗口闪退）。随包发布可让产物自包含、免装运行库。
+          $vsRoot = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
+            -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+            -property installationPath 2>$null
+          $crtDir = if ($vsRoot) {
+            Get-ChildItem "$vsRoot\VC\Redist\MSVC" -Recurse -Directory `
+              -Filter 'Microsoft.VC143.CRT' -ErrorAction SilentlyContinue |
+              Select-Object -First 1
+          }
+          if ($crtDir) {
+            foreach ($dll in 'vcruntime140.dll', 'msvcp140.dll', 'vcruntime140_1.dll') {
+              $dllSrc = Join-Path $crtDir.FullName $dll
+              if (Test-Path $dllSrc) { Copy-Item -LiteralPath $dllSrc -Destination $dst }
+            }
+            Write-Host "Bundled VC++ runtime from $($crtDir.FullName)"
+          } else {
+            Write-Warning 'VC++ CRT not found; target machine may need Visual C++ Redistributable.'
+          }
           Write-Host "Staged $((Get-ChildItem $dst -Recurse -File).Count) files to $dst"
       - name: Upload app artifact
         uses: actions/upload-artifact@v7

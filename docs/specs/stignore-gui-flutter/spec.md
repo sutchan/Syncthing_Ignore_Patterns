@@ -70,9 +70,11 @@ Dart + Flutter Windows 桌面应用，提供 `.stignore` 规则的批量扫描�
 - 不依赖 PowerShell 运行时（纯 Dart/Flutter 实现）
 
 ## 状态
-- 代码已完成：扫描 / 应用 / 备份轮转 / 中英双语 / 明暗主题 / 清单 manifest
-- `flutter analyze` 零告警已达成（v1.18.7 清零 52 项，CI `build-windows` 强制校验）；GitHub Actions `build-windows` 已落地，自动构建并发布 `SyncthingIgnoreGUI-vX.Y.Z-windows-x64.zip`（版本取自根 `VERSION`）
-- v1.21.0：新增窗口大小/位置记忆（REQ-7）；修复选项勾选不刷新与输入框不反映「浏览」选择；按 ≤200 行规则拆分 `app_state.dart`/`home_page.dart`（本地 `flutter analyze` 0 问题、`flutter test` 19/19）
-- v1.22.0：新增忽略清单在线更新（REQ-8）——应用目录随构建携带 `.stignore`，界面显示当前清单版本并提供「检查清单更新」按钮从仓库下载；Apply 使用生效清单（本地 31/31 测试通过）
-- 待办：测试覆盖率门禁（≥80%）、UI 部件测试（flutter_test + mockito）、发布包说明（VC++ 运行库 / Flutter AOT）或 Inno Setup
-- 详见 [开发任务清单](../../development-tasks.md)
+
+> 完整任务跟踪（功能对等、工程化、构建发布、规则集维护、待办与版本说明）统一维护在
+> [开发任务清单](../../development-tasks.md)。本文档不再重复列出待办，避免多处漂移。
+
+- 代码已完成：扫描 / 应用 / 备份轮转 / 中英双语 / 明暗主题 / 清单 manifest / 窗口记忆 / 忽略清单在线更新
+- `flutter analyze` 零告警已达成（v1.18.7 清零 52 项，CI `build-windows` 强制校验）
+- GitHub Actions `build-windows` 已落地，自动构建并发布 `SyncthingIgnoreGUI-vX.Y.Z-windows-x64.zip`（版本取自根 `VERSION`）
+- 里程碑：v1.21.0 窗口记忆 + 选项刷新修复 + ≤200 行拆分；v1.22.0 忽略清单在线更新（本地 31/31 测试通过）
