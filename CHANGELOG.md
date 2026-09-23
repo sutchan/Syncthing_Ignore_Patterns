@@ -5,6 +5,12 @@
 
 ---
 
+## [v1.20.1] - 2026-09-23
+
+### 文档
+- docs: 修正 `docs/specs/stignore-gui-flutter/spec.md` 与 `docs/project.md` §9.1 滞后描述——补充 v1.19.0（设置对话框 + 磁盘持久化语言/主题，原右上角独立下拉收敛为齿轮按钮）、v1.19.1（扫描/替换跳过应用自身 exe 目录子树 `skipRoots`）、v1.20.0（异步遍历 + 扫描深度 `maxDepth` / 大目录过滤 `skipLargeDirs`/`maxFilesPerDir`）的已实现行为
+- chore: 同步版本至 v1.20.1（VERSION / pubspec `1.20.1+1` / `AppState.version` / `manifest.dart` 示例 / README 徽章）
+
 ## [v1.20.0] - 2026-09-23
 
 ### 新增

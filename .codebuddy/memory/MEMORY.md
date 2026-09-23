@@ -8,7 +8,7 @@
 ## 项目约定（SyncthingIgnorePatterns）
 - 提交信息遵循 Git 规范（type: 描述，首字母小写、动词开头、≤50字）。
 - **版本三轨独立**（docs/project.md §4，v1.18.6 确立；文档/配置变更升 PATCH、新功能升 MINOR）：
-  - ① **Flutter 主实现轨**（当前 v1.18.10）= 根 `VERSION` 文件（CI 单一来源）↔ `app/pubspec.yaml` `version:` ↔ `app/lib/state/app_state.dart` `AppState.version` ↔ `app/lib/models/manifest.dart` 示例值 ↔ `README.md`/`README_EN.md` 徽章与正文版本引用。**须彼此一致**。
+  - ① **Flutter 主实现轨**（当前 v1.20.1，随开发快速演进，动版本前务必 `cat VERSION` + `git log` 实查，勿凭记忆）= 根 `VERSION` 文件（CI 单一来源）↔ `app/pubspec.yaml` `version:` ↔ `app/lib/state/app_state.dart` `AppState.version` ↔ `app/lib/models/manifest.dart` 示例值 ↔ `README.md`/`README_EN.md` 徽章与正文版本引用。**须彼此一致**。
   - ② **PowerShell 遗留轨**（当前 v1.18.5）= `SyncthingIgnoreGUI.ps1` 头 `//Version` 与 `$ScriptVersion`，**独立演进**。
   - ③ **`.stignore` 规则集轨**（当前 v1.18.5）= 根 `.stignore` 与 `app/assets/.stignore` 头 `//Version` **须内部一致**，`//Updated` 为修订日。改规则集必须同步打包副本。
   - 跨轨版本不同步属正常（如 Flutter 1.18.10 vs 遗留/规则集 1.18.5）。
