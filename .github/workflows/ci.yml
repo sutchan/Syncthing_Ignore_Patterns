@@ -220,18 +220,26 @@ jobs:
           $src = "app/build/windows/x64/runner/Release"
           # 用 .NET SmallestSize 高压缩（优于 Compress-Archive 默认 Deflate），
           # 并剔除调试符号（*.pdb/*.exp/*.lib）以减小发布包体积
+          # 注意：CreateEntryFromFile 是扩展方法（ZipFileExtensions），PowerShell 无法作为静态成员调用，
+          # 故改用实例方法 CreateEntry + 流拷贝逐文件写入
           if (Test-Path $zip) { Remove-Item $zip -Force }
-          $fs = [System.IO.File]::Create($zip)
-          $za = [System.IO.Compression.ZipArchive]::new($fs, 'Create')
+          $level = [System.IO.Compression.CompressionLevel]::SmallestSize
           $base = [System.IO.Path]::GetFullPath($src)
+          $fs = [System.IO.File]::Create($zip)
+          $za = [System.IO.Compression.ZipArchive]::new($fs, [System.IO.Compression.ZipArchiveMode]::Create)
           Get-ChildItem $src -Recurse -File |
             Where-Object { $_.Extension -notin '.pdb', '.exp', '.lib' } |
             ForEach-Object {
               $rel = $_.FullName.Substring($base.Length + 1).Replace('\', '/')
-              [void][System.IO.Compression.ZipArchive]::CreateEntryFromFile(
-                $za, $_.FullName, $rel, [System.IO.Compression.CompressionLevel]::SmallestSize)
+              $entry = $za.CreateEntry($rel, $level)
+              $out = $entry.Open()
+              $in = [System.IO.File]::OpenRead($_.FullName)
+              $in.CopyTo($out)
+              $in.Dispose()
+              $out.Dispose()
             }
-          $za.Dispose(); $fs.Dispose()
+          $za.Dispose()
+          $fs.Dispose()
           Write-Host "Created $zip"
       - name: Upload app artifact
         uses: actions/upload-artifact@v7

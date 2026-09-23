@@ -28,7 +28,7 @@ class LogEntry {
 }
 
 class AppState extends ChangeNotifier {
-  AppState({this.version = '1.20.2', SettingsStore? settingsStore})
+  AppState({this.version = '1.20.3', SettingsStore? settingsStore})
       : _settings = settingsStore ?? SettingsStore();
 
   final String version;

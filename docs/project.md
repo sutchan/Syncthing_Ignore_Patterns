@@ -34,7 +34,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 SyncthingIgnorePatterns/
 ├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
-├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.20.2）
+├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.20.3）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
 │   ├── lib/
 │   │   ├── main.dart         # 入口，注入 AppState
@@ -63,7 +63,7 @@ SyncthingIgnorePatterns/
 
 - 语义化版本 `MAJOR.MINOR.PATCH`；文档/配置类变更默认升级 `PATCH`，新功能升级 `MINOR`。
 - **主实现（Flutter 桌面版）版本单一来源**：
-  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.20.2+1`）
+  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.20.3+1`）
   - `app/lib/state/app_state.dart` 的 `AppState.version`（关于框 / 日志展示）
   - `README.md` / `README_EN.md` 版本徽章
   - 根目录 `VERSION` 文件（CI 读取的主实现版本单一来源）
@@ -107,6 +107,10 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.20.3 (2026-09-23)
+- fix(ci): 发布包打包改用 `ZipArchive.CreateEntry` + 流拷贝——`CreateEntryFromFile` 为扩展方法，PowerShell 不可作为静态成员调用，曾致 `build-windows` 打包失败
+- chore: 同步版本至 v1.20.3（VERSION / pubspec `1.20.3+1` / `AppState.version` / `manifest.dart` 示例 / README 徽章）
 
 ### v1.20.2 (2026-09-23)
 - perf(ci): 减小发布包体积——构建加 `--tree-shake-icons`、发布包改用 `SmallestSize` 高压缩并剔除 `*.pdb`/`*.exp`/`*.lib` 调试符号（`ci.yml` 打包步骤）
@@ -311,7 +315,7 @@ SyncthingIgnorePatterns/
 - [ ] Flutter 版相较 PowerShell 版仍缺：应用前安全确认框、实时状态行（当前扫描目录）、拖拽填入、双击打开文件、启动时「已加载清单」提示
 - [ ] 应用阶段 `Stop` 取消尚未接入 `applyRules` 循环
 - [ ] 测试覆盖率门禁（≥80%）、UI 部件测试（flutter_test + mockito）未建立
-- [x] GitHub Actions CI：构建并打包命名归档 `SyncthingIgnoreGUI-v1.20.2-windows-x64.zip`（`.github/workflows/ci.yml`）
+- [x] GitHub Actions CI：构建并打包命名归档 `SyncthingIgnoreGUI-v1.20.3-windows-x64.zip`（`.github/workflows/ci.yml`）
 - [ ] 发布包说明（VC++ 运行库 / Flutter AOT 运行时）或 Inno Setup 安装包
 - [ ] 规则更新后须同步 `app/assets/.stignore` 副本
 
@@ -370,7 +374,7 @@ dart run coverage:format_coverage --packages=.dart_tool/package_config.json \
 ### 9.4 实现分工
 
 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
-**Dart + Flutter 桌面版（v1.20.2）为主实现**，构建为独立 `.exe` 分发。两者共享同一
+**Dart + Flutter 桌面版（v1.20.3）为主实现**，构建为独立 `.exe` 分发。两者共享同一
 `.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等项与工程化待办，
 见 [开发任务清单](development-tasks.md)。
 
@@ -395,4 +399,4 @@ CI 构建的发布包统一命名（与全局约定一致）：
 - 发布包压缩：CI 打包步骤用 .NET `System.IO.Compression` `CompressionLevel.SmallestSize`（优于 `Compress-Archive` 默认 Deflate），并剔除调试符号 `*.pdb`/`*.exp`/`*.lib`，进一步减小 `.zip` 体积（见 `ci.yml` `Package artifact` 步骤）。
 - 预发布版本以 GitHub Release 的 `prerelease` 标记区分，**不在文件名加后缀**。
 
-示例：`SyncthingIgnoreGUI-v1.20.2-windows-x64.zip`
+示例：`SyncthingIgnoreGUI-v1.20.3-windows-x64.zip`

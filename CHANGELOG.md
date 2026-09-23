@@ -5,6 +5,12 @@
 
 ---
 
+## [v1.20.3] - 2026-09-23
+
+### 修复
+- fix(ci): 发布包打包改用 `ZipArchive.CreateEntry`（实例方法）+ 流拷贝，修复 `CreateEntryFromFile`（`ZipFileExtensions` 扩展方法）在 PowerShell 中不可调用导致 `build-windows` 打包步骤失败
+- chore: 同步版本至 v1.20.3（VERSION / pubspec `1.20.3+1` / `AppState.version` / `manifest.dart` 示例 / README 徽章）
+
 ## [v1.20.2] - 2026-09-23
 
 ### 构建 / CI

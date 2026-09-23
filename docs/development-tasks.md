@@ -1,6 +1,6 @@
 # 开发任务清单（剩余未完成任务）
 
-> 跟踪 Flutter 桌面版（主实现，v1.20.2）相较 PowerShell 遗留版（v1.18.5）的
+> 跟踪 Flutter 桌面版（主实现，v1.20.3）相较 PowerShell 遗留版（v1.18.5）的
 > 功能对等项与工程化待办。已完成项亦列出以便追溯。
 > 状态图例：✅ 已完成 · 🔲 待办 · 🔧 进行中
 
@@ -41,7 +41,7 @@
 | 项 | 状态 | 说明 |
 |----|------|------|
 | 构建 Windows exe（`flutter build windows`） | ✅ | 由 CI `build-windows` 在 windows-latest 构建并发布 zip，无需本机 |
-| GitHub Actions CI：构建并打包命名归档 | ✅ | `SyncthingIgnoreGUI-v1.20.2-windows-x64.zip`（`.github/workflows/ci.yml`） |
+| GitHub Actions CI：构建并打包命名归档 | ✅ | `SyncthingIgnoreGUI-v1.20.3-windows-x64.zip`（`.github/workflows/ci.yml`） |
 | 发布包说明（VC++ 运行库 / Flutter AOT 运行时） | 🔲 | 或 Inno Setup 安装包 |
 | 自动更新 | 🔲 | 可选，未规划 |
 
@@ -53,6 +53,6 @@
 | 规则集版本（`.stignore` 头 `//Version`）独立演进 | ✅ | 当前 v1.18.5，与工具版本解耦 |
 
 ## 版本说明
-- Flutter 桌面版：v1.20.2（pubspec `1.20.2+1`，`AppState.version`）
+- Flutter 桌面版：v1.20.3（pubspec `1.20.3+1`，`AppState.version`）
 - PowerShell 遗留版：v1.18.5（独立演进）
 - 规则集 `.stignore`：v1.18.5（独立版本，`Updated` 为规则集修订日）
