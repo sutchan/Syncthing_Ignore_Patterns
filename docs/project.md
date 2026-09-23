@@ -35,7 +35,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 SyncthingIgnorePatterns/
 ├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
-├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.25.2）
+├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.25.3）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
 │   ├── lib/
 │   │   ├── main.dart         # 入口，注入 AppState；首帧后恢复/采样窗口几何
@@ -67,7 +67,7 @@ SyncthingIgnorePatterns/
 
 - 语义化版本 `MAJOR.MINOR.PATCH`；文档/配置类变更默认升级 `PATCH`，新功能升级 `MINOR`。
 - **主实现（Flutter 桌面版）版本单一来源**：
-  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.25.2+1`）
+  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.25.3+1`）
   - `app/lib/state/app_state.dart` 的 `AppState.version`（关于框 / 日志展示）
   - `README.md` / `README_EN.md` 版本徽章
   - 根目录 `VERSION` 文件（CI 读取的主实现版本单一来源）
@@ -111,6 +111,12 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.25.3 (2026-09-23)
+- docs: 新增功能与 UI 完善改进建议（`docs/specs/stignore-gui-flutter/spec.md`「改进建议（评估中）」），按 P0/P1/P2 分级，覆盖扫描可取消、结果列表增强、多扫描根、备份恢复、预检一致状态、启动自动更新检查等
+- chore: 同步版本至 v1.25.3（VERSION / pubspec `1.25.3+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+- docs: 修正 development-tasks.md 版本说明与 project.md 示例版本引用至 v1.25.3
+- chore(ci): 发布归档内以 `SyncthingIgnoreGUI/` 为顶层目录，解压不再散落根目录
 
 ### v1.25.2 (2026-09-23)
 - fix(app): 修复扫描崩溃——`scanner.scanRoots` 的 `Isolate.run` 闭包与进度回调同作用域共享不可发送的 `AppState` 上下文，真实扫描会抛 `object is unsendable`；已将闭包抽到顶层 `_scanOneRoot`（影响 v1.25.0/v1.25.1 的扫描功能）；`flutter test` 79/79
@@ -465,9 +471,10 @@ flutter test --coverage                 # 生成 coverage/lcov.info（含每文�
 ### 9.4 实现分工
 
 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
-**Dart + Flutter 桌面版（v1.25.2）为主实现**，构建为独立 `.exe` 分发。两者共享同一
+**Dart + Flutter 桌面版（v1.25.3）为主实现**，构建为独立 `.exe` 分发。两者共享同一
 `.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等状态与验证边界，
-见 [开发任务清单](development-tasks.md)。
+见 [开发任务清单](development-tasks.md)；功能与 UI 的后续完善建议集中维护于
+[`docs/specs/stignore-gui-flutter/spec.md`](specs/stignore-gui-flutter/spec.md) 的「改进建议（评估中）」一节。
 
 ### 9.5 构建产物命名规范
 
@@ -490,10 +497,12 @@ CI 构建的发布包统一命名（与全局约定一致）：
 - 归档**仅在 `release` 作业**压缩：用 .NET `System.IO.Compression` `CompressionLevel.SmallestSize`
   （优于 `Compress-Archive` 默认 Deflate），暂存时剔除调试符号 `*.pdb`/`*.exp`/`*.lib`，以减小 `.zip` 体积
   （见 `ci.yml` `Stage release files` / `Package release archive` 步骤）。
+- 归档内以**产品命名目录 `SyncthingIgnoreGUI/`** 为顶层（由 `env.APP_NAME` 决定）：所有条目路径加
+  `APP_NAME` 前缀，解压后得到 `SyncthingIgnoreGUI/` 目录而非文件散落根目录。
 - Release 资产**仅上传归档**（`*.zip` / `*.tar.gz`），不上传构建目录树。
 - 预发布版本以 GitHub Release 的 `prerelease` 标记区分，**不在文件名加后缀**。
 
-示例：`SyncthingIgnoreGUI-v1.25.2-windows-x64.zip`
+示例：`SyncthingIgnoreGUI-v1.25.3-windows-x64.zip`
 
 ### 9.6 忽略清单在线更新（v1.22.0）
 

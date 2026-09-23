@@ -22,6 +22,6 @@ A（功能对等）/ B（工程化 / 质量）/ C（构建与发布）/ D（规�
 - **Inno Setup 安装器**：未采用——自动更新已覆盖该需求，且 Release 资产规范仅上传 `*.zip` / `*.tar.gz`。
 
 ## 版本说明
-- Flutter 桌面版：v1.25.2（pubspec `1.25.2+1`，`AppState.version`）
+- Flutter 桌面版：v1.25.3（pubspec `1.25.3+1`，`AppState.version`）
 - PowerShell 遗留版：v1.18.5（独立演进）
 - 规则集 `.stignore`：v1.18.5（独立版本，`Updated` 为规则集修订日）

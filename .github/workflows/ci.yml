@@ -11,7 +11,8 @@
 #   Windows/macOS 用 zip、Linux 用 tar.gz；版本取自根 VERSION（needs.version.outputs.version），
 #   禁止硬编码；Release 仅上传归档（不上传构建目录树）；预发布以 Release prerelease 标记区分。
 #   CI 产物以「目录」形式在作业间传递（避免产物内再套一层压缩包导致二次压缩），
-#   发布归档仅在 release 作业压缩生成。
+#   发布归档仅在 release 作业压缩生成，且归档内以「产品命名目录（env.APP_NAME）」为顶层，
+#   解压后得到 SyncthingIgnoreGUI/ 而非文件散落根目录。
 #
 # 版本三轨独立（见 docs/project.md §4）：
 #   Flutter 主实现  = VERSION（pubspec / AppState.version / manifest 示例 / README 徽章）
@@ -297,6 +298,9 @@ jobs:
           # 用 .NET SmallestSize 高压缩；CreateEntryFromFile 为扩展方法不可用，故用 CreateEntry + 流拷贝
           $ver = "${{ needs.version.outputs.version }}"
           $zip = "${{ env.APP_NAME }}-v$ver-windows-x64.zip"
+          # 归档内顶层目录：以产品/项目命名（env.APP_NAME = SyncthingIgnoreGUI），
+          # 解压后得到 SyncthingIgnoreGUI/ 而非文件散落根目录。
+          $innerDir = "${{ env.APP_NAME }}"
           $src = "dist"
           if (Test-Path $zip) { Remove-Item $zip -Force }
           $level = [System.IO.Compression.CompressionLevel]::SmallestSize
@@ -306,7 +310,8 @@ jobs:
           Get-ChildItem $src -Recurse -File |
             ForEach-Object {
               $rel = $_.FullName.Substring($base.Length + 1).Replace('\', '/')
-              $entry = $za.CreateEntry($rel, $level)
+              $entryPath = "$innerDir/$rel"
+              $entry = $za.CreateEntry($entryPath, $level)
               $out = $entry.Open()
               $in = [System.IO.File]::OpenRead($_.FullName)
               $in.CopyTo($out)

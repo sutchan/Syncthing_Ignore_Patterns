@@ -5,6 +5,16 @@
 
 ---
 
+## [v1.25.3] - 2026-09-23
+
+### 文档
+- docs: 新增功能与 UI 完善改进建议（`docs/specs/stignore-gui-flutter/spec.md`「改进建议（评估中）」一节），按 P0/P1/P2 分级，覆盖扫描可取消、结果列表增强、多扫描根、备份恢复、预检一致状态、启动自动更新检查等
+- chore: 同步版本至 v1.25.3（VERSION / pubspec `1.25.3+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+- docs: 修正 development-tasks.md 版本说明与 project.md 示例版本引用至 v1.25.3
+
+### 构建
+- chore(ci): 发布归档内以产品命名目录 `SyncthingIgnoreGUI/` 为顶层（`.github/workflows/ci.yml` 的 Package release archive 步骤为条目路径加 `APP_NAME` 前缀），解压后文件归入该目录而非散落根目录
+
 ## [v1.25.2] - 2026-09-23
 
 ### 修复
