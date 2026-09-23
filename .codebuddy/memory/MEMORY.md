@@ -9,7 +9,7 @@
 ## 项目约定（SyncthingIgnorePatterns）
 - 提交遵循 Git 规范：`type: 描述`（首字母小写、动词开头、≤50字）。
 - **版本三轨独立**（docs/project.md §4）：
-  - ① Flutter 主轨（当前 **v1.22.0**，CI 单一来源 `VERSION`）= `VERSION` ↔ `app/pubspec.yaml` ↔ `app/lib/state/app_state.dart` `AppState.version` ↔ `app/lib/models/manifest.dart` 示例 ↔ `README*` 徽章/正文。动版本前必 `cat VERSION`+`git log` 实查。
+  - ① Flutter 主轨（当前 **v1.23.1**，CI 单一来源 `VERSION`）= `VERSION` ↔ `app/pubspec.yaml` ↔ `app/lib/state/app_state.dart` `AppState.version` ↔ `app/lib/models/manifest.dart` 示例 ↔ `README*` 徽章/正文。动版本前必 `cat VERSION`+`git log` 实查。
   - ② PowerShell 遗留轨（v1.18.5）= `SyncthingIgnoreGUI.ps1` 头 `//Version`+`$ScriptVersion`，独立演进。
   - ③ `.stignore` 规则集轨（v1.18.5，头 `//Version: 1.18.5`）= 根与 `app/assets/.stignore` 须内部一致，`//Updated` 为修订日。跨轨不同步属正常。
 - **CI/CD**（`.github/workflows/ci.yml`，4 作业，ubuntu `release` 用 `shell: pwsh` 有 .NET8）：
@@ -18,7 +18,8 @@
   - `build-windows`（windows-latest）：pub get / analyze（error/warning/info 任一即 exit 1，须清零）/ test --coverage / build windows --release（`--tree-shake-icons`）；上传 LCOV+摘要。
   - `release`（仅 `v*` 标签）：softprops/action-gh-release，说明取自 `CHANGELOG.md` 对应小节。
   - 产物：CI 不再产 zip（v1.20.4 起 `build-windows` 上传 `app/build/package` **目录**），归档仅在 `release` 的 `Package release archive` 用 .NET `SmallestSize` 压缩一次（避 zip 套 zip），剔除 `*.pdb/*.exp/*.lib`；命名 `SyncthingIgnoreGUI-v<版本>-windows-x64.zip`，版本取自 `needs.version.outputs.version`（禁硬编码）。
-- **已知规则副本身份漂移（待裁决）**：根与 bundle 的 `.stignore` 是否一致曾告警，CI 当前仅告警不阻断，待用户定同步方向再改阻断。
+- **规则副本一致性（v1.23.1 起 CI 阻断）**：根 `.stignore` 与 `app/assets/.stignore` 当前完全一致（397 行、`//Version: 1.18.5`，`//Updated: 2026-09-22`）；CI `validate` 的「Ruleset copy consistency」步骤已由「仅告警」改为**不一致即 `exit 1`**。改规则集必须同时改两处（或复制根文件覆盖副本），否则 CI 直接失败。
+- **许可**：仓库根 `LICENSE` = MIT（`Copyright (c) 2019-2026 Sut`），README / README_EN 的许可段落互链该文件。
 - **多 agent 并发提交风险**：会话间隙会被他人 `git add -A` 扫入提交；临时脚本勿放仓库根；动版本/规则集前 `git show HEAD:<file>` 核对真值。`.gitignore` 已加 `_pubget.log`/`__*_tmp.ps1`/`_elevate.ps1`。
 - **CHANGELOG 双副本**：根 `CHANGELOG.md` + `docs/project.md` §7 必须同写。
 - **构建产物命名规范**（`docs/project.md` §9.5）：`<产品名>-v<语义版本>-<os>-<arch>.<扩展名>`，`env.APP_NAME=SyncthingIgnoreGUI`，Windows/macOS=zip、Linux=tar.gz；预发布用 Release `prerelease` 标记区分（文件名不加后缀）。
@@ -27,6 +28,7 @@
 - **窗口几何记忆**（v1.21.0，无新依赖）：`models/window_bounds.dart`+`services/window_bounds.dart`（win32 `FindWindow('FLUTTER_RUNNER_WIN32_WINDOW')`→`GetWindowRect`/`SetWindowPos`），写入 `settings.json.window`，启动恢复+每 2s 采样。坑：`ffi` 2.x `calloc` 是 `Allocator` 实例 → `calloc.allocate<RECT>(sizeOf<RECT>())`/`calloc.free(p)`。
 - **偏好写入须串行化**（v1.22.0 修）：`SettingsStore.save` 原裸 `unawaited` 致并发写竞态（较旧快照最后落盘/半截 JSON）→ 改写队列+`flush:true`，新增回归用例。排查启示：`--coverage` 间歇红灯多为调度/时间敏感竞态，优先查并发写/未 await 的 Future。
 - **忽略清单在线更新**（v1.22.0）：清单版本来自 `.stignore` 头 `//Version`，与应用版本独立。来源优先级 exe 同目录→APPDATA→内置资源；更新优先写回 exe 同目录。仓库 raw `https://raw.githubusercontent.com/sutchan/Syncthing_Ignore_Patterns/main/.stignore`（main 分支）。模块 `models/ruleset_info.dart`+`services/{app_paths,ruleset_store,ruleset_update}.dart`+`state/ruleset_state.dart`+`ui/ruleset_card.dart`；`dart:io HttpClient`（15s/5MiB，无新依赖）；下载器经 `AppState(rulesetStore:/rulesetFetcher:/rulesetBundled:)` 注入，测试不触网。
+- **应用安全与实时反馈**（v1.23.0，对齐 PS 版）：`services/applier.dart` 的 `applyRules` 新增 `isCancelled` 回调（`ApplyResult.cancelled`），支持应用阶段「停止」；`ui/action_row.dart` 非预览非强制时 Apply 先弹确认框（`state/apply_flow.dart` `pendingApplyCount()` **同步**读清单，避免 async gap 令对话框在测试中不弹）；`services/scanner.dart` 的 `scanRoots` 新增 `onProgress` → `scan_flow._reportScanProgress` 刷新实时状态行；`ui/results_list.dart` 改用 `InkWell`（`ListTile` **无 `onDoubleTap`**）单击定位目录/双击默认程序打开；`main.dart` 启动 `loadExistingManifest()` 回填清单并日志提示条数。测试 **34/34**。
 - **覆盖率基线**（v1.22.0）：`lib/` 62.5%（523/837）；新模块 80–96%，`state/scan_flow`/`apply_flow`/`progress_state`/`pickers_state`+`services/platform_io`/`window_bounds` 仍 0%。
 - **覆盖率工具坑**：`dart-collect-coverage` 的 `test_with_coverage` 对 Flutter 包不可用（跑 `dart run test`），须 `flutter test --coverage`；lcov 用相对路径且无 `LF/LH` 行，须从 `DA:行号,命中` 汇总。
 - **扫描/替换跳过应用自身目录**（v1.19.1）：`scanner.dart` 始终跳 `p.dirname(Platform.resolvedExecutable)`+`applier.dart` `skipRoots` 兜底（`skippedAppDir` 静默跳过）；改这两处须同步 `scanner_test`/`applier_test`。

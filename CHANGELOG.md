@@ -5,6 +5,36 @@
 
 ---
 
+## [v1.23.1] - 2026-09-23
+
+### 变更
+- chore(ci): 规则集副本一致性检查由「仅告警」改为**阻断**——`validate` 作业在根 `.stignore` 与 `app/assets/.stignore` 不一致时 `exit 1`（此前仅输出 `::warning` 不失败）。两文件当前完全一致（397 行、`//Version: 1.18.5`），规则更新漏同步副本将直接导致 CI 失败
+- docs: 新增仓库根 `LICENSE`（MIT，版权 2019-2026 Sut），与 README / README_EN 的 MIT 声明对齐并互链
+- chore: 同步版本至 v1.23.1（VERSION / pubspec `1.23.1+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
+### 说明
+- 规则集内容未改动（仍为 1.18.5）；PowerShell 遗留版版本不变（1.18.5）
+
+## [v1.23.0] - 2026-09-23
+
+### 新增
+- feat(app): 功能对齐 PowerShell 版的四项交互
+  - **应用阶段可停止**：`applyRules` 新增 `isCancelled` 回调，写入每个路径前检查，点「停止」即中止后续写入并以 `ApplyResult.cancelled` 标记，提示「用户已停止」
+  - **应用前安全确认框**：非预览且非强制时，Apply 先弹确认框（显示将写入的路径数，读取自清单；点「取消」则不执行），对齐 PowerShell 版 v1.9.0 行为
+  - **扫描实时状态行**：`scanRoots` 新增 `onProgress` 回调，扫描时按根目录刷新「正在扫描 x/y 个根目录 | 已找到 N | 当前：<目录> | 耗时 mm:ss」
+  - **结果列表双击打开文件**：单击定位所在文件夹，双击用默认程序打开该 `.stignore` 文件
+  - **启动加载现有清单**：启动时读取既有清单，结果列表回填路径并在日志提示「已加载现有清单：N 个文件」
+- i18n: 新增 `cancel`（取消）键，供确认框「取消」按钮使用
+
+### 测试
+- `applier_test`：新增「`isCancelled` 提前停止」用例（仅处理到取消点之前的路径）
+- `scanner_test`：新增「`scanRoots` 逐批上报进度」用例
+- `widget_test`：新增「Apply 弹确认框、取消则中止」用例
+- 本地 `flutter analyze` 无问题、`flutter test` **34/34** 通过
+
+### 说明
+- 规则集内容未改动（仍为 1.18.5）；PowerShell 遗留版版本不变（1.18.5）
+
 ## [v1.22.0] - 2026-09-23
 
 ### 新增

@@ -30,10 +30,11 @@ mixin ApplyFlow on ChangeNotifier,
   String get appDirectory;
 
   /// Number of paths in the manifest that [apply] would touch, or `0` when the
-  /// manifest is missing/corrupt. Used for the pre-apply confirmation prompt.
-  Future<int> pendingApplyCount() async {
+  /// manifest is missing/corrupt. Read synchronously so the pre-apply prompt can
+  /// be shown within the button handler without an async gap.
+  int pendingApplyCount() {
     try {
-      final json = jsonDecode(await File(manifestPath).readAsString())
+      final json = jsonDecode(File(manifestPath).readAsStringSync())
           as Map<String, dynamic>;
       return Manifest.fromJson(json).files.length;
     } on Exception {

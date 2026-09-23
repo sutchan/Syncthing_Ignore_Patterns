@@ -35,7 +35,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 SyncthingIgnorePatterns/
 ├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
-├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.22.0）
+├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.23.1）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
 │   ├── lib/
 │   │   ├── main.dart         # 入口，注入 AppState；首帧后恢复/采样窗口几何
@@ -67,7 +67,7 @@ SyncthingIgnorePatterns/
 
 - 语义化版本 `MAJOR.MINOR.PATCH`；文档/配置类变更默认升级 `PATCH`，新功能升级 `MINOR`。
 - **主实现（Flutter 桌面版）版本单一来源**：
-  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.22.0+1`）
+  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.23.1+1`）
   - `app/lib/state/app_state.dart` 的 `AppState.version`（关于框 / 日志展示）
   - `README.md` / `README_EN.md` 版本徽章
   - 根目录 `VERSION` 文件（CI 读取的主实现版本单一来源）
@@ -111,6 +111,17 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.23.1 (2026-09-23)
+- chore(ci): 规则集副本一致性检查由「仅告警」改为**阻断**——根 `.stignore` 与 `app/assets/.stignore` 不一致时 `validate` 作业 `exit 1`（两文件当前完全一致：397 行、`//Version: 1.18.5`）
+- docs: 新增仓库根 `LICENSE`（MIT，版权 2019-2026 Sut），README / README_EN 许可段落改为互链该文件
+- chore: 同步版本至 v1.23.1（VERSION / pubspec `1.23.1+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
+### v1.23.0 (2026-09-23)
+- feat(app): 功能对齐 PowerShell 版的四项交互——① 应用阶段可停止（`applyRules` 新增 `isCancelled` 回调，`ApplyResult.cancelled`）；② 应用前安全确认框（非预览且非强制时弹框显示待写路径数）；③ 扫描实时状态行（`scanRoots` 新增 `onProgress`，逐根刷新「正在扫描 x/y | 已找到 N | 当前目录 | 耗时」）；④ 结果列表双击用默认程序打开文件（单击仍定位所在目录）
+- feat(app): 启动时加载既有清单，结果列表回填路径并日志提示「已加载现有清单：N 个文件」（`scan_flow.loadExistingManifest()`）
+- test(app): 新增 `isCancelled` 提前停止、`scanRoots` 进度上报、Apply 确认框（取消中止）用例——`flutter test` 34/34
+- chore: 同步版本至 v1.23.0（VERSION / pubspec `1.23.0+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
 
 ### v1.22.0 (2026-09-23)
 - feat(app): 忽略清单在线更新——界面新增「忽略清单」卡片显示当前清单版本/来源/修订日；「检查清单更新」按钮从仓库 raw 地址下载最新 `.stignore`，按 `//Version` 比较后写盘生效并提示新版本号（`清单已更新到 vX（原 vY）` / `已是最新版本（vX）`）；清单来源优先级 exe 同目录 → `%APPDATA%` → 内置资源，构建时 CMake `POST_BUILD` 把 `assets/.stignore` 复制到 exe 同目录；Apply 改用生效清单并记录在用版本；下载器/内置加载器可注入（无新增依赖，`dart:io HttpClient`）
@@ -345,14 +356,14 @@ SyncthingIgnorePatterns/
 
 | 模块 | 职责 |
 |------|------|
-| `lib/main.dart` | 入口，`runApp` 前 `await AppState.loadSettings()` 恢复用户偏好；首帧后 `restoreWindowBounds()`/`startWindowTracking()` 恢复并采样窗口几何 |
+| `lib/main.dart` | 入口，`runApp` 前 `await AppState.loadSettings()` 恢复用户偏好、`loadRulesetInfo()`、`loadExistingManifest()` 回填既有清单（v1.23.0）；首帧后 `restoreWindowBounds()`/`startWindowTracking()` 恢复并采样窗口几何 |
 | `lib/app.dart` | `MaterialApp` + 明暗主题（`ThemeMode` 跟随设置） |
 | `lib/i18n.dart` | 中英双语字典，键与 PowerShell `$T` 一致；`t(key, args)` 支持 `{0}` 占位 |
 | `lib/models/manifest.dart` | `StignoreRecord` / `Manifest`，对齐 PowerShell manifest JSON 结构 |
 | `lib/models/window_bounds.dart` | `WindowBounds`（x/y/width/height 纯数据）：JSON 往返、可用性校验（v1.21.0） |
 | `lib/models/ruleset_info.dart` | `RulesetInfo`：解析清单头 `//Version`/`//Updated`，并提供点分版本比较 `compareRulesetVersions`（v1.22.0） |
-| `lib/services/scanner.dart` | DFS 异步遍历找 `.stignore`（跳过 `.git`/规则源/应用自身 exe 目录子树，v1.19.1），每根目录一个 isolate 并行（默认 4）；`findStignoreFilesRaw` 支持 `maxDepth`/`skipLargeDirs`/`maxFilesPerDir`（v1.20.0），流式计数避免巨目录卡死，纯函数可单测 |
-| `lib/services/applier.dart` | 应用标准规则：SHA-256 比对跳过一致文件、写前 `.bak.<时间戳>` 备份、`<base>.bak.*` 轮转保留 ≤3、仅 `force` 清理失效路径；`applyRules` 支持 `skipRoots`（v1.19.1）自动跳过应用自身目录子树 |
+| `lib/services/scanner.dart` | DFS 异步遍历找 `.stignore`（跳过 `.git`/规则源/应用自身 exe 目录子树，v1.19.1），每根目录一个 isolate 并行（默认 4）；`findStignoreFilesRaw` 支持 `maxDepth`/`skipLargeDirs`/`maxFilesPerDir`（v1.20.0），流式计数避免巨目录卡死；`scanRoots` 新增 `onProgress` 回调按根上报进度（v1.23.0），纯函数可单测 |
+| `lib/services/applier.dart` | 应用标准规则：SHA-256 比对跳过一致文件、写前 `.bak.<时间戳>` 备份、`<base>.bak.*` 轮转保留 ≤3、仅 `force` 清理失效路径；`applyRules` 支持 `skipRoots`（v1.19.1）自动跳过应用自身目录子树、`isCancelled` 回调支持应用阶段中止（`ApplyResult.cancelled`，v1.23.0） |
 | `lib/services/rules_source.dart` | 从 `assets/.stignore` 加载标准规则并计算 SHA-256 |
 | `lib/services/platform_io.dart` | Windows 固定驱动器枚举（win32 `GetLogicalDrives` / `GetDriveType`） |
 | `lib/services/window_bounds.dart` | 经 win32 按窗口类名 `FLUTTER_RUNNER_WIN32_WINDOW` 找宿主窗口，`GetWindowRect` 读取 / `SetWindowPos` 恢复几何；越界/过小几何忽略，非 Windows 为 no-op（v1.21.0） |
@@ -367,16 +378,16 @@ SyncthingIgnorePatterns/
 | `lib/state/progress_state.dart` | mixin：`isBusy`/`cancelled`/`progress`/`status`/`summary`/`results` + `begin()`/`finish()`/`elapsed()` |
 | `lib/state/pickers_state.dart` | mixin：`rootText`/`manifestPath` 字段与「浏览」选择（`pickRoot`/`pickManifest`） |
 | `lib/state/ruleset_state.dart` | mixin：清单版本/来源/更新状态；`loadRulesetInfo()`（不联网）、`effectiveRules()`（Apply 实际使用的清单）、`checkRulesetUpdate()`（下载并按版本采纳）（v1.22.0） |
-| `lib/state/scan_flow.dart` | mixin：`scan()`——解析根目录（留空=固定驱动器）→ `scanRoots` → 写清单 |
-| `lib/state/apply_flow.dart` | mixin：`apply()`——载入标准规则 → `applyRules`（预览/强制/备份）→ 回写清单 |
+| `lib/state/scan_flow.dart` | mixin：`scan()`——解析根目录（留空=固定驱动器）→ `scanRoots` → 写清单；`_reportScanProgress` 刷新实时状态行、`loadExistingManifest()` 启动回填既有清单（v1.23.0） |
+| `lib/state/apply_flow.dart` | mixin：`apply()`——载入标准规则 → `applyRules`（预览/强制/备份/`isCancelled`）→ 回写清单；`pendingApplyCount()` 供确认框（v1.23.0） |
 | `lib/ui/home_page.dart` | 主界面装配壳（Scaffold + 子组件 + 关于对话框）；子组件按职责拆至同目录（v1.21.0） |
 | `lib/ui/settings_dialog.dart` | 语言/主题设置对话框（`SettingsDialog.show`） |
 | `lib/ui/root_field.dart` | 根目录/清单路径输入（`TextEditingController`，可反映「浏览」结果） |
 | `lib/ui/options_row.dart` | 预览/强制/备份复选行（经 `setPreview`/`setForce`/`setBackup` 触发刷新） |
 | `lib/ui/scan_options.dart` | 扫描深度滑块 + 大目录过滤开关/阈值滑块 |
 | `lib/ui/ruleset_card.dart` | 忽略清单卡片：当前版本 / 来源（内置·已下载）/ 修订日 + 存放路径（悬停）+「检查清单更新」按钮 + 结果提示（v1.22.0） |
-| `lib/ui/action_row.dart` | 扫描/应用/清空/停止按钮 |
-| `lib/ui/results_list.dart` | 结果列表（点击打开所在目录） |
+| `lib/ui/action_row.dart` | 扫描/应用/清空/停止按钮；非预览非强制时 Apply 先弹确认框（v1.23.0） |
+| `lib/ui/results_list.dart` | 结果列表（单击打开所在目录、双击用默认程序打开文件，v1.23.0） |
 | `lib/ui/log_list.dart` | 分级着色的日志列表 |
 
 ### 9.2 构建为 exe
@@ -390,7 +401,8 @@ flutter build windows --release --tree-shake-icons        # 产物：build/windo
 
 > 标准规则集随资源打包（`assets/.stignore`），运行时由 `rootBundle` 加载；
 > 构建后 CMake `POST_BUILD` 还会把它复制为 exe 同目录的 `.stignore`（清单来源
-> 优先级与在线更新见 §9.6）。更新规则后需同步该副本（见 §4 版本同步）。
+> 优先级与在线更新见 §9.6）。更新规则后需同步该副本（见 §4 版本同步），
+> 且 CI `validate` 会校验根 `.stignore` 与 `app/assets/.stignore` 完全一致（不一致即失败，v1.23.1）。
 > exe 分发需目标机具备 Visual C++
 > 运行库与 Flutter AOT 运行时（发布包已自带）。
 > CI 自动构建：推送 `v*` 标签时由 `.github/workflows/ci.yml` 的 `build-windows` 作业
@@ -417,7 +429,7 @@ dart run coverage:format_coverage --packages=.dart_tool/package_config.json \
 ### 9.4 实现分工
 
 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
-**Dart + Flutter 桌面版（v1.22.0）为主实现**，构建为独立 `.exe` 分发。两者共享同一
+**Dart + Flutter 桌面版（v1.23.1）为主实现**，构建为独立 `.exe` 分发。两者共享同一
 `.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等项与工程化待办，
 见 [开发任务清单](development-tasks.md)。
 
@@ -445,7 +457,7 @@ CI 构建的发布包统一命名（与全局约定一致）：
 - Release 资产**仅上传归档**（`*.zip` / `*.tar.gz`），不上传构建目录树。
 - 预发布版本以 GitHub Release 的 `prerelease` 标记区分，**不在文件名加后缀**。
 
-示例：`SyncthingIgnoreGUI-v1.22.0-windows-x64.zip`
+示例：`SyncthingIgnoreGUI-v1.23.1-windows-x64.zip`
 
 ### 9.6 忽略清单在线更新（v1.22.0）
 
@@ -472,6 +484,23 @@ CI 构建的发布包统一命名（与全局约定一致）：
 - 缺少版本头 / 网络失败 → 保留本地并给出原因（同时写入日志）。
 
 Apply 使用 `effectiveRules()`（下载副本优先），日志记录在用清单的版本与修订日。
+
+### 9.7 应用安全与实时交互（v1.23.0）
+
+对齐 PowerShell 遗留版的四项交互：
+
+- **应用阶段可停止**：`services/applier.dart` 的 `applyRules` 接受 `isCancelled`
+  回调，在每个路径写入前检查；用户点「停止」后循环即中止，已完成部分保留，
+  结果以 `ApplyResult.cancelled` 标记，状态行提示「用户已停止」。
+- **应用前安全确认框**：非预览且非强制时，`ui/action_row.dart` 先弹出确认框，
+  显示将要写入的路径数（`state/apply_flow.dart` 的 `pendingApplyCount()` 同步读取清单）；
+  点「取消」则不执行应用。
+- **扫描实时状态行**：`services/scanner.dart` 的 `scanRoots` 逐批调用 `onProgress`，
+  `state/scan_flow.dart` 据此刷新「正在扫描 x/y 个根目录 | 已找到 N | 当前：<目录> | 耗时」。
+- **结果列表双击打开文件**：`ui/results_list.dart` 单击定位所在文件夹（`explorer <dir>`），
+  双击用系统默认程序打开该 `.stignore`（`cmd /c start "" <file>`）。
+- **启动加载现有清单**：`main.dart` 在 `runApp` 前调用 `loadExistingManifest()`，
+  结果列表回填既有路径并日志提示「已加载现有清单：N 个文件」。
 清单版本（`.stignore` 头 `//Version`）与应用版本（`VERSION`）**相互独立**。
 
 ## 10. 品牌资产

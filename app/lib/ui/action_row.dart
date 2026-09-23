@@ -51,8 +51,7 @@ class ActionRow extends StatelessWidget {
   /// prompt in the PowerShell tool.
   Future<void> _onApply(BuildContext context) async {
     if (!state.preview && !state.force) {
-      final count = await state.pendingApplyCount();
-      if (!context.mounted) return;
+      final count = state.pendingApplyCount();
       final loc = state.loc;
       final confirmed = await showDialog<bool>(
         context: context,

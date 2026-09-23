@@ -4,7 +4,7 @@
 
 > 开箱即用的 `.stignore` 规则集：21 个分类 · 329 条规则，自动排除系统文件、缓存、构建产物与应用数据。
 
-![Version](https://img.shields.io/badge/version-v1.22.0-blue)
+![Version](https://img.shields.io/badge/version-v1.23.1-blue)
 ![CI](https://github.com/sutchan/Syncthing_Ignore_Patterns/actions/workflows/ci.yml/badge.svg)
 ![Updated](https://img.shields.io/badge/updated-2026--09--22-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -21,7 +21,7 @@
 - ✅ **中英双语文档**，附批量同步 GUI 工具
 - ✅ **持续维护**，随生态更新规则
 
-> `.stignore` 文件头 `Updated`（`2026-09-22`）是规则集修订日；工具发布版本见 CHANGELOG（当前 `v1.22.0`）。两者分别对应"规则集修订"与"工具发布"，不同步属正常。
+> `.stignore` 文件头 `Updated`（`2026-09-22`）是规则集修订日；工具发布版本见 CHANGELOG（当前 `v1.23.1`）。两者分别对应"规则集修订"与"工具发布"，不同步属正常。
 
 ### 快速开始
 
@@ -94,7 +94,7 @@
 
 项目提供两种实现，功能与行为一致（扫描 / 应用 / 备份轮转 / 中英双语 / 明暗主题）：
 
-#### 方案一：Dart + Flutter 桌面版（推荐，主实现 · v1.22.0）
+#### 方案一：Dart + Flutter 桌面版（推荐，主实现 · v1.23.1）
 
 位于 `app/`，构建为独立 `.exe` 分发，目标机无需安装 PowerShell：
 
@@ -141,4 +141,4 @@ flowchart LR
 
 ### 开源许可
 
-基于 [MIT 许可证](https://opensource.org/licenses/MIT) 开源。
+基于 [MIT 许可证](LICENSE) 开源，全文见仓库根目录 [`LICENSE`](LICENSE)。

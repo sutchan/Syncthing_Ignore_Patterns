@@ -1,7 +1,7 @@
 # .github/workflows/ci.yml
 # SyncthingIgnorePatterns CI/CD
 # - version:       从根 VERSION 读取主实现版本，校验 v* 标签与 VERSION 一致
-# - validate:      校验 PowerShell GUI 语法、.stignore 规则集、规则副本漂移、分三轨校验版本一致性
+# - validate:      校验 PowerShell GUI 语法、.stignore 规则集、规则副本一致性（阻断）、分三轨校验版本一致性
 # - build-windows: 在 windows-latest 构建 Flutter Windows 桌面 exe，跑测试与覆盖率并打包产物
 # - release:       仅在推送 v* 标签时创建 GitHub Release（说明取自 CHANGELOG）并上传产物
 #
@@ -105,12 +105,12 @@ jobs:
             Write-Host "No duplicate rule patterns"
           }
           if ($rules.Count -eq 0) { Write-Error ".stignore has no rules"; exit 1 }
-      - name: Ruleset copy drift report (.stignore vs app/assets/.stignore)
+      - name: Ruleset copy consistency (.stignore vs app/assets/.stignore)
         shell: pwsh
         run: |
-          # 报告型检查：根 .stignore（标准源）与 app/assets/.stignore（运行时打包副本）
-          # 应保持一致。仓库当前存在已知差异（见 docs/development-tasks.md §D），
-          # 故仅输出告警与摘要，不阻断构建；差异消除后可改为阻断。
+          # 阻断型检查：根 .stignore（标准源）与 app/assets/.stignore（运行时打包副本）
+          # 必须逐行一致，否则打包进应用的规则集会滞后于标准源。
+          # 规则更新后请同步两处（可用根文件覆盖副本），CI 会在此拦截不一致。
           $root = (Get-Content .stignore -Raw) -replace "`r`n", "`n"
           $copy = (Get-Content app/assets/.stignore -Raw) -replace "`r`n", "`n"
           if ($root -eq $copy) {
@@ -123,8 +123,8 @@ jobs:
             Where-Object SideIndicator -eq '=>' | ForEach-Object InputObject
           $msg = "Ruleset copies differ. Only in .stignore: [$($onlyRoot -join ', ')] | " +
                  "Only in app/assets/.stignore: [$($onlyCopy -join ', ')]"
-          Write-Warning $msg
-          Write-Host "::warning title=Ruleset drift::$msg"
+          Write-Error $msg
+          exit 1
       - name: Version consistency check (three independent tracks)
         shell: pwsh
         run: |
