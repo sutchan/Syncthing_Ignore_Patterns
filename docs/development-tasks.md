@@ -1,6 +1,6 @@
 # 开发任务清单（剩余未完成任务）
 
-> 跟踪 Flutter 桌面版（主实现，v1.19.1）相较 PowerShell 遗留版（v1.18.5）的
+> 跟踪 Flutter 桌面版（主实现，v1.20.0）相较 PowerShell 遗留版（v1.18.5）的
 > 功能对等项与工程化待办。已完成项亦列出以便追溯。
 > 状态图例：✅ 已完成 · 🔲 待办 · 🔧 进行中
 
@@ -14,6 +14,7 @@
 | 中英双语 + 明暗主题 | ✅ | `i18n.dart` / `app.dart` |
 | 设置按钮 / 设置对话框（语言 + 主题集中管理） | ✅ | `home_page.dart` `_SettingsDialog`（v1.19.0） |
 | 扫描 / 替换时跳过应用自身目录的 `.stignore` | ✅ | `scanner.dart` 始终跳过 `p.dirname(Platform.resolvedExecutable)` + `applier.dart` `skipRoots`（v1.19.1） |
+| 扫描深度调节（1–10，默认 3）+ 大目录过滤（默认跳过 >100 文件子目录，可开闭/调值） | ✅ | `scanner.dart` `findStignoreFilesRaw` 增 `maxDepth`/`skipLargeDirs`/`maxFilesPerDir` + `home_page` `_ScanOptions`（v1.20.0） |
 | 仅预览 / 强制 / 备份 选项 | ✅ | `app_state.dart` / UI |
 | Stop 取消（扫描阶段） | ✅ | `app_state.stop()` + `scan()` 检查 |
 | Stop 取消（应用阶段） | 🔲 | 需将 `_cancelled` 接入 `applyRules` 循环 |
@@ -40,7 +41,7 @@
 | 项 | 状态 | 说明 |
 |----|------|------|
 | 构建 Windows exe（`flutter build windows`） | ✅ | 由 CI `build-windows` 在 windows-latest 构建并发布 zip，无需本机 |
-| GitHub Actions CI：构建并打包命名归档 | ✅ | `SyncthingIgnoreGUI-v1.19.1-windows-x64.zip`（`.github/workflows/ci.yml`） |
+| GitHub Actions CI：构建并打包命名归档 | ✅ | `SyncthingIgnoreGUI-v1.20.0-windows-x64.zip`（`.github/workflows/ci.yml`） |
 | 发布包说明（VC++ 运行库 / Flutter AOT 运行时） | 🔲 | 或 Inno Setup 安装包 |
 | 自动更新 | 🔲 | 可选，未规划 |
 
@@ -52,6 +53,6 @@
 | 规则集版本（`.stignore` 头 `//Version`）独立演进 | ✅ | 当前 v1.18.5，与工具版本解耦 |
 
 ## 版本说明
-- Flutter 桌面版：v1.19.1（pubspec `1.19.1+1`，`AppState.version`）
+- Flutter 桌面版：v1.20.0（pubspec `1.20.0+1`，`AppState.version`）
 - PowerShell 遗留版：v1.18.5（独立演进）
 - 规则集 `.stignore`：v1.18.5（独立版本，`Updated` 为规则集修订日）

@@ -42,6 +42,8 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 12),
             _OptionsRow(state: state),
             const SizedBox(height: 12),
+            _ScanOptions(state: state),
+            const SizedBox(height: 12),
             _ActionRow(state: state),
             const SizedBox(height: 12),
             if (state.isBusy)
@@ -236,6 +238,77 @@ class _OptionsRow extends StatelessWidget {
           dense: true,
         ),
       ],
+    );
+  }
+}
+
+class _ScanOptions extends StatelessWidget {
+  const _ScanOptions({required this.state});
+  final AppState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = state.loc;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(loc.t('scanDepth'),
+                style: Theme.of(context).textTheme.titleSmall),
+            Row(
+              children: [
+                Expanded(
+                  child: Slider(
+                    value: state.maxDepth.toDouble(),
+                    min: 1,
+                    max: 10,
+                    divisions: 9,
+                    label: '${state.maxDepth}',
+                    onChanged: (v) => state.setMaxDepth(v.toInt()),
+                  ),
+                ),
+                SizedBox(
+                  width: 56,
+                  child: Text('${state.maxDepth} ${loc.t('level')}'),
+                ),
+              ],
+            ),
+            const Divider(),
+            CheckboxListTile(
+              title: Text(loc.t('skipLargeDirs')),
+              value: state.filterLargeDirs,
+              onChanged: (v) => state.setFilterLargeDirs(v!),
+              controlAffinity: ListTileControlAffinity.leading,
+              dense: true,
+            ),
+            if (state.filterLargeDirs)
+              Padding(
+                padding: const EdgeInsets.only(left: 16, right: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Slider(
+                        value: state.maxFilesPerDir.toDouble(),
+                        min: 10,
+                        max: 1000,
+                        divisions: 99,
+                        label: '${state.maxFilesPerDir}',
+                        onChanged: (v) => state.setMaxFilesPerDir(v.toInt()),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 120,
+                      child: Text(
+                          '${loc.t('maxFilesPerDir')}: ${state.maxFilesPerDir}'),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

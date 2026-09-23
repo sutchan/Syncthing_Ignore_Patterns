@@ -5,6 +5,21 @@
 
 ---
 
+## [v1.20.0] - 2026-09-23
+
+### 新增
+- feat(app): 扫描选项
+  - 扫描深度调节：默认 3 级，可调范围 1–10 级（`AppState.maxDepth` / `setMaxDepth`，UI 滑块；根目录记为第 1 级）
+  - 大目录过滤：默认开启，跳过直接条目数 > 100 的子目录（其自身 `.stignore` 一并排除）；阈值可调（10–1000），可一键开闭（`AppState.filterLargeDirs` / `maxFilesPerDir`，UI 复选框 + 滑块）
+  - `services/scanner.dart`：`findStignoreFilesRaw` 改为异步，新增 `maxDepth` / `maxFilesPerDir` / `skipLargeDirs`；深度超限即停止下探；大目录用流式计数 `Directory.list().take(n+1)` 提前判定，避免 `node_modules` 之类巨目录卡死
+  - `i18n.dart`：新增 `scanDepth` / `skipLargeDirs` / `maxFilesPerDir` / `level`（en + zh）
+  - `ui/home_page.dart`：新增 `_ScanOptions` 卡片（深度滑块 + 大目录过滤复选框/阈值滑块）
+- chore: 同步版本至 v1.20.0（VERSION / pubspec `1.20.0+1` / `AppState.version` / `manifest.dart` 示例 / README 徽章）
+
+### 测试
+- `scanner_test`：新增 `maxDepth limits how deep .stignore files are found`、`skipLargeDirs skips directories with too many entries`；`findStignoreFiles` 改为 `await`（函数现返回 `Future`）
+- 本地 `flutter analyze` 无问题、`flutter test` **15/15** 通过
+
 ## [v1.19.1] - 2026-09-23
 
 ### 修复

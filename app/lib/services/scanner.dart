@@ -30,12 +30,33 @@ bool _isWithinOrEquals(String parent, String child) {
       nc.startsWith('$np/');
 }
 
-/// Walks [root] depth-first and returns raw record maps for every `.stignore`.
-/// Exposed as a top-level function so it can run inside an isolate.
-List<Map<String, dynamic>> findStignoreFilesRaw(
+/// Cheaply counts the entries directly inside [dir], stopping early once the
+/// count exceeds [threshold]. Returns a value > [threshold] for large /
+/// unreadable directories so the caller can skip them without materializing a
+/// huge listing (e.g. `node_modules`).
+Future<int> _countEntries(String dir, int threshold) async {
+  try {
+    return await Directory(dir).list().take(threshold + 1).length;
+  } on FileSystemException {
+    return threshold + 1; // unreadable => treat as large and skip
+  }
+}
+
+/// Walks [root] depth-first (up to [maxDepth] levels, root = level 1) and
+/// returns raw record maps for every `.stignore`. Exposed as a top-level
+/// function so it can run inside an isolate.
+///
+/// [skipDir] (the standard rules source) and the tool's own executable
+/// directory are skipped as whole subtrees. When [skipLargeDirs] is set, any
+/// subdirectory whose direct entry count exceeds [maxFilesPerDir] is skipped
+/// entirely (not descended, and its own `.stignore` is excluded).
+Future<List<Map<String, dynamic>>> findStignoreFilesRaw(
   String root, {
   String? skipDir,
-}) {
+  int maxDepth = 3,
+  int maxFilesPerDir = 100,
+  bool skipLargeDirs = false,
+}) async {
   final records = <Map<String, dynamic>>[];
   if (!Directory(root).existsSync()) return records;
 
@@ -48,9 +69,10 @@ List<Map<String, dynamic>> findStignoreFilesRaw(
     if (skipDir != null && skipDir.trim().isNotEmpty) skipDir.trim(),
   };
 
-  final stack = <String>[root];
+  // (directory path, 1-based level from root)
+  final stack = <(String, int)>[(root, 1)];
   while (stack.isNotEmpty) {
-    final dir = stack.removeLast();
+    final (dir, level) = stack.removeLast();
     final List<FileSystemEntity> entries;
     try {
       entries = Directory(dir).listSync();
@@ -62,7 +84,15 @@ List<Map<String, dynamic>> findStignoreFilesRaw(
       if (e is Directory) {
         if (p.basename(e.path) == '.git') continue;
         if (skip.any((s) => _isWithinOrEquals(s, e.path))) continue;
-        stack.add(e.path);
+
+        // Honor the depth limit and the large-directory filter before descending.
+        if (level < maxDepth) {
+          if (skipLargeDirs &&
+              await _countEntries(e.path, maxFilesPerDir) > maxFilesPerDir) {
+            continue; // too many files: skip this whole subtree
+          }
+          stack.add((e.path, level + 1));
+        }
       } else if (e is File) {
         if (p.basename(e.path) == '.stignore') {
           final stat = e.statSync();
@@ -80,14 +110,30 @@ List<Map<String, dynamic>> findStignoreFilesRaw(
 }
 
 /// Typed wrapper around [findStignoreFilesRaw] for direct (non-isolate) use.
-List<StignoreRecord> findStignoreFiles(String root, {String? skipDir}) =>
-    findStignoreFilesRaw(root, skipDir: skipDir)
-        .map(StignoreRecord.fromJson)
-        .toList();
+Future<List<StignoreRecord>> findStignoreFiles(
+  String root, {
+  String? skipDir,
+  int maxDepth = 3,
+  int maxFilesPerDir = 100,
+  bool skipLargeDirs = false,
+}) =>
+    findStignoreFilesRaw(
+      root,
+      skipDir: skipDir,
+      maxDepth: maxDepth,
+      maxFilesPerDir: maxFilesPerDir,
+      skipLargeDirs: skipLargeDirs,
+    ).then((m) => m.map(StignoreRecord.fromJson).toList());
 
 /// Top-level isolate entry: scans a single root and returns raw record maps.
-List<Map<String, dynamic>> _scanRoot(Map<String, String?> args) =>
-    findStignoreFilesRaw(args['root']!, skipDir: args['skipDir']);
+Future<List<Map<String, dynamic>>> _scanRoot(Map<String, dynamic> args) =>
+    findStignoreFilesRaw(
+      args['root']!,
+      skipDir: args['skipDir'],
+      maxDepth: args['maxDepth'] ?? 3,
+      maxFilesPerDir: args['maxFilesPerDir'] ?? 100,
+      skipLargeDirs: args['skipLargeDirs'] ?? false,
+    );
 
 /// Scans all [roots] with at most [maxThreads] isolates running concurrently
 /// (roots are processed in batches of [maxThreads]). [skipDir] is the directory
@@ -97,6 +143,9 @@ Future<List<StignoreRecord>> scanRoots(
   List<String> roots, {
   int maxThreads = 4,
   String? skipDir,
+  int maxDepth = 3,
+  int maxFilesPerDir = 100,
+  bool skipLargeDirs = false,
 }) async {
   final records = <StignoreRecord>[];
   for (var i = 0; i < roots.length; i += maxThreads) {
@@ -104,7 +153,13 @@ Future<List<StignoreRecord>> scanRoots(
         roots.sublist(i, min(i + maxThreads, roots.length));
     final tasks = batch.map(
       (r) => Isolate.run<List<Map<String, dynamic>>>(
-        () => _scanRoot({'root': r, 'skipDir': skipDir}),
+        () => _scanRoot({
+          'root': r,
+          'skipDir': skipDir,
+          'maxDepth': maxDepth,
+          'maxFilesPerDir': maxFilesPerDir,
+          'skipLargeDirs': skipLargeDirs,
+        }),
       ),
     );
     final results = await Future.wait(tasks);

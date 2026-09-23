@@ -28,7 +28,7 @@ class LogEntry {
 }
 
 class AppState extends ChangeNotifier {
-  AppState({this.version = '1.19.1', SettingsStore? settingsStore})
+  AppState({this.version = '1.20.0', SettingsStore? settingsStore})
       : _settings = settingsStore ?? SettingsStore();
 
   final String version;
@@ -82,6 +82,32 @@ class AppState extends ChangeNotifier {
   bool preview = false;
   bool force = false;
   bool backup = true;
+
+  int _maxDepth = 3;
+  int get maxDepth => _maxDepth;
+  void setMaxDepth(int v) {
+    final c = v.clamp(1, 10);
+    if (_maxDepth == c) return;
+    _maxDepth = c;
+    notifyListeners();
+  }
+
+  bool _filterLargeDirs = true;
+  bool get filterLargeDirs => _filterLargeDirs;
+  void setFilterLargeDirs(bool v) {
+    if (_filterLargeDirs == v) return;
+    _filterLargeDirs = v;
+    notifyListeners();
+  }
+
+  int _maxFilesPerDir = 100;
+  int get maxFilesPerDir => _maxFilesPerDir;
+  void setMaxFilesPerDir(int v) {
+    final c = v < 1 ? 1 : v;
+    if (_maxFilesPerDir == c) return;
+    _maxFilesPerDir = c;
+    notifyListeners();
+  }
 
   bool isBusy = false;
   bool _cancelled = false;
@@ -162,7 +188,14 @@ class AppState extends ChangeNotifier {
 
     log('${loc.t('ready')} (${roots.length} roots)', 'info');
     try {
-      final records = await scanRoots(roots, maxThreads: 4, skipDir: appDirectory);
+      final records = await scanRoots(
+        roots,
+        maxThreads: 4,
+        skipDir: appDirectory,
+        maxDepth: _maxDepth,
+        maxFilesPerDir: _maxFilesPerDir,
+        skipLargeDirs: _filterLargeDirs,
+      );
       if (_cancelled) {
         _finish();
         log(loc.t('stopped'), 'warn');
