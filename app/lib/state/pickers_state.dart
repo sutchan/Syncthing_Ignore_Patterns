@@ -6,9 +6,11 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 
+import '../services/file_drop.dart';
+import 'log_state.dart';
 import 'preferences_state.dart';
 
-mixin PickersState on ChangeNotifier, PreferencesState {
+mixin PickersState on ChangeNotifier, PreferencesState, LogState {
   /// Scan root typed or picked by the user (blank = all fixed drives).
   String rootText = '';
 
@@ -35,5 +37,41 @@ mixin PickersState on ChangeNotifier, PreferencesState {
     if (uri == null) return;
     manifestPath = uri.toFilePath();
     notifyListeners();
+  }
+
+  /// Applies a path dropped onto the window.
+  ///
+  /// Folders become the scan root; `.stignore` / `.json` files become the
+  /// manifest path; anything else is reported in the log and ignored.
+  void applyDrop(String path) {
+    final target =
+        classifyDrop(path, isDirectory: Directory(path).existsSync());
+    if (target == DropTarget.ignore) {
+      log(loc.t('dropIgnored', [path]), 'muted');
+      notifyListeners();
+      return;
+    }
+    if (target == DropTarget.root) {
+      rootText = path;
+      log(loc.t('dropRoot', [path]), 'info');
+    } else {
+      manifestPath = path;
+      log(loc.t('dropManifest', [path]), 'info');
+    }
+    notifyListeners();
+  }
+
+  /// Listens for files dropped onto the window (forwarded by the Windows
+  /// runner over [fileDropChannel]); a no-op on other platforms.
+  void listenForFileDrops() {
+    fileDropChannel.setMethodCallHandler((call) async {
+      if (call.method != 'onFilesDropped') return;
+      final args = call.arguments;
+      if (args is List) {
+        for (final path in args.whereType<String>()) {
+          applyDrop(path);
+        }
+      }
+    });
   }
 }

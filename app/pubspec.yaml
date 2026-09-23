@@ -1,7 +1,7 @@
 name: syncthing_ignore_gui
 description: GUI tool to scan and apply Syncthing .stignore rules across all synced folders.
 publish_to: 'none'
-version: 1.24.0+1
+version: 1.25.1+1
 
 environment:
   sdk: ^3.4.0

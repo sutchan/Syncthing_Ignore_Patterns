@@ -37,6 +37,12 @@ class AppAboutDialog extends StatelessWidget {
                 key: const Key('about-update-status'),
                 style: Theme.of(context).textTheme.bodyMedium),
           ],
+          if (state.updateInstallStatus.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(state.updateInstallStatus,
+                key: const Key('about-install-status'),
+                style: Theme.of(context).textTheme.bodyMedium),
+          ],
         ],
       ),
       actions: [
@@ -45,6 +51,14 @@ class AppAboutDialog extends StatelessWidget {
             key: const Key('about-open-releases'),
             onPressed: _openReleases,
             child: Text(loc.t('openReleases')),
+          ),
+        if (newer != null)
+          FilledButton(
+            key: const Key('about-install-update'),
+            onPressed: (state.installingUpdate || state.checkingAppUpdate)
+                ? null
+                : state.installUpdate,
+            child: Text(loc.t('installUpdate')),
           ),
         TextButton.icon(
           key: const Key('about-check-update'),

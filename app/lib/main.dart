@@ -18,6 +18,8 @@ Future<void> main() async {
   await state.loadRulesetInfo();
   // Show any manifest left over from a previous session ("loaded N file(s)").
   await state.loadExistingManifest();
+  // Accept folders / .stignore files dragged onto the window.
+  state.listenForFileDrops();
   runApp(
     ChangeNotifierProvider<AppState>.value(
       value: state,

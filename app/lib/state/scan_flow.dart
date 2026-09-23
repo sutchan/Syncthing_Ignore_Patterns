@@ -89,7 +89,11 @@ mixin ScanFlow on ChangeNotifier,
   }
 
   /// Renders the live status line while roots are being walked.
+  ///
+  /// Multi-root scans know their total, so the bar shows real progress; a
+  /// single root walks a whole drive of unknown size, so it stays indeterminate.
   void _reportScanProgress(int done, int total, int found, String current) {
+    progress = total > 1 ? done / total : null;
     status = total > 1
         ? loc.t('statusScan', [done + 1, total, found, current, elapsed()])
         : loc.t('statusScanOne', [found, current, elapsed()]);

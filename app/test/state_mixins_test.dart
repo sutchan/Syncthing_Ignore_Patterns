@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 import 'package:syncthing_ignore_gui/services/ruleset_store.dart';
 import 'package:syncthing_ignore_gui/services/settings_store.dart';
 import 'package:syncthing_ignore_gui/state/app_state.dart';
@@ -62,6 +63,20 @@ void main() {
     expect(s.logs.last.text, contains('3'));
     s.clearLog();
     expect(s.logs, isEmpty);
+  });
+
+  test('applyDrop fills the matching input', () {
+    final s = newState();
+    final dir = Directory(p.join(tmp.path, 'dropped'))..createSync();
+    s.applyDrop(dir.path);
+    expect(s.rootText, dir.path);
+
+    final file = File(p.join(tmp.path, 'r.stignore'))..writeAsStringSync('x');
+    s.applyDrop(file.path);
+    expect(s.manifestPath, file.path);
+
+    s.applyDrop(p.join(tmp.path, 'notes.txt'));
+    expect(s.logs.last.level, 'muted');
   });
 
   test('stop() flags cancellation and rulesPathLabel shows the file name', () {

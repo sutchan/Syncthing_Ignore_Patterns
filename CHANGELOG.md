@@ -5,6 +5,36 @@
 
 ---
 
+## [v1.25.1] - 2026-09-23
+
+### 变更
+- docs: 清理已完成任务并统一文档口径
+  - `docs/development-tasks.md`：仅保留未完成任务（当前为空）与「验证边界」，移除状态图例与全部已完成项
+  - `docs/project.md`：§8 更名「任务与已知限制」并声明当前无未完成任务；§9.3 测试清单补全为 19 个文件 / 79 用例、覆盖率更新为 85.60%（927/1083）；§3 目录树测试说明改为「19 个测试文件…CI 强制行覆盖率 ≥80%」；§9.4 措辞同步
+  - `docs/specs/stignore-gui-flutter/spec.md`：「状态」段措辞与已完成能力清单同步（补拖拽填入、一键更新安装）
+  - `README.md` / `README_EN.md`：新增「拖拽填入」「更新」两条特性说明
+- chore: 同步版本至 v1.25.1（VERSION / pubspec `1.25.1+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
+### 说明
+- 本次仅文档与版本号变更，**无代码/行为改动**；规则集仍为 1.18.5、PowerShell 遗留版仍为 1.18.5
+
+## [v1.25.0] - 2026-09-23
+
+### 新增
+- feat(app): 拖拽填入——Windows runner 通过 `DragAcceptFiles` + `WM_DROPFILES` 接收资源管理器拖放，经 MethodChannel `syncthing_ignore_gui/drop` 转发给 Dart（新增 `services/file_drop.dart` 的 `classifyDrop`，`state/pickers_state.dart` 的 `applyDrop`/`listenForFileDrops`）：文件夹 → 扫描根目录，`.stignore`/`.json` → 清单路径，其余忽略并记日志；runner 链接 `shell32.lib`
+- feat(app): 一键下载并安装更新——新增 `services/update_installer.dart`：「关于」对话框发现新版本后提供「下载并安装」，下载 `SyncthingIgnoreGUI-vX-windows-x64.zip`（校验 zip 魔数、200 MiB 上限），生成 PowerShell 助手脚本（等本进程退出 → `Expand-Archive` 覆盖应用目录 → 重启 → 自删）后退出应用；应用目录不可写时明确报错、不改动任何文件
+
+### 变更
+- chore: 同步版本至 v1.25.0（VERSION / pubspec `1.25.0+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
+### 测试
+- 新增 `file_drop_test`（落点分类）、`update_installer_test`（资源 URL / zip 魔数 / PowerShell 引号 / 脚本内容 / 下载与非 zip 拒绝 / 安装与只读目录拒绝）及更新安装状态用例
+- 本地 `flutter analyze` 无问题、`flutter test` **79/79**；`lib/` 行覆盖率 **85.60%**（927/1083）
+
+### 说明
+- 拖放的**原生接收**与自动更新的**替换/重启环节无法在本机验证**（无 MSVC、不实跑 GUI）：仅由 CI 编译 + 本地单测覆盖；替换失败时助手脚本会写入应用目录 `update.log`
+- 规则集内容未改动（仍为 1.18.5）；PowerShell 遗留版版本不变（1.18.5）
+
 ## [v1.24.0] - 2026-09-23
 
 ### 新增

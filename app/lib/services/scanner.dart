@@ -155,24 +155,26 @@ Future<List<StignoreRecord>> scanRoots(
 }) async {
   final records = <StignoreRecord>[];
   for (var i = 0; i < roots.length; i += maxThreads) {
-    final batch =
-        roots.sublist(i, min(i + maxThreads, roots.length));
+    final batch = roots.sublist(i, min(i + maxThreads, roots.length));
     onProgress?.call(i, roots.length, records.length, batch.first);
-    final tasks = batch.map(
-      (r) => Isolate.run<List<Map<String, dynamic>>>(
+    var completed = 0;
+    await Future.wait(batch.map(
+      (root) => Isolate.run<List<Map<String, dynamic>>>(
         () => _scanRoot({
-          'root': r,
+          'root': root,
           'skipDir': skipDir,
           'maxDepth': maxDepth,
           'maxFilesPerDir': maxFilesPerDir,
           'skipLargeDirs': skipLargeDirs,
         }),
-      ),
-    );
-    final results = await Future.wait(tasks);
-    for (final maps in results) {
-      records.addAll(maps.map(StignoreRecord.fromJson));
-    }
+      ).then((maps) {
+        // Aggregation and progress reporting run on the main isolate, so the
+        // counter stays consistent even though the walks run in parallel.
+        records.addAll(maps.map(StignoreRecord.fromJson));
+        completed++;
+        onProgress?.call(i + completed, roots.length, records.length, root);
+      }),
+    ));
   }
   return records;
 }

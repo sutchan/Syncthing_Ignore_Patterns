@@ -92,6 +92,7 @@ Future<ApplyResult> applyRules({
   required bool backup,
   List<String>? skipRoots,
   bool Function()? isCancelled,
+  void Function(int done, int total)? onProgress,
   required void Function(String message, String level) log,
 }) async {
   var replaced = 0;
@@ -105,7 +106,10 @@ Future<ApplyResult> applyRules({
   final sourceCanonical =
       File(sourcePath).absolute.resolveSymbolicLinksSyncSafe();
 
-  for (final rec in manifest.files) {
+  final total = manifest.files.length;
+  for (var index = 0; index < total; index++) {
+    onProgress?.call(index, total);
+    final rec = manifest.files[index];
     if (isCancelled?.call() ?? false) {
       stopped = true;
       break;
