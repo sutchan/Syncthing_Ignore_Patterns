@@ -5,6 +5,17 @@
 
 ---
 
+## [v1.25.2] - 2026-09-23
+
+### 修复
+- fix(app): 修复扫描崩溃——`services/scanner.dart` 的 `scanRoots` 把进度回调闭包与 `Isolate.run` 闭包置于同一作用域，导致不可发送的 `AppState`/`SettingsStore` 上下文被序列化，`scan()` 在真实运行中会抛 `Illegal argument in isolate message: object is unsendable` 并中断扫描。已将 `Isolate.run` 闭包抽到顶层函数 `_scanOneRoot`，使其仅捕获纯参数（v1.25.0 引入，影响 v1.25.0/v1.25.1 的扫描功能）
+
+### 测试
+- `flutter analyze` 无问题、`flutter test` **79/79**（此前 `scan_flow_test` 因上述崩溃失败，现已修复）
+
+### 说明
+- 规则集内容未改动（仍为 1.18.5）；PowerShell 遗留版版本不变（1.18.5）
+
 ## [v1.25.1] - 2026-09-23
 
 ### 变更

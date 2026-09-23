@@ -35,7 +35,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 SyncthingIgnorePatterns/
 ├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
-├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.25.1）
+├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.25.2）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
 │   ├── lib/
 │   │   ├── main.dart         # 入口，注入 AppState；首帧后恢复/采样窗口几何
@@ -67,7 +67,7 @@ SyncthingIgnorePatterns/
 
 - 语义化版本 `MAJOR.MINOR.PATCH`；文档/配置类变更默认升级 `PATCH`，新功能升级 `MINOR`。
 - **主实现（Flutter 桌面版）版本单一来源**：
-  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.25.1+1`）
+  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.25.2+1`）
   - `app/lib/state/app_state.dart` 的 `AppState.version`（关于框 / 日志展示）
   - `README.md` / `README_EN.md` 版本徽章
   - 根目录 `VERSION` 文件（CI 读取的主实现版本单一来源）
@@ -111,6 +111,9 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.25.2 (2026-09-23)
+- fix(app): 修复扫描崩溃——`scanner.scanRoots` 的 `Isolate.run` 闭包与进度回调同作用域共享不可发送的 `AppState` 上下文，真实扫描会抛 `object is unsendable`；已将闭包抽到顶层 `_scanOneRoot`（影响 v1.25.0/v1.25.1 的扫描功能）；`flutter test` 79/79
 
 ### v1.25.1 (2026-09-23)
 - docs: 清理已完成任务并统一文档口径——`development-tasks.md` 仅保留未完成任务（当前为空）与验证边界；`project.md` §8 更名「任务与已知限制」并声明无未完成任务、§9.3 测试清单补全 19 文件 / 79 用例与覆盖率 85.60%、§3 目录树说明更新、§9.4 措辞同步；`spec.md` 状态段同步；README 中英双语补「拖拽填入」「更新」特性
@@ -462,7 +465,7 @@ flutter test --coverage                 # 生成 coverage/lcov.info（含每文�
 ### 9.4 实现分工
 
 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
-**Dart + Flutter 桌面版（v1.25.1）为主实现**，构建为独立 `.exe` 分发。两者共享同一
+**Dart + Flutter 桌面版（v1.25.2）为主实现**，构建为独立 `.exe` 分发。两者共享同一
 `.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等状态与验证边界，
 见 [开发任务清单](development-tasks.md)。
 
@@ -490,7 +493,7 @@ CI 构建的发布包统一命名（与全局约定一致）：
 - Release 资产**仅上传归档**（`*.zip` / `*.tar.gz`），不上传构建目录树。
 - 预发布版本以 GitHub Release 的 `prerelease` 标记区分，**不在文件名加后缀**。
 
-示例：`SyncthingIgnoreGUI-v1.25.1-windows-x64.zip`
+示例：`SyncthingIgnoreGUI-v1.25.2-windows-x64.zip`
 
 ### 9.6 忽略清单在线更新（v1.22.0）
 

@@ -135,15 +135,39 @@ Future<List<Map<String, dynamic>>> _scanRoot(Map<String, dynamic> args) =>
       skipLargeDirs: args['skipLargeDirs'] ?? false,
     );
 
+/// Scans a single root inside its own isolate and returns [StignoreRecord]s.
+///
+/// Defined at top level (not inside [scanRoots]) so the closure handed to
+/// [Isolate.run] captures only plain arguments. If it lived inside [scanRoots]
+/// it would share that function's closure context with the `onProgress` callback
+/// (which closes over app state and is not sendable), and [Isolate.run] would
+/// fail with "object is unsendable".
+Future<List<StignoreRecord>> _scanOneRoot(
+  String root, {
+  required String? skipDir,
+  required int maxDepth,
+  required int maxFilesPerDir,
+  required bool skipLargeDirs,
+}) =>
+    Isolate.run<List<Map<String, dynamic>>>(
+      () => _scanRoot({
+        'root': root,
+        'skipDir': skipDir,
+        'maxDepth': maxDepth,
+        'maxFilesPerDir': maxFilesPerDir,
+        'skipLargeDirs': skipLargeDirs,
+      }),
+    ).then((maps) => maps.map(StignoreRecord.fromJson).toList());
+
 /// Scans all [roots] with at most [maxThreads] isolates running concurrently
 /// (roots are processed in batches of [maxThreads]). [skipDir] is the directory
 /// of the standard rules source, excluded to avoid re-scanning the tool's own
 /// `.stignore`.
 ///
-/// [onProgress] is invoked at the start of each batch with the number of roots
-/// already completed, the total root count, the records found so far and a root
-/// currently being scanned. It lets the UI show a live status line without
-/// crossing the isolate boundary.
+/// [onProgress] is invoked at the start of each batch and after each root
+/// finishes, with the number of roots already completed, the total root count,
+/// the records found so far and a root currently being scanned. It lets the UI
+/// show a live status line; the callback always runs on the main isolate.
 Future<List<StignoreRecord>> scanRoots(
   List<String> roots, {
   int maxThreads = 4,
@@ -159,18 +183,14 @@ Future<List<StignoreRecord>> scanRoots(
     onProgress?.call(i, roots.length, records.length, batch.first);
     var completed = 0;
     await Future.wait(batch.map(
-      (root) => Isolate.run<List<Map<String, dynamic>>>(
-        () => _scanRoot({
-          'root': root,
-          'skipDir': skipDir,
-          'maxDepth': maxDepth,
-          'maxFilesPerDir': maxFilesPerDir,
-          'skipLargeDirs': skipLargeDirs,
-        }),
-      ).then((maps) {
-        // Aggregation and progress reporting run on the main isolate, so the
-        // counter stays consistent even though the walks run in parallel.
-        records.addAll(maps.map(StignoreRecord.fromJson));
+      (root) => _scanOneRoot(
+        root,
+        skipDir: skipDir,
+        maxDepth: maxDepth,
+        maxFilesPerDir: maxFilesPerDir,
+        skipLargeDirs: skipLargeDirs,
+      ).then((recs) {
+        records.addAll(recs);
         completed++;
         onProgress?.call(i + completed, roots.length, records.length, root);
       }),
