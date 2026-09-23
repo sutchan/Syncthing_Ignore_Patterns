@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/assets/logo-128.png" alt="SyncthingIgnoreGUI" width="104" height="104"></p>
+
 # Syncthing 忽略模式
 
 > 开箱即用的 `.stignore` 规则集：21 个分类 · 329 条规则，自动排除系统文件、缓存、构建产物与应用数据。

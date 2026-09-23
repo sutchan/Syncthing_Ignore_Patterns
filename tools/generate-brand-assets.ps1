@@ -30,8 +30,8 @@ $resDir = Join-Path $RepoRoot 'app/windows/runner/resources'
 New-Item -ItemType Directory -Force -Path $assetsDir, $resDir | Out-Null
 
 # --- palette -----------------------------------------------------------------
-$ColorTealTop = [System.Drawing.ColorTranslator]::FromHtml('#1FBFAE')
-$ColorTealBottom = [System.Drawing.ColorTranslator]::FromHtml('#0A6E62')
+$ColorTealTop = [System.Drawing.ColorTranslator]::FromHtml('#22C6B4')
+$ColorTealBottom = [System.Drawing.ColorTranslator]::FromHtml('#08665C')
 $White = [System.Drawing.Color]::White
 
 # --- geometry (fractions of the canvas size) ---------------------------------
@@ -79,20 +79,7 @@ function New-LogoBitmap {
       $rect, $ColorTealTop, $ColorTealBottom, [single]90)
     $g.FillPath($tileBrush, $tile)
 
-    # 2) soft top gloss (only visible from 64px up)
-    if ($Size -ge 64) {
-      $gloss = [System.Drawing.Drawing2D.LinearGradientBrush]::new(
-        $rect,
-        [System.Drawing.Color]::FromArgb(46, 255, 255, 255),
-        [System.Drawing.Color]::FromArgb(0, 255, 255, 255),
-        [single]90)
-      $g.SetClip($tile)
-      $g.FillRectangle($gloss, 0, 0, $s, $s * 0.55)
-      $g.ResetClip()
-      $gloss.Dispose()
-    }
-
-    # 3) white glyph: sync loop (two arcs) cut by the ignore slash
+    # 2) white glyph: sync loop (two arcs) cut by the ignore slash
     $pen = [System.Drawing.Pen]::new($White, [single]($s * $StrokeRatio))
     $pen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
     $pen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round

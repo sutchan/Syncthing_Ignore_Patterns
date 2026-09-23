@@ -26,7 +26,8 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
   专有语法（如 `ForEach-Object -Parallel`）。并行改用 runspace 线程池实现。
 - **GUI 已迁移至 Dart + Flutter 桌面版（主实现，见 §9）**，新实现位于 `app/`，构建为独立
   `.exe`；纯 ASCII 与单文件自包含两条红线**仅适用于旧版 `.ps1`**，Flutter 版
-  按 Dart 模块拆分（单一职责），不沿用 200 行单文件约束。
+  按 Dart 模块拆分（单一职责），并遵守「单文件 ≤ 200 行」约束（v1.21.0 已拆分
+  `lib/state/` 与 `lib/ui/`）。
 
 ## 3. 目录结构
 
@@ -34,16 +35,17 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 SyncthingIgnorePatterns/
 ├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
-├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.21.0）
+├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.21.1）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
 │   ├── lib/
-│   │   ├── main.dart         # 入口，注入 AppState
+│   │   ├── main.dart         # 入口，注入 AppState；首帧后恢复/采样窗口几何
 │   │   ├── app.dart          # MaterialApp + 明暗主题
 │   │   ├── i18n.dart         # 中英双语字典（键对齐 $T）
-│   │   ├── models/manifest.dart
-│   │   ├── services/         # scanner / applier / rules_source / platform_io / settings_store
-│   │   ├── state/app_state.dart  # 扫描/应用编排 + 日志/进度状态
-│   │   └── ui/home_page.dart
+│   │   ├── models/           # manifest.dart / window_bounds.dart
+│   │   ├── services/         # scanner / applier / rules_source / platform_io / settings_store / window_bounds
+│   │   ├── state/            # app_state.dart（组合）+ preferences / scan_options / log / progress / pickers + scan_flow / apply_flow
+│   │   └── ui/               # home_page.dart（装配）+ settings_dialog / root_field / options_row / scan_options / action_row / results_list / log_list
+│   ├── windows/runner/resources/app_icon.ico   # Windows 应用图标（品牌资产，见 §10）
 │   ├── assets/.stignore      # 标准规则集（运行时 rootBundle 加载）
 │   └── test/                 # scanner_test / applier_test / settings_store_test / widget_test（覆盖率基线）
 ├── README.md                 # 中文文档
@@ -55,7 +57,9 @@ SyncthingIgnorePatterns/
 │   └── *.bak.*               # 清单备份（轮转 ≤3，已被忽略）
 ├── docs/                     # 文档目录（原 openspec/）
 │   ├── project.md
-│   └── specs/stignore-gui/spec.md
+│   ├── assets/               # 品牌资产：logo.svg / logo-512.png / logo-128.png / BRAND.md
+│   └── specs/                # stignore-gui/spec.md（遗留）+ stignore-gui-flutter/spec.md（主实现）
+├── tools/                    # generate-brand-assets.ps1（品牌资产生成，见 §10）
 └── SyncthingIgnorePatterns.code-workspace
 ```
 
@@ -63,7 +67,7 @@ SyncthingIgnorePatterns/
 
 - 语义化版本 `MAJOR.MINOR.PATCH`；文档/配置类变更默认升级 `PATCH`，新功能升级 `MINOR`。
 - **主实现（Flutter 桌面版）版本单一来源**：
-  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.21.0+1`）
+  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.21.1+1`）
   - `app/lib/state/app_state.dart` 的 `AppState.version`（关于框 / 日志展示）
   - `README.md` / `README_EN.md` 版本徽章
   - 根目录 `VERSION` 文件（CI 读取的主实现版本单一来源）
@@ -326,7 +330,7 @@ SyncthingIgnorePatterns/
 - [ ] Flutter 版相较 PowerShell 版仍缺：应用前安全确认框、实时状态行（当前扫描目录）、拖拽填入、双击打开文件、启动时「已加载清单」提示
 - [ ] 应用阶段 `Stop` 取消尚未接入 `applyRules` 循环
 - [ ] 测试覆盖率门禁（≥80%）、UI 部件测试（flutter_test + mockito）未建立
-- [x] GitHub Actions CI：构建并打包命名归档 `SyncthingIgnoreGUI-v1.21.0-windows-x64.zip`（`.github/workflows/ci.yml`）
+- [x] GitHub Actions CI：构建并打包命名归档 `SyncthingIgnoreGUI-v1.21.1-windows-x64.zip`（`.github/workflows/ci.yml`）
 - [ ] 发布包说明（VC++ 运行库 / Flutter AOT 运行时）或 Inno Setup 安装包
 - [ ] 规则更新后须同步 `app/assets/.stignore` 副本
 
@@ -402,7 +406,7 @@ dart run coverage:format_coverage --packages=.dart_tool/package_config.json \
 ### 9.4 实现分工
 
 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
-**Dart + Flutter 桌面版（v1.21.0）为主实现**，构建为独立 `.exe` 分发。两者共享同一
+**Dart + Flutter 桌面版（v1.21.1）为主实现**，构建为独立 `.exe` 分发。两者共享同一
 `.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等项与工程化待办，
 见 [开发任务清单](development-tasks.md)。
 
@@ -430,4 +434,4 @@ CI 构建的发布包统一命名（与全局约定一致）：
 - Release 资产**仅上传归档**（`*.zip` / `*.tar.gz`），不上传构建目录树。
 - 预发布版本以 GitHub Release 的 `prerelease` 标记区分，**不在文件名加后缀**。
 
-示例：`SyncthingIgnoreGUI-v1.21.0-windows-x64.zip`
+示例：`SyncthingIgnoreGUI-v1.21.1-windows-x64.zip`

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"
+     role="img" aria-label="Syncthing .stignore Manager">
+  <title>Syncthing .stignore Manager</title>
+  <desc>Teal tile with a sync loop (two arcs) cut by a bold ignore slash.</desc>
+
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#22C6B4"/>
+      <stop offset="1" stop-color="#08665C"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Tile: corner radius 0.22 x 512 = 112.6 -->
+  <rect width="512" height="512" rx="112.6" fill="url(#tile)"/>
+
+  <!--
+    Mark: ring centre-line radius 116.5, stroke 58.9, round caps.
+    Two arcs of 130 deg leave 50 deg gaps centred on 135 deg / 315 deg, so the
+    slash passes through the openings and reads as "the sync loop is ignored".
+  -->
+  <g fill="none" stroke="#FFFFFF" stroke-width="58.9" stroke-linecap="round">
+    <path d="M365.5 216.2A116.5 116.5 0 0 1 216.2 365.5"/>
+    <path d="M146.5 295.8A116.5 116.5 0 0 1 295.8 146.5"/>
+    <path d="M130.6 381.4 381.4 130.6"/>
+  </g>
+</svg>
