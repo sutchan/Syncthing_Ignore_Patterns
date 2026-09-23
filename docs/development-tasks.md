@@ -1,6 +1,6 @@
 # 开发任务清单（剩余未完成任务）
 
-> 跟踪 Flutter 桌面版（主实现，v1.21.1）相较 PowerShell 遗留版（v1.18.5）的
+> 跟踪 Flutter 桌面版（主实现，v1.22.0）相较 PowerShell 遗留版（v1.18.5）的
 > 功能对等项与工程化待办。已完成项亦列出以便追溯。
 > 状态图例：✅ 已完成 · 🔲 待办 · 🔧 进行中
 
@@ -25,6 +25,7 @@
 | 启动时显示「已加载现有清单：N 个」 | 🔲 | `scan()` 每次重建清单 |
 | 语言 / 主题持久化到磁盘 | ✅ | `settings_store.dart`（`%APPDATA%\SyncthingIgnoreGUI\settings.json`，v1.19.0） |
 | 记住窗口大小与位置 | ✅ | `models/window_bounds.dart` + `services/window_bounds.dart`（win32 按窗口类名定位）随 `settings.json` 的 `window` 字段持久化，启动恢复 + 每 2s 采样（v1.21.0） |
+| 忽略清单在线更新：显示当前清单版本 + 「检查清单更新」按钮从仓库下载最新清单并提示新版本号 | ✅ | `models/ruleset_info.dart` + `services/ruleset_store.dart`/`ruleset_update.dart` + `state/ruleset_state.dart` + `ui/ruleset_card.dart`（v1.22.0） |
 
 ## B. 工程化 / 质量
 
@@ -42,9 +43,10 @@
 | 项 | 状态 | 说明 |
 |----|------|------|
 | 构建 Windows exe（`flutter build windows`） | ✅ | 由 CI `build-windows` 在 windows-latest 构建并发布 zip，无需本机 |
-| GitHub Actions CI：构建并打包命名归档 | ✅ | `SyncthingIgnoreGUI-v1.21.1-windows-x64.zip`（`.github/workflows/ci.yml`） |
+| GitHub Actions CI：构建并打包命名归档 | ✅ | `SyncthingIgnoreGUI-v1.22.0-windows-x64.zip`（`.github/workflows/ci.yml`） |
 | 发布包说明（VC++ 运行库 / Flutter AOT 运行时） | 🔲 | 或 Inno Setup 安装包 |
 | 应用图标与品牌资产 | ✅ | `tools/generate-brand-assets.ps1` → `docs/assets/`（logo.svg / PNG / BRAND.md）+ `app/windows/runner/resources/app_icon.ico`（v1.21.1） |
+| 应用目录携带 `.stignore`（构建后复制到 exe 同目录） | ✅ | `windows/runner/CMakeLists.txt` POST_BUILD 复制 `assets/.stignore`（v1.22.0） |
 | 自动更新 | 🔲 | 可选，未规划 |
 
 ## D. 规则集维护
@@ -55,6 +57,6 @@
 | 规则集版本（`.stignore` 头 `//Version`）独立演进 | ✅ | 当前 v1.18.5，与工具版本解耦 |
 
 ## 版本说明
-- Flutter 桌面版：v1.21.1（pubspec `1.21.1+1`，`AppState.version`）
+- Flutter 桌面版：v1.22.0（pubspec `1.22.0+1`，`AppState.version`）
 - PowerShell 遗留版：v1.18.5（独立演进）
 - 规则集 `.stignore`：v1.18.5（独立版本，`Updated` 为规则集修订日）

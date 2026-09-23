@@ -13,6 +13,7 @@ import 'log_state.dart';
 import 'pickers_state.dart';
 import 'preferences_state.dart';
 import 'progress_state.dart';
+import 'ruleset_state.dart';
 import 'scan_options_state.dart';
 
 mixin ApplyFlow on ChangeNotifier,
@@ -20,7 +21,8 @@ mixin ApplyFlow on ChangeNotifier,
     PreferencesState,
     LogState,
     ScanOptionsState,
-    PickersState {
+    PickersState,
+    RulesetUpdateState {
   /// Application version, recorded in the re-written manifest.
   String get version;
 
@@ -40,7 +42,7 @@ mixin ApplyFlow on ChangeNotifier,
 
     String sourceContent;
     try {
-      sourceContent = await loadStandardRules();
+      sourceContent = await effectiveRules();
     } on Exception catch (e) {
       finish();
       log(e.toString(), 'error');
@@ -48,6 +50,10 @@ mixin ApplyFlow on ChangeNotifier,
     }
     final sourceHash = sha256OfString(sourceContent);
     log('${loc.t('repo')} SHA256: $sourceHash', 'muted');
+    log(
+      loc.t('rulesetInUse', [ruleset?.version ?? '—', ruleset?.updated ?? '—']),
+      'muted',
+    );
 
     late final Manifest manifest;
     try {

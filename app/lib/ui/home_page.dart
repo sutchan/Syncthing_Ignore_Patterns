@@ -10,6 +10,7 @@ import 'log_list.dart';
 import 'options_row.dart';
 import 'results_list.dart';
 import 'root_field.dart';
+import 'ruleset_card.dart';
 import 'scan_options.dart';
 import 'settings_dialog.dart';
 
@@ -51,6 +52,8 @@ class HomePage extends StatelessWidget {
             OptionsRow(state: state),
             const SizedBox(height: 12),
             ScanOptions(state: state),
+            const SizedBox(height: 12),
+            RulesetCard(state: state),
             const SizedBox(height: 12),
             ActionRow(state: state),
             const SizedBox(height: 12),

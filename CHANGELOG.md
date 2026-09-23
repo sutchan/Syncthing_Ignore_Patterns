@@ -5,6 +5,29 @@
 
 ---
 
+## [v1.22.0] - 2026-09-23
+
+### 新增
+- feat(app): 忽略清单在线更新
+  - **应用目录携带清单**：`windows/runner/CMakeLists.txt` 新增 `POST_BUILD` 步骤，把 `assets/.stignore` 复制为 exe 同目录的 `.stignore`（`flutter build windows` 与 CI 产物均生效）
+  - **清单来源优先级**（新增 `services/ruleset_store.dart`）：exe 同目录 `.stignore` → `%APPDATA%\SyncthingIgnoreGUI\.stignore` → 内置资源 `assets/.stignore`；更新优先写回 exe 同目录，不可写时自动回退用户数据目录
+  - **界面**（新增 `ui/ruleset_card.dart`）：显示当前清单版本（`//Version`）、来源（内置 / 已下载）、修订日（`//Updated`）与存放路径（悬停提示），并提供「检查清单更新」按钮
+  - **在线更新**（新增 `services/ruleset_update.dart` + `state/ruleset_state.dart`，`models/ruleset_info.dart`）：点击按钮从 `https://raw.githubusercontent.com/sutchan/Syncthing_Ignore_Patterns/main/.stignore` 下载最新清单（`dart:io HttpClient`，15 s 超时 / 5 MiB 上限 / UTF-8，**无新增依赖**），按 `//Version` 比较：更新则写盘生效并提示「清单已更新到 vX（原 vY）」；否则提示「已是最新版本（vX）」；缺少版本头或网络失败时保留本地并说明原因（同时写入日志）
+  - Apply 改用 `effectiveRules()`（下载副本优先于内置资源），并在日志记录在用清单的版本与修订日
+  - 抽取 `services/app_paths.dart`（`settings_store` 与清单缓存共用用户数据目录），消除目录推导重复
+- chore: 同步版本至 v1.22.0（VERSION / pubspec `1.22.0+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
+### 修复
+- fix(settings): `SettingsStore.save` 改为**串行化写入**（写队列 + `flush: true`）。此前语言/主题变更与窗口几何采样会在同一 tick 各自 `unawaited` 写盘，交错的 `writeAsString` 会让**较旧的快照最后落盘**（甚至写出半截 JSON 而回退默认值），用户的偏好会莫名其妙丢失。表现为 `flutter test --coverage` 下 `settings_store_test` 偶发 `Expected: 'zh' Actual: 'en'`（CI 使用 `--coverage`，故为间歇性红灯）；新增回归用例「overlapping saves keep the newest snapshot」
+
+### 测试
+- 新增 `ruleset_info_test.dart`：清单头解析（CRLF/BOM/空格容错、缺少版本头）与点分版本比较
+- 新增 `ruleset_update_test.dart`：内置回退、采纳并落盘更新、远端不更新则保持本地、缺少版本头拒绝、网络失败可恢复、已存副本启动优先、`RulesetStore` 路径解析（全部注入假下载器，不触网）
+- 本地 `flutter analyze` 无问题、`flutter test` **31/31** 通过（新增并发写入回归用例）
+
+### 说明
+- 清单版本（`.stignore` 头 `//Version`）与应用版本（`VERSION`）相互独立；本版未改动规则集内容（仍为 1.18.5）
+
 ## [v1.21.1] - 2026-09-23
 
 ### 新增

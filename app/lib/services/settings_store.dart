@@ -11,6 +11,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import '../models/window_bounds.dart';
+import 'app_paths.dart';
 
 /// Immutable snapshot of the persisted preferences.
 class AppSettings {
@@ -51,19 +52,7 @@ class SettingsStore {
   final String? _directory;
 
   /// The directory that holds `settings.json`.
-  String get directory {
-    final override = _directory;
-    if (override != null) return override;
-    final env = Platform.environment;
-    if (Platform.isWindows) {
-      final appData = env['APPDATA'];
-      if (appData != null && appData.isNotEmpty) {
-        return p.join(appData, 'SyncthingIgnoreGUI');
-      }
-    }
-    final home = env['HOME'] ?? env['USERPROFILE'] ?? Directory.systemTemp.path;
-    return p.join(home, '.syncthing_ignore_gui');
-  }
+  String get directory => _directory ?? defaultDataDirectory();
 
   /// Absolute path of the settings file.
   String get path => p.join(directory, 'settings.json');
@@ -81,14 +70,29 @@ class SettingsStore {
     return const AppSettings();
   }
 
-  /// Writes [settings]; failures are swallowed since preferences are
-  /// best-effort and must never break the app.
-  Future<void> save(AppSettings settings) async {
+  /// Tail of the write queue, so overlapping saves are applied in order.
+  Future<void> _queue = Future<void>.value();
+
+  /// Writes [settings] once any pending write has finished.
+  ///
+  /// Failures are swallowed since preferences are best-effort and must never
+  /// break the app. Serialising matters: a language/theme change and the window
+  /// geometry sampler can save within the same tick, and interleaved
+  /// `writeAsString` calls can leave an *older* snapshot (or a half-written
+  /// file) on disk, which silently loses the user's choice.
+  Future<void> save(AppSettings settings) {
+    final next = _queue.then((_) => _write(settings));
+    _queue = next;
+    return next;
+  }
+
+  Future<void> _write(AppSettings settings) async {
     try {
       final file = File(path);
       await file.parent.create(recursive: true);
       await file.writeAsString(
         const JsonEncoder.withIndent('  ').convert(settings.toJson()),
+        flush: true,
       );
     } on Exception {
       // Best-effort persistence.

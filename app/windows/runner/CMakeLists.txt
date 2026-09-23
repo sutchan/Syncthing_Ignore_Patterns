@@ -38,3 +38,14 @@ target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)
+
+# Ship the standard ruleset next to the executable, so the application directory
+# always contains the latest ignore list. The app prefers this file over the
+# bundled asset and writes ruleset updates back here when the folder is writable
+# (falling back to %APPDATA%\SyncthingIgnoreGUI otherwise).
+add_custom_command(TARGET ${BINARY_NAME} POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../assets/.stignore"
+    "$<TARGET_FILE_DIR:${BINARY_NAME}>/.stignore"
+  COMMENT "Shipping .stignore next to the executable"
+)

@@ -13,6 +13,9 @@ Future<void> main() async {
   // user's saved preferences instead of a default flash.
   final state = AppState();
   await state.loadSettings();
+  // Ruleset metadata is read from disk (no network), so the version is visible
+  // on the first frame.
+  await state.loadRulesetInfo();
   runApp(
     ChangeNotifierProvider<AppState>.value(
       value: state,
