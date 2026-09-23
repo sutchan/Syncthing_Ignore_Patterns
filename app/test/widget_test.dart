@@ -93,4 +93,23 @@ void main() {
     // Cancelled at the dialog: no apply run was started.
     expect(state.isBusy, isFalse);
   });
+
+  testWidgets('About dialog checks for updates', (tester) async {
+    final state = AppState(releaseFetcher: (_) async => '9.9.9');
+    await tester.pumpWidget(
+      ChangeNotifierProvider<AppState>.value(value: state, child: const App()),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('about-button')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('about-dialog')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('about-check-update')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('about-update-status')), findsOneWidget);
+    expect(state.availableAppVersion, '9.9.9');
+    expect(find.byKey(const Key('about-open-releases')), findsOneWidget);
+  });
 }

@@ -72,6 +72,12 @@ Dart + Flutter Windows 桌面应用，提供 `.stignore` 规则的批量扫描�
 - 扫描实时状态行：`scanRoots` 的 `onProgress` 回调按根目录刷新「正在扫描 x/y 个根目录 | 已找到 N | 当前：<目录> | 耗时」
 - 启动加载既有清单：读取既有清单回填结果列表，并日志提示「已加载现有清单：N 个文件」
 
+### REQ-10 应用更新检查（v1.24.0）
+- 入口：「关于」对话框的「检查应用更新」按钮（`ui/about_dialog.dart`）
+- 检查：`GET https://api.github.com/repos/sutchan/Syncthing_Ignore_Patterns/releases/latest`（15 s 超时、1 MiB 上限，`Accept: application/vnd.github+json`），取 `tag_name` 去掉 `v` 前缀
+- 结果：高于当前版本则提示「发现新版本 vX（当前 vY）」并提供「打开下载页」；否则提示已是最新；失败时给出原因并写入日志
+- **仅检查与提示，不做静默自动安装**（安装由用户从 Releases 下载完成）
+
 ## 非目标
 - 不做云端同步、不做规则冲突合并
 - 不依赖 PowerShell 运行时（纯 Dart/Flutter 实现）
@@ -81,7 +87,7 @@ Dart + Flutter Windows 桌面应用，提供 `.stignore` 规则的批量扫描�
 > 完整任务跟踪（功能对等、工程化、构建发布、规则集维护、待办与版本说明）统一维护在
 > [开发任务清单](../../development-tasks.md)。本文档不再重复列出待办，避免多处漂移。
 
-- 代码已完成：扫描 / 应用 / 备份轮转 / 中英双语 / 明暗主题 / 清单 manifest / 窗口记忆 / 忽略清单在线更新 / 应用确认与停止 / 扫描实时状态行
+- 代码已完成：扫描 / 应用 / 备份轮转 / 中英双语 / 明暗主题 / 清单 manifest / 窗口记忆 / 忽略清单在线更新 / 应用确认与停止 / 扫描实时状态行 / 应用更新检查
 - `flutter analyze` 零告警已达成（v1.18.7 清零 52 项，CI `build-windows` 强制校验）
 - GitHub Actions `build-windows` 已落地，自动构建并发布 `SyncthingIgnoreGUI-vX.Y.Z-windows-x64.zip`（版本取自根 `VERSION`）
-- 里程碑：v1.21.0 窗口记忆 + 选项刷新修复 + ≤200 行拆分；v1.22.0 忽略清单在线更新；v1.23.0 应用确认 + 应用阶段停止 + 扫描实时状态行 + 双击打开文件 + 启动加载清单（本地 34/34 测试通过）；v1.23.1 补齐根 `LICENSE`（MIT）+ CI 规则副本一致性检查改阻断
+- 里程碑：v1.21.0 窗口记忆 + 选项刷新修复 + ≤200 行拆分；v1.22.0 忽略清单在线更新；v1.23.0 应用确认 + 应用阶段停止 + 扫描实时状态行 + 双击打开文件 + 启动加载清单（本地 34/34 测试通过）；v1.23.1 补齐根 `LICENSE`（MIT）+ CI 规则副本一致性检查改阻断；v1.23.2 补充测试使 `lib/` 行覆盖率达 83.46%（55/55 用例通过）+ CI 覆盖率门禁 ≥80%；v1.24.0 应用更新检查 + exe 名统一为 `SyncthingIgnoreGUI` + 发布包说明（本地 64/64，覆盖率 85.67%）

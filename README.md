@@ -4,7 +4,7 @@
 
 > 开箱即用的 `.stignore` 规则集：21 个分类 · 329 条规则，自动排除系统文件、缓存、构建产物与应用数据。
 
-![Version](https://img.shields.io/badge/version-v1.23.1-blue)
+![Version](https://img.shields.io/badge/version-v1.24.0-blue)
 ![CI](https://github.com/sutchan/Syncthing_Ignore_Patterns/actions/workflows/ci.yml/badge.svg)
 ![Updated](https://img.shields.io/badge/updated-2026--09--22-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -21,7 +21,7 @@
 - ✅ **中英双语文档**，附批量同步 GUI 工具
 - ✅ **持续维护**，随生态更新规则
 
-> `.stignore` 文件头 `Updated`（`2026-09-22`）是规则集修订日；工具发布版本见 CHANGELOG（当前 `v1.23.1`）。两者分别对应"规则集修订"与"工具发布"，不同步属正常。
+> `.stignore` 文件头 `Updated`（`2026-09-22`）是规则集修订日；工具发布版本见 CHANGELOG（当前 `v1.24.0`）。两者分别对应"规则集修订"与"工具发布"，不同步属正常。
 
 ### 快速开始
 
@@ -94,7 +94,7 @@
 
 项目提供两种实现，功能与行为一致（扫描 / 应用 / 备份轮转 / 中英双语 / 明暗主题）：
 
-#### 方案一：Dart + Flutter 桌面版（推荐，主实现 · v1.23.1）
+#### 方案一：Dart + Flutter 桌面版（推荐，主实现 · v1.24.0）
 
 位于 `app/`，构建为独立 `.exe` 分发，目标机无需安装 PowerShell：
 
@@ -102,7 +102,7 @@
 cd app
 flutter config --enable-windows-desktop
 flutter pub get
-flutter build windows        # 产物：build/windows/x64/runner/Release/syncthing_ignore_gui.exe
+flutter build windows        # 产物：build/windows/x64/runner/Release/SyncthingIgnoreGUI.exe
 ```
 
 - **界面**：根目录 / 清单路径输入、仅预览 / 强制 / 备份三项勾选、扫描 / 应用 / 停止 / 清空日志、进度条、结果与日志列表
@@ -110,6 +110,8 @@ flutter build windows        # 产物：build/windows/x64/runner/Release/syncthi
 - **扫描**：每根目录一个 isolate 并行（默认 4），跳过 `.git` 与规则源目录，无权限目录跳过并累计
 - **应用**：SHA-256 比对跳过一致文件、写前 `.bak.<时间戳>` 备份、`<base>.bak.*` 轮转 ≤3、`force` 才清理失效路径
 - **标准规则**：随 `assets/.stignore` 资源打包，运行时 `rootBundle` 加载；更新规则须同步该副本
+- **运行要求**：Windows 10/11 x64；发布包**已自带** Flutter AOT 运行时与 Visual C++ 运行库（`vcruntime140.dll` / `msvcp140.dll` / `vcruntime140_1.dll`），无需另装任何运行库；解压后直接运行 `SyncthingIgnoreGUI.exe`
+- **发布包说明**：`SyncthingIgnoreGUI-vX.Y.Z-windows-x64.zip` 内含 `SyncthingIgnoreGUI.exe`、`flutter_windows.dll`、`data/`（`app.so` 与 `flutter_assets/`）、标准规则副本 `.stignore` 与上述 VC++ 运行库 DLL；**不含**调试符号（`*.pdb`/`*.exp`/`*.lib`）
 
 #### 方案二：PowerShell WinForms（遗留 · 维护态 · v1.18.5）
 

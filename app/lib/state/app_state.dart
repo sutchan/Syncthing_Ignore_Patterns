@@ -12,9 +12,11 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
+import '../services/app_update.dart';
 import '../services/ruleset_store.dart';
 import '../services/ruleset_update.dart';
 import '../services/settings_store.dart';
+import 'app_update_state.dart';
 import 'apply_flow.dart';
 import 'log_state.dart';
 import 'pickers_state.dart';
@@ -32,14 +34,16 @@ class AppState extends ChangeNotifier
         ProgressState,
         PickersState,
         RulesetUpdateState,
+        AppUpdateState,
         ScanFlow,
         ApplyFlow {
   AppState({
-    this.version = '1.23.1',
+    this.version = '1.24.0',
     SettingsStore? settingsStore,
     RulesetStore? rulesetStore,
     RulesetFetcher? rulesetFetcher,
     RulesetLoader? rulesetBundled,
+    ReleaseFetcher? releaseFetcher,
   }) {
     initPreferences(settingsStore ?? SettingsStore());
     initRuleset(
@@ -47,6 +51,7 @@ class AppState extends ChangeNotifier
       fetcher: rulesetFetcher,
       bundled: rulesetBundled,
     );
+    initAppUpdate(fetcher: releaseFetcher);
   }
 
   /// Application version shown in the About dialog and written into manifests.

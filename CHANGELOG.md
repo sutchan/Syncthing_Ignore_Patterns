@@ -5,6 +5,36 @@
 
 ---
 
+## [v1.24.0] - 2026-09-23
+
+### 新增
+- feat(app): 应用更新检查——「关于」对话框新增「检查应用更新」按钮，经 GitHub Releases API（`GET .../releases/latest`）读取最新 `tag_name` 与当前版本比较：有更新提示「发现新版本 vX（当前 vY）」并给出「打开下载页」；已最新 / 失败分别提示。新增 `services/app_update.dart`（JSON 解析 + `HttpClient` 下载，15 s 超时 / 1 MiB 上限，**无新增依赖**）、`state/app_update_state.dart`、`ui/about_dialog.dart`（自 `home_page.dart` 抽出）；下载器可注入，测试不触网。**仅检查与提示，不做静默自动安装**
+
+### 变更
+- chore(windows): 产物 exe 名与产品名统一——`windows/CMakeLists.txt` 的 `BINARY_NAME` 由 `syncthing_ignore_gui` 改为 `SyncthingIgnoreGUI`；`Runner.rc` 的 `FileDescription`/`InternalName`/`OriginalFilename`/`ProductName` 同步改名，`CompanyName`/`LegalCopyright` 由 `com.example` 占位更正为 `Sut`；`main.cpp` 初始窗口标题改为 `SyncthingIgnoreGUI`
+- docs: 补「发布包说明」——README 中英双语新增「运行要求」与「发布包说明」（自带 Flutter AOT 与 VC++ 运行库、包内清单、剔除调试符号），`project.md` §9.2 同步
+- chore: 同步版本至 v1.24.0（VERSION / pubspec `1.24.0+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
+### 测试
+- 新增 `app_update_test`（tag 解析 + 本地 `HttpServer` 覆盖 200 / 非 200 / 缺 `tag_name`）、`app_update_state_test`（有新版本 / 已最新 / 失败）与「关于对话框检查更新」部件测试
+- 本地 `flutter analyze` 无问题、`flutter test` **64/64**；`lib/` 行覆盖率 **85.67%**（831/970）
+
+### 说明
+- 规则集内容未改动（仍为 1.18.5）；PowerShell 遗留版版本不变（1.18.5）
+
+## [v1.23.2] - 2026-09-23
+
+### 新增
+- test(app): 大幅补充测试，行覆盖率由 62.49% 提升至 **83.46%**（747/895），并落地覆盖率门禁
+  - 新增 `manifest_test`（模型序列化与容错）、`rules_source_test`（SHA-256 / 自定义路径读取）、`state_mixins_test`（进度 / 选项钳制 / 日志 / 应用状态）、`scan_flow_test`（`scan()` 端到端 + 启动加载清单）、`apply_flow_test`（写入 / 预览 / 缺清单）、`platform_io_test`（驱动器枚举）、`window_bounds_service_test`（几何守卫）、`ruleset_fetch_test`（本地 `HttpServer` 验证下载与错误分支）、`app_paths_test`（用户数据目录）
+  - 本地 `flutter test` **55/55** 通过；`lib/` 0% 模块从 7 个降为 1 个（仅 `pickers_state`，依赖 `file_picker` 平台通道）
+
+### 变更
+- chore(ci): `build-windows` 覆盖率步骤由「仅输出摘要」改为**门禁**——行覆盖率 `< 80%` 时 `exit 1`，措辞改为 `Coverage check (>= 80% lines)`
+
+### 说明
+- 规则集内容未改动（仍为 1.18.5）；PowerShell 遗留版版本不变（1.18.5）
+
 ## [v1.23.1] - 2026-09-23
 
 ### 变更

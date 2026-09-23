@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../state/app_state.dart';
+import 'about_dialog.dart';
 import 'action_row.dart';
 import 'log_list.dart';
 import 'options_row.dart';
@@ -37,7 +38,7 @@ class HomePage extends StatelessWidget {
             key: const Key('about-button'),
             icon: const Icon(Icons.info_outline),
             tooltip: loc.t('about'),
-            onPressed: () => _showAbout(context, state),
+            onPressed: () => AppAboutDialog.show(context),
           ),
         ],
       ),
@@ -86,13 +87,4 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  void _showAbout(BuildContext context, AppState state) {
-    final loc = state.loc;
-    showAboutDialog(
-      context: context,
-      applicationName: loc.t('title'),
-      applicationVersion: state.version,
-      children: [Text(loc.t('aboutText', [state.version, 'GitHub']))],
-    );
-  }
 }

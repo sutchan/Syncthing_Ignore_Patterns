@@ -9,13 +9,13 @@
 ## 项目约定（SyncthingIgnorePatterns）
 - 提交遵循 Git 规范：`type: 描述`（首字母小写、动词开头、≤50字）。
 - **版本三轨独立**（docs/project.md §4）：
-  - ① Flutter 主轨（当前 **v1.23.1**，CI 单一来源 `VERSION`）= `VERSION` ↔ `app/pubspec.yaml` ↔ `app/lib/state/app_state.dart` `AppState.version` ↔ `app/lib/models/manifest.dart` 示例 ↔ `README*` 徽章/正文。动版本前必 `cat VERSION`+`git log` 实查。
+  - ① Flutter 主轨（当前 **v1.23.2**，CI 单一来源 `VERSION`）= `VERSION` ↔ `app/pubspec.yaml` ↔ `app/lib/state/app_state.dart` `AppState.version` ↔ `app/lib/models/manifest.dart` 示例 ↔ `README*` 徽章/正文。动版本前必 `cat VERSION`+`git log` 实查。
   - ② PowerShell 遗留轨（v1.18.5）= `SyncthingIgnoreGUI.ps1` 头 `//Version`+`$ScriptVersion`，独立演进。
   - ③ `.stignore` 规则集轨（v1.18.5，头 `//Version: 1.18.5`）= 根与 `app/assets/.stignore` 须内部一致，`//Updated` 为修订日。跨轨不同步属正常。
 - **CI/CD**（`.github/workflows/ci.yml`，4 作业，ubuntu `release` 用 `shell: pwsh` 有 .NET8）：
   - `version`：读根 `VERSION`，校验 `v*` 标签==VERSION。
-  - `validate`：ps1 语法 `Parser::ParseFile` + `.stignore` 规则集 + **规则副本漂移报告（仅告警不阻断）** + **三轨版本一致性**（Flutter 轨固定 6 处正则须全等）。
-  - `build-windows`（windows-latest）：pub get / analyze（error/warning/info 任一即 exit 1，须清零）/ test --coverage / build windows --release（`--tree-shake-icons`）；上传 LCOV+摘要。
+  - `validate`：ps1 语法 `Parser::ParseFile` + `.stignore` 规则集 + **规则副本一致性（不一致即 `exit 1`）** + **三轨版本一致性**（Flutter 轨固定 6 处正则须全等）。
+  - `build-windows`（windows-latest）：pub get / analyze（error/warning/info 任一即 exit 1，须清零）/ test --coverage / build windows --release（`--tree-shake-icons`）；上传 LCOV 并执行**覆盖率门禁**（`Coverage check (>= 80% lines)`，<80% 即 exit 1）。
   - `release`（仅 `v*` 标签）：softprops/action-gh-release，说明取自 `CHANGELOG.md` 对应小节。
   - 产物：CI 不再产 zip（v1.20.4 起 `build-windows` 上传 `app/build/package` **目录**），归档仅在 `release` 的 `Package release archive` 用 .NET `SmallestSize` 压缩一次（避 zip 套 zip），剔除 `*.pdb/*.exp/*.lib`；命名 `SyncthingIgnoreGUI-v<版本>-windows-x64.zip`，版本取自 `needs.version.outputs.version`（禁硬编码）。
 - **规则副本一致性（v1.23.1 起 CI 阻断）**：根 `.stignore` 与 `app/assets/.stignore` 当前完全一致（397 行、`//Version: 1.18.5`，`//Updated: 2026-09-22`）；CI `validate` 的「Ruleset copy consistency」步骤已由「仅告警」改为**不一致即 `exit 1`**。改规则集必须同时改两处（或复制根文件覆盖副本），否则 CI 直接失败。
@@ -29,8 +29,8 @@
 - **偏好写入须串行化**（v1.22.0 修）：`SettingsStore.save` 原裸 `unawaited` 致并发写竞态（较旧快照最后落盘/半截 JSON）→ 改写队列+`flush:true`，新增回归用例。排查启示：`--coverage` 间歇红灯多为调度/时间敏感竞态，优先查并发写/未 await 的 Future。
 - **忽略清单在线更新**（v1.22.0）：清单版本来自 `.stignore` 头 `//Version`，与应用版本独立。来源优先级 exe 同目录→APPDATA→内置资源；更新优先写回 exe 同目录。仓库 raw `https://raw.githubusercontent.com/sutchan/Syncthing_Ignore_Patterns/main/.stignore`（main 分支）。模块 `models/ruleset_info.dart`+`services/{app_paths,ruleset_store,ruleset_update}.dart`+`state/ruleset_state.dart`+`ui/ruleset_card.dart`；`dart:io HttpClient`（15s/5MiB，无新依赖）；下载器经 `AppState(rulesetStore:/rulesetFetcher:/rulesetBundled:)` 注入，测试不触网。
 - **应用安全与实时反馈**（v1.23.0，对齐 PS 版）：`services/applier.dart` 的 `applyRules` 新增 `isCancelled` 回调（`ApplyResult.cancelled`），支持应用阶段「停止」；`ui/action_row.dart` 非预览非强制时 Apply 先弹确认框（`state/apply_flow.dart` `pendingApplyCount()` **同步**读清单，避免 async gap 令对话框在测试中不弹）；`services/scanner.dart` 的 `scanRoots` 新增 `onProgress` → `scan_flow._reportScanProgress` 刷新实时状态行；`ui/results_list.dart` 改用 `InkWell`（`ListTile` **无 `onDoubleTap`**）单击定位目录/双击默认程序打开；`main.dart` 启动 `loadExistingManifest()` 回填清单并日志提示条数。测试 **34/34**。
-- **覆盖率基线**（v1.22.0）：`lib/` 62.5%（523/837）；新模块 80–96%，`state/scan_flow`/`apply_flow`/`progress_state`/`pickers_state`+`services/platform_io`/`window_bounds` 仍 0%。
-- **覆盖率工具坑**：`dart-collect-coverage` 的 `test_with_coverage` 对 Flutter 包不可用（跑 `dart run test`），须 `flutter test --coverage`；lcov 用相对路径且无 `LF/LH` 行，须从 `DA:行号,命中` 汇总。
+- **覆盖率基线**（v1.23.2）：`lib/` 行覆盖率 **83.46%**（747/895）；CI `build-windows` 已设 **≥80% 门禁**。新增测试：`manifest_test`/`rules_source_test`/`state_mixins_test`/`scan_flow_test`/`apply_flow_test`/`platform_io_test`/`window_bounds_service_test`/`ruleset_fetch_test`/`app_paths_test`；`flutter test` 55/55。仍 0%：`state/pickers_state.dart`（依赖 `file_picker` 平台通道，无头环境不可测）。
+- **覆盖率工具坑**：`dart-collect-coverage` 的 `test_with_coverage` 对 Flutter 包不可用（跑 `dart run test`），须 `flutter test --coverage`。其 lcov **含每文件 `LF:`/`LH:` 汇总行**（32 个文件段），CI 直接累加 LF/LH 得总覆盖率（亦可按 `DA:行号,命中` 统计）；`SF:` 为反斜杠相对路径。
 - **扫描/替换跳过应用自身目录**（v1.19.1）：`scanner.dart` 始终跳 `p.dirname(Platform.resolvedExecutable)`+`applier.dart` `skipRoots` 兜底（`skippedAppDir` 静默跳过）；改这两处须同步 `scanner_test`/`applier_test`。
 - **扫描深度+大目录过滤**（v1.20.0）：`findStignoreFilesRaw` 改 `async`，增 `maxDepth`(默认3)/`skipLargeDirs`(默认true)/`maxFilesPerDir`(默认100)，大目录流式 `list().take(threshold+1).length` 提前判定；`home_page` `_ScanOptions` 提供 UI。测试须 `await`。
 - **v1.21.0 结构**（≤200 行）：`app_state.dart` 拆 7 个 mixin（`on <多 mixin>` 互访；`version`/`appDirectory` 加 `@override`），`home_page.dart` 拆 7 个 `ui/` 子组件，主要容器/控件带语义化 `Key`。**选项不刷新坑**：UI 可写通知态须走会 notify 的 setter（`setPreview`/`setForce`/`setBackup`），`root_field` 改 `TextEditingController`+监听 `AppState`。

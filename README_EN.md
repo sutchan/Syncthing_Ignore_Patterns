@@ -4,7 +4,7 @@
 
 > A curated, ready-to-use `.stignore` rule set: 21 categories · 329 patterns that exclude system files, caches, build artifacts, and app data.
 
-![Version](https://img.shields.io/badge/version-v1.23.1-blue)
+![Version](https://img.shields.io/badge/version-v1.24.0-blue)
 ![CI](https://github.com/sutchan/Syncthing_Ignore_Patterns/actions/workflows/ci.yml/badge.svg)
 ![Updated](https://img.shields.io/badge/updated-2026--09--22-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -21,7 +21,7 @@
 - ✅ **Bilingual docs** plus a batch-sync GUI tool
 - ✅ **Actively maintained** as the ecosystem evolves
 
-> The `Updated` date in the `.stignore` header (`2026-09-22`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.23.1`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
+> The `Updated` date in the `.stignore` header (`2026-09-22`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.24.0`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
 
 ### Quick Start
 
@@ -94,7 +94,7 @@ Use the "Ignore Patterns" preview in the Web UI to verify matches before saving.
 
 The project ships two implementations with identical behavior (scan / apply / backup rotation / bilingual UI / light & dark themes):
 
-#### Option 1: Dart + Flutter Desktop (recommended, primary · v1.23.1)
+#### Option 1: Dart + Flutter Desktop (recommended, primary · v1.24.0)
 
 Located in `app/`, built into a standalone `.exe` — no PowerShell required on the target machine:
 
@@ -102,7 +102,7 @@ Located in `app/`, built into a standalone `.exe` — no PowerShell required on 
 cd app
 flutter config --enable-windows-desktop
 flutter pub get
-flutter build windows        # output: build/windows/x64/runner/Release/syncthing_ignore_gui.exe
+flutter build windows        # output: build/windows/x64/runner/Release/SyncthingIgnoreGUI.exe
 ```
 
 - **UI**: root / manifest-path inputs, Preview / Force / Backup toggles, Scan / Apply / Stop / Clear-log buttons, progress bar, results & log lists
@@ -110,6 +110,8 @@ flutter build windows        # output: build/windows/x64/runner/Release/syncthin
 - **Scan**: one isolate per root (4 by default), skips `.git` and the rules-source dir, tolerates access-denied folders
 - **Apply**: SHA-256 compare skips identical files, `.bak.<timestamp>` backup before writing, `<base>.bak.*` rotation ≤3, `Force` cleans stale paths
 - **Standard rules**: bundled as `assets/.stignore`, loaded via `rootBundle` at runtime; sync that copy when rules change
+- **Requirements**: Windows 10/11 x64. The release archive **bundles** the Flutter AOT runtime and the Visual C++ runtime (`vcruntime140.dll` / `msvcp140.dll` / `vcruntime140_1.dll`) — no separate runtime install needed; unzip and run `SyncthingIgnoreGUI.exe`
+- **Release package**: `SyncthingIgnoreGUI-vX.Y.Z-windows-x64.zip` contains `SyncthingIgnoreGUI.exe`, `flutter_windows.dll`, `data/` (`app.so` + `flutter_assets/`), the bundled `.stignore`, and the VC++ runtime DLLs; debug symbols (`*.pdb`/`*.exp`/`*.lib`) are **excluded**
 
 #### Option 2: PowerShell WinForms (legacy · maintenance · v1.18.5)
 

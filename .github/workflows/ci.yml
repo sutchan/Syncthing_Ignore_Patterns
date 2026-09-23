@@ -2,7 +2,7 @@
 # SyncthingIgnorePatterns CI/CD
 # - version:       从根 VERSION 读取主实现版本，校验 v* 标签与 VERSION 一致
 # - validate:      校验 PowerShell GUI 语法、.stignore 规则集、规则副本一致性（阻断）、分三轨校验版本一致性
-# - build-windows: 在 windows-latest 构建 Flutter Windows 桌面 exe，跑测试与覆盖率并打包产物
+# - build-windows: 在 windows-latest 构建 Flutter Windows 桌面 exe，跑测试与覆盖率（行覆盖率门禁 ≥80%）并打包产物
 # - release:       仅在推送 v* 标签时创建 GitHub Release（说明取自 CHANGELOG）并上传产物
 #
 # 构建产物命名规范（与全局约定一致，见 docs/project.md §9.5）：
@@ -191,25 +191,30 @@ jobs:
       - name: Test (with coverage)
         working-directory: app
         run: flutter test --coverage
-      - name: Coverage summary
+      - name: Coverage check (>= 80% lines)
         if: always()
         shell: pwsh
         working-directory: app
         run: |
           $f = 'coverage/lcov.info'
-          if (-not (Test-Path $f)) { Write-Host "No coverage file found"; exit 0 }
+          if (-not (Test-Path $f)) { Write-Error "No coverage file found"; exit 1 }
           $lf = 0; $lh = 0
           foreach ($line in Get-Content $f) {
             if ($line.StartsWith('LF:')) { $lf += [int]$line.Substring(3) }
             elseif ($line.StartsWith('LH:')) { $lh += [int]$line.Substring(3) }
           }
-          if ($lf -gt 0) {
-            $pct = [math]::Round($lh * 100 / $lf, 2)
-            $msg = "Flutter line coverage: $pct% ($lh/$lf)"
-            Write-Host $msg
-            Write-Host "::notice title=Coverage::$msg"
-            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Coverage`n`n$msg"
+          if ($lf -le 0) { Write-Error "Coverage file has no LF records"; exit 1 }
+          $pct = [math]::Round($lh * 100 / $lf, 2)
+          $msg = "Flutter line coverage: $pct% ($lh/$lf)"
+          Write-Host $msg
+          Write-Host "::notice title=Coverage::$msg"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Coverage`n`n$msg"
+          $min = 80
+          if ($pct -lt $min) {
+            Write-Error "Coverage $pct% is below the required $min% line threshold"
+            exit 1
           }
+          Write-Host "Coverage meets the $min% line threshold"
       - name: Build Windows release
         working-directory: app
         run: flutter build windows --release --tree-shake-icons
