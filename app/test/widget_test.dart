@@ -1,4 +1,5 @@
 // Widget smoke test: the app shell builds and shows the localized title.
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:syncthing_ignore_gui/app.dart';
@@ -19,7 +20,8 @@ void main() {
     expect(find.text('Apply standard rules'), findsOneWidget);
   });
 
-  testWidgets('Language switch updates the title to Chinese', (tester) async {
+  testWidgets('Settings button opens the dialog and switching language works',
+      (tester) async {
     await tester.pumpWidget(
       ChangeNotifierProvider(
         create: (_) => AppState(),
@@ -28,9 +30,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('English'));
+    await tester.tap(find.byIcon(Icons.settings));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('中文').last);
+    expect(find.text('Settings'), findsOneWidget);
+
+    await tester.tap(find.text('中文'));
+    await tester.pumpAndSettle();
+
+    // The dialog is localized now, so close it via the Chinese label.
+    await tester.tap(find.text('关闭'));
     await tester.pumpAndSettle();
 
     expect(find.text('Syncthing .stignore 管理器'), findsOneWidget);

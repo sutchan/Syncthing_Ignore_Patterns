@@ -21,13 +21,10 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         title: Text(loc.t('title')),
         actions: [
-          _LanguageMenu(state: state),
-          Tooltip(
-            message: loc.t('theme'),
-            child: IconButton(
-              icon: Icon(state.dark ? Icons.dark_mode : Icons.light_mode),
-              onPressed: () => state.setTheme(!state.dark),
-            ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: loc.t('settings'),
+            onPressed: () => _showSettings(context),
           ),
           IconButton(
             icon: const Icon(Icons.info_outline),
@@ -79,22 +76,74 @@ class HomePage extends StatelessWidget {
       children: [Text(loc.t('aboutText', [state.version, 'GitHub']))],
     );
   }
+
+  void _showSettings(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => const _SettingsDialog(),
+    );
+  }
 }
 
-class _LanguageMenu extends StatelessWidget {
-  const _LanguageMenu({required this.state});
-  final AppState state;
+/// Language + theme preferences. Every change is written to disk
+/// immediately, so the choices survive a restart.
+class _SettingsDialog extends StatelessWidget {
+  const _SettingsDialog();
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButton<String>(
-      value: state.lang,
-      items: const [
-        DropdownMenuItem(value: 'en', child: Text('English')),
-        DropdownMenuItem(value: 'zh', child: Text('中文')),
+    final state = context.watch<AppState>();
+    final loc = state.loc;
+
+    return AlertDialog(
+      title: Row(
+        children: [
+          const Icon(Icons.settings),
+          const SizedBox(width: 8),
+          Text(loc.t('settings')),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(loc.t('lang')),
+          const SizedBox(height: 8),
+          SegmentedButton<String>(
+            segments: [
+              ButtonSegment(value: 'en', label: Text(loc.t('enItem'))),
+              ButtonSegment(value: 'zh', label: Text(loc.t('zhItem'))),
+            ],
+            selected: {state.lang},
+            onSelectionChanged: (v) => state.setLanguage(v.first),
+          ),
+          const SizedBox(height: 20),
+          Text(loc.t('theme')),
+          const SizedBox(height: 8),
+          SegmentedButton<bool>(
+            segments: [
+              ButtonSegment(
+                value: false,
+                icon: const Icon(Icons.light_mode),
+                label: Text(loc.t('themeLight')),
+              ),
+              ButtonSegment(
+                value: true,
+                icon: const Icon(Icons.dark_mode),
+                label: Text(loc.t('themeDark')),
+              ),
+            ],
+            selected: {state.dark},
+            onSelectionChanged: (v) => state.setTheme(v.first),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(loc.t('close')),
+        ),
       ],
-      onChanged: (v) => state.setLanguage(v!),
-      underline: const SizedBox.shrink(),
     );
   }
 }

@@ -34,18 +34,18 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 SyncthingIgnorePatterns/
 ├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
-├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.18.11）
+├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.19.0）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
 │   ├── lib/
 │   │   ├── main.dart         # 入口，注入 AppState
 │   │   ├── app.dart          # MaterialApp + 明暗主题
 │   │   ├── i18n.dart         # 中英双语字典（键对齐 $T）
 │   │   ├── models/manifest.dart
-│   │   ├── services/         # scanner / applier / rules_source / platform_io
+│   │   ├── services/         # scanner / applier / rules_source / platform_io / settings_store
 │   │   ├── state/app_state.dart  # 扫描/应用编排 + 日志/进度状态
 │   │   └── ui/home_page.dart
 │   ├── assets/.stignore      # 标准规则集（运行时 rootBundle 加载）
-│   └── test/                 # scanner_test / applier_test（覆盖率基线）
+│   └── test/                 # scanner_test / applier_test / settings_store_test / widget_test（覆盖率基线）
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档
 ├── CHANGELOG.md              # 独立变更日志（Keep a Changelog 风格）
@@ -63,7 +63,7 @@ SyncthingIgnorePatterns/
 
 - 语义化版本 `MAJOR.MINOR.PATCH`；文档/配置类变更默认升级 `PATCH`，新功能升级 `MINOR`。
 - **主实现（Flutter 桌面版）版本单一来源**：
-  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.18.11+1`）
+  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.19.0+1`）
   - `app/lib/state/app_state.dart` 的 `AppState.version`（关于框 / 日志展示）
   - `README.md` / `README_EN.md` 版本徽章
   - 根目录 `VERSION` 文件（CI 读取的主实现版本单一来源）
@@ -107,6 +107,12 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.19.0 (2026-09-22)
+- feat(app): 新增「设置」按钮与设置对话框，集中管理界面语言与明暗主题（AppBar 的语言下拉与主题切换收敛为单一齿轮按钮）
+- fix(app): 语言/主题持久化到 `%APPDATA%\SyncthingIgnoreGUI\settings.json`（新增 `lib/services/settings_store.dart`，纯 `dart:io` 无新增依赖；`AppState.loadSettings()` 启动恢复、`setLanguage()`/`setTheme()` 变更即写盘；`main.dart` 在 `runApp` 前加载，首帧即恢复上次偏好）；此前仅为会话内状态，关闭即丢失
+- test(app): 新增 `settings_store_test.dart`（缺省/往返/损坏回退/启动恢复/写盘）；`widget_test.dart` 语言切换改走设置对话框 —— `flutter test` 12/12
+- chore: 同步版本至 v1.19.0（VERSION / pubspec / `AppState.version` / `manifest.dart` 示例 / README 徽章）
 
 ### v1.18.11 (2026-09-22)
 - ci: 规范化构建产物命名（对齐全局约定）——新增 §9.5「构建产物命名规范」（`<产品名>-v<语义版本>-<os>-<arch>.<扩展名>`，产品名取 `env.APP_NAME`、版本取根 `VERSION`）；CI 头补注该规则；Actions 产物名由 `windows-x64-release` 改为 `SyncthingIgnoreGUI-v<版本>-windows-x64`；`release` 作业补 `prerelease` 标记（版本含 `-` 时自动标预发布）
@@ -287,7 +293,7 @@ SyncthingIgnorePatterns/
 - [ ] Flutter 版相较 PowerShell 版仍缺：应用前安全确认框、实时状态行（当前扫描目录）、拖拽填入、双击打开文件、启动时「已加载清单」提示
 - [ ] 应用阶段 `Stop` 取消尚未接入 `applyRules` 循环
 - [ ] 测试覆盖率门禁（≥80%）、UI 部件测试（flutter_test + mockito）未建立
-- [x] GitHub Actions CI：构建并打包命名归档 `SyncthingIgnoreGUI-v1.18.11-windows-x64.zip`（`.github/workflows/ci.yml`）
+- [x] GitHub Actions CI：构建并打包命名归档 `SyncthingIgnoreGUI-v1.19.0-windows-x64.zip`（`.github/workflows/ci.yml`）
 - [ ] 发布包说明（VC++ 运行库 / Flutter AOT 运行时）或 Inno Setup 安装包
 - [ ] 规则更新后须同步 `app/assets/.stignore` 副本
 
@@ -299,7 +305,7 @@ SyncthingIgnorePatterns/
 
 | 模块 | 职责 |
 |------|------|
-| `lib/main.dart` | 入口，`ChangeNotifierProvider` 注入 `AppState` |
+| `lib/main.dart` | 入口，`runApp` 前 `await AppState.loadSettings()` 恢复用户偏好，再经 `ChangeNotifierProvider` 注入 |
 | `lib/app.dart` | `MaterialApp` + 明暗主题（`ThemeMode` 跟随设置） |
 | `lib/i18n.dart` | 中英双语字典，键与 PowerShell `$T` 一致；`t(key, args)` 支持 `{0}` 占位 |
 | `lib/models/manifest.dart` | `StignoreRecord` / `Manifest`，对齐 PowerShell manifest JSON 结构 |
@@ -307,8 +313,9 @@ SyncthingIgnorePatterns/
 | `lib/services/applier.dart` | 应用标准规则：SHA-256 比对跳过一致文件、写前 `.bak.<时间戳>` 备份、`<base>.bak.*` 轮转保留 ≤3、仅 `force` 清理失效路径 |
 | `lib/services/rules_source.dart` | 从 `assets/.stignore` 加载标准规则并计算 SHA-256 |
 | `lib/services/platform_io.dart` | Windows 固定驱动器枚举（win32 `GetLogicalDrives` / `GetDriveType`） |
-| `lib/state/app_state.dart` | 扫描/应用编排，进度/状态/日志/结果状态，Stop 取消 |
-| `lib/ui/home_page.dart` | 主界面：根目录/清单路径输入、选项勾选、扫描/应用/停止/清空、进度条、结果与日志列表 |
+| `lib/services/settings_store.dart` | 用户偏好（语言 / 主题）JSON 持久化：`%APPDATA%\SyncthingIgnoreGUI\settings.json`；纯 `dart:io`，无新增依赖，缺失/损坏回退默认值 |
+| `lib/state/app_state.dart` | 扫描/应用编排，进度/状态/日志/结果状态，Stop 取消；`loadSettings()`/`setLanguage()`/`setTheme()` 负责偏好恢复与写盘 |
+| `lib/ui/home_page.dart` | 主界面：根目录/清单路径输入、选项勾选、扫描/应用/停止/清空、进度条、结果与日志列表；AppBar「设置」按钮 → 语言/主题对话框 |
 
 ### 9.2 构建为 exe
 
@@ -328,7 +335,8 @@ flutter build windows        # 产物：build/windows/x64/runner/Release/syncthi
 ### 9.3 测试与覆盖率（dart-collect-coverage）
 
 `app/test/` 覆盖纯逻辑：`scanner_test.dart`（遍历/跳过/并行）、`applier_test.dart`
-（替换/跳过/预览/备份轮转）。生成 LCOV：
+（替换/跳过/预览/备份轮转）、`settings_store_test.dart`（缺省/往返/损坏回退/`AppState`
+启动恢复与写盘）与 `widget_test.dart`（应用壳渲染 + 设置对话框语言切换）。生成 LCOV：
 
 ```bash
 cd app
@@ -344,7 +352,7 @@ dart run coverage:format_coverage --packages=.dart_tool/package_config.json \
 ### 9.4 实现分工
 
 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
-**Dart + Flutter 桌面版（v1.18.11）为主实现**，构建为独立 `.exe` 分发。两者共享同一
+**Dart + Flutter 桌面版（v1.19.0）为主实现**，构建为独立 `.exe` 分发。两者共享同一
 `.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等项与工程化待办，
 见 [开发任务清单](development-tasks.md)。
 
@@ -368,4 +376,4 @@ CI 构建的发布包统一命名（与全局约定一致）：
   不上传构建目录树（多平台同名文件会互相覆盖）。
 - 预发布版本以 GitHub Release 的 `prerelease` 标记区分，**不在文件名加后缀**。
 
-示例：`SyncthingIgnoreGUI-v1.18.11-windows-x64.zip`
+示例：`SyncthingIgnoreGUI-v1.19.0-windows-x64.zip`

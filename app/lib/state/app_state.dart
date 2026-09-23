@@ -19,6 +19,7 @@ import '../services/applier.dart';
 import '../services/platform_io.dart';
 import '../services/rules_source.dart';
 import '../services/scanner.dart';
+import '../services/settings_store.dart';
 
 class LogEntry {
   const LogEntry(this.text, this.level);
@@ -27,19 +28,24 @@ class LogEntry {
 }
 
 class AppState extends ChangeNotifier {
-  AppState({this.version = '1.18.11'});
+  AppState({this.version = '1.19.0', SettingsStore? settingsStore})
+      : _settings = settingsStore ?? SettingsStore();
 
   final String version;
   final AppLocalizations _en = AppLocalizations('en');
   final AppLocalizations _zh = AppLocalizations('zh');
+
+  /// Disk-backed store for the language/theme preferences.
+  final SettingsStore _settings;
 
   AppLocalizations get loc => _lang == 'zh' ? _zh : _en;
 
   String _lang = 'en';
   String get lang => _lang;
   void setLanguage(String v) {
-    if (_lang == v) return;
+    if (!AppLocalizations.supported.contains(v) || _lang == v) return;
     _lang = v;
+    _persistSettings();
     notifyListeners();
   }
 
@@ -48,7 +54,21 @@ class AppState extends ChangeNotifier {
   void setTheme(bool isDark) {
     if (_dark == isDark) return;
     _dark = isDark;
+    _persistSettings();
     notifyListeners();
+  }
+
+  /// Restores the persisted preferences. Call once before `runApp` so the
+  /// first frame already uses the saved language and theme.
+  Future<void> loadSettings() async {
+    final saved = await _settings.load();
+    _lang = AppLocalizations.supported.contains(saved.lang) ? saved.lang : 'en';
+    _dark = saved.dark;
+    notifyListeners();
+  }
+
+  void _persistSettings() {
+    unawaited(_settings.save(AppSettings(lang: _lang, dark: _dark)));
   }
 
   String rootText = '';

@@ -7,10 +7,15 @@ import 'package:provider/provider.dart';
 import 'app.dart';
 import 'state/app_state.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Restore language/theme before the first frame so the window opens with the
+  // user's saved preferences instead of a default flash.
+  final state = AppState();
+  await state.loadSettings();
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AppState(),
+    ChangeNotifierProvider<AppState>.value(
+      value: state,
       child: const App(),
     ),
   );

@@ -5,6 +5,24 @@
 
 ---
 
+## [v1.19.0] - 2026-09-22
+
+### 新增
+- feat(app): 新增「设置」按钮与设置对话框，集中管理界面语言与明暗主题（AppBar 的语言下拉与主题切换按钮收敛为单一齿轮按钮）
+
+### 修复
+- fix(app): 语言与明暗主题选择持久化到磁盘，重启后自动恢复；此前仅保存在会话内存中，关闭窗口即丢失
+  - 新增 `lib/services/settings_store.dart`：纯 `dart:io` JSON 读写（`%APPDATA%\SyncthingIgnoreGUI\settings.json`），**无新增依赖**；文件缺失或损坏时回退默认值
+  - `lib/state/app_state.dart`：新增 `loadSettings()`，`setLanguage()` / `setTheme()` 变更即写盘（best-effort，写盘失败不影响 UI）；语言码按 `AppLocalizations.supported` 校验
+  - `lib/main.dart`：`runApp` 前先 `await loadSettings()`，首帧即为上次的语言/主题，避免闪烁默认值
+  - `lib/i18n.dart`：新增 `settings` / `close` 文案（en + zh）
+- chore: 同步版本至 v1.19.0（VERSION / pubspec `1.19.0+1` / `AppState.version` / `manifest.dart` 示例 / README 徽章）
+
+### 测试
+- 新增 `app/test/settings_store_test.dart`：缺省值 / 存读往返 / 损坏 JSON 回退 / `AppState` 启动恢复 / 变更写盘（5 项）
+- `app/test/widget_test.dart`：语言切换用例改走设置对话框（新增设置按钮打开断言）
+- 本地 `flutter analyze` 无问题、`flutter test` **12/12** 通过
+
 ## [v1.18.11] - 2026-09-22
 
 ### CI / 规范

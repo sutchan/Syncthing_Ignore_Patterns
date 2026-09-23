@@ -1,0 +1,80 @@
+import 'dart:io';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
+import 'package:syncthing_ignore_gui/services/settings_store.dart';
+import 'package:syncthing_ignore_gui/state/app_state.dart';
+
+/// Polls [store] until the persisted language/theme match, so the test does not
+/// depend on the exact timing of [AppState]'s fire-and-forget save.
+Future<AppSettings> _waitFor(SettingsStore store, String lang, bool dark) async {
+  for (var i = 0; i < 50; i++) {
+    final saved = await store.load();
+    if (saved.lang == lang && saved.dark == dark) return saved;
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+  }
+  return store.load();
+}
+
+void main() {
+  test('load returns defaults when the file is missing', () async {
+    final dir = await Directory.systemTemp.createTemp('sig_settings_');
+    addTearDown(() => dir.delete(recursive: true));
+
+    final settings = await SettingsStore(directory: dir.path).load();
+    expect(settings.lang, 'en');
+    expect(settings.dark, isFalse);
+  });
+
+  test('save then load round-trips the preferences', () async {
+    final dir = await Directory.systemTemp.createTemp('sig_settings_');
+    addTearDown(() => dir.delete(recursive: true));
+    final store = SettingsStore(directory: dir.path);
+
+    await store.save(const AppSettings(lang: 'zh', dark: true));
+    expect(File(p.join(dir.path, 'settings.json')).existsSync(), isTrue);
+
+    final settings = await store.load();
+    expect(settings.lang, 'zh');
+    expect(settings.dark, isTrue);
+  });
+
+  test('load falls back to defaults on corrupt JSON', () async {
+    final dir = await Directory.systemTemp.createTemp('sig_settings_');
+    addTearDown(() => dir.delete(recursive: true));
+    File(p.join(dir.path, 'settings.json')).writeAsStringSync('{not json');
+
+    final settings = await SettingsStore(directory: dir.path).load();
+    expect(settings.lang, 'en');
+    expect(settings.dark, isFalse);
+  });
+
+  test('AppState restores saved preferences on startup', () async {
+    final dir = await Directory.systemTemp.createTemp('sig_state_');
+    addTearDown(() => dir.delete(recursive: true));
+    final store = SettingsStore(directory: dir.path);
+    await store.save(const AppSettings(lang: 'zh', dark: true));
+
+    final state = AppState(settingsStore: store);
+    await state.loadSettings();
+
+    expect(state.lang, 'zh');
+    expect(state.dark, isTrue);
+    expect(state.loc.t('scan'), '扫描 .stignore 文件');
+  });
+
+  test('AppState writes language/theme changes back to disk', () async {
+    final dir = await Directory.systemTemp.createTemp('sig_state_');
+    addTearDown(() => dir.delete(recursive: true));
+    final store = SettingsStore(directory: dir.path);
+
+    final state = AppState(settingsStore: store)..setTheme(true);
+    state.setLanguage('zh');
+    state.setLanguage('klingon'); // unsupported codes must be ignored
+    state.setTheme(false);
+
+    final saved = await _waitFor(store, 'zh', false);
+    expect(saved.lang, 'zh');
+    expect(saved.dark, isFalse);
+  });
+}
