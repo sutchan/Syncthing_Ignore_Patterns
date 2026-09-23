@@ -30,7 +30,7 @@ class AppState extends ChangeNotifier
         PickersState,
         ScanFlow,
         ApplyFlow {
-  AppState({this.version = '1.21.0', SettingsStore? settingsStore}) {
+  AppState({this.version = '1.21.1', SettingsStore? settingsStore}) {
     initPreferences(settingsStore ?? SettingsStore());
   }
 

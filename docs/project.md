@@ -112,6 +112,10 @@ SyncthingIgnorePatterns/
 
 ## 7. CHANGELOG
 
+### v1.21.1 (2026-09-23)
+- feat(brand): 设计与应用标志、建立品牌资产——`tools/generate-brand-assets.ps1` 生成 `docs/assets/logo.svg`/`logo-512.png`/`logo-128.png` 与多尺寸 `app_icon.ico`（替换 Flutter 默认图标）；新增 `docs/assets/BRAND.md` 品牌规范与 §10 章节；README 双语文档顶部加 logo
+- chore: 同步版本至 v1.21.1（VERSION / pubspec / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
 ### v1.21.0 (2026-09-23)
 - feat(app): 记住窗口大小与位置——新增 `models/window_bounds.dart` + `services/window_bounds.dart`（win32 按窗口类名找宿主窗口，`GetWindowRect`/`SetWindowPos`）；几何随偏好写入 `settings.json`，启动恢复、每 2s 采样变更（越界/过小几何忽略）
 - fix(app): 修复选项勾选后界面不刷新的 bug——预览/强制/备份原为裸字段，赋值不触发 `notifyListeners`，改为 `setPreview`/`setForce`/`setBackup`；根目录/清单输入改用 `TextEditingController` 以反映「浏览」结果
@@ -435,3 +439,17 @@ CI 构建的发布包统一命名（与全局约定一致）：
 - 预发布版本以 GitHub Release 的 `prerelease` 标记区分，**不在文件名加后缀**。
 
 示例：`SyncthingIgnoreGUI-v1.21.1-windows-x64.zip`
+
+## 10. 品牌资产
+
+标志与应用图标由 [`tools/generate-brand-assets.ps1`](../tools/generate-brand-assets.ps1)
+统一生成（纯 .NET `System.Drawing`，本机离线可跑）：
+
+- **标志**：teal 渐变圆角底板 + 白色同步环（两段圆弧）被粗斜杠截断——
+  环=同步循环、斜杠=忽略、缺口=「同步被忽略规则截断」。
+- **色板**：`#22C6B4 → #08665C`（垂直渐变）+ `#FFFFFF` 图形；界面主色种子 `Colors.teal`。
+- **资产**：`docs/assets/logo.svg`（矢量母版）、`logo-512.png`、`logo-128.png`、
+  `app/windows/runner/resources/app_icon.ico`（16/24/32/48/64/128/256，PNG 载荷，
+  由 `runner.rc` 的 `IDI_APP_ICON` 编译进 exe）。
+- **规范**（最小尺寸 / 留白 / 禁用项 / 再生成方式）见
+  [docs/assets/BRAND.md](assets/BRAND.md)。

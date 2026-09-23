@@ -5,6 +5,16 @@
 
 ---
 
+## [v1.21.1] - 2026-09-23
+
+### 新增
+- feat(brand): 设计应用标志并建立品牌资产体系
+  - 标志含义：teal 渐变圆角底板 + 白色同步环（两段圆弧）被粗斜杠截断——环=同步循环、斜杠=忽略、缺口=「同步被忽略规则截断」
+  - 新增 `tools/generate-brand-assets.ps1`（纯 .NET `System.Drawing`，离线可跑）：生成 `docs/assets/logo-512.png`、`logo-128.png`，并把 16/24/32/48/64/128/256 七种尺寸打包为 `app/windows/runner/resources/app_icon.ico`（PNG 载荷，经 `runner.rc` 的 `IDI_APP_ICON` 编译进 exe）
+  - 新增 `docs/assets/logo.svg`（矢量母版）与 `docs/assets/BRAND.md`（标志含义 / 色板 / 最小尺寸 / 留白 / 禁用项 / 资产清单 / 再生成方式）
+  - README 与 README_EN 顶部加入居中 logo；`docs/project.md` 新增 §10「品牌资产」
+- chore: 同步版本至 v1.21.1（VERSION / pubspec `1.21.1+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
 ## [v1.21.0] - 2026-09-23
 
 ### 新增
