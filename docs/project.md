@@ -34,7 +34,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 SyncthingIgnorePatterns/
 ├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
-├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.20.4）
+├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.21.0）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
 │   ├── lib/
 │   │   ├── main.dart         # 入口，注入 AppState
@@ -63,7 +63,7 @@ SyncthingIgnorePatterns/
 
 - 语义化版本 `MAJOR.MINOR.PATCH`；文档/配置类变更默认升级 `PATCH`，新功能升级 `MINOR`。
 - **主实现（Flutter 桌面版）版本单一来源**：
-  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.20.4+1`）
+  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.21.0+1`）
   - `app/lib/state/app_state.dart` 的 `AppState.version`（关于框 / 日志展示）
   - `README.md` / `README_EN.md` 版本徽章
   - 根目录 `VERSION` 文件（CI 读取的主实现版本单一来源）
@@ -107,6 +107,13 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.21.0 (2026-09-23)
+- feat(app): 记住窗口大小与位置——新增 `models/window_bounds.dart` + `services/window_bounds.dart`（win32 按窗口类名找宿主窗口，`GetWindowRect`/`SetWindowPos`）；几何随偏好写入 `settings.json`，启动恢复、每 2s 采样变更（越界/过小几何忽略）
+- fix(app): 修复选项勾选后界面不刷新的 bug——预览/强制/备份原为裸字段，赋值不触发 `notifyListeners`，改为 `setPreview`/`setForce`/`setBackup`；根目录/清单输入改用 `TextEditingController` 以反映「浏览」结果
+- refactor(app): 拆分超过 200 行的源码——`app_state.dart` 拆出 `preferences_state`/`scan_options_state`/`log_state`/`progress_state`/`pickers_state`/`scan_flow`/`apply_flow` 七个 mixin；`home_page.dart` 拆为 `settings_dialog`/`root_field`/`options_row`/`scan_options`/`action_row`/`results_list`/`log_list`，并为主要容器与交互控件补充语义化 `Key`
+- test(app): 新增选项点击生效回归测试 + 窗口几何持久化/校验测试（`flutter test` 19/19）
+- chore: 同步版本至 v1.21.0（VERSION / pubspec `1.21.0+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
 
 ### v1.20.4 (2026-09-23)
 - fix(ci): 修复产物「二次压缩」——`build-windows` 暂存运行文件为目录产物、`release` 作业才压缩归档，避免 `upload-artifact` 自带压缩与 `.zip` 叠加（zip 套 zip）
@@ -319,7 +326,7 @@ SyncthingIgnorePatterns/
 - [ ] Flutter 版相较 PowerShell 版仍缺：应用前安全确认框、实时状态行（当前扫描目录）、拖拽填入、双击打开文件、启动时「已加载清单」提示
 - [ ] 应用阶段 `Stop` 取消尚未接入 `applyRules` 循环
 - [ ] 测试覆盖率门禁（≥80%）、UI 部件测试（flutter_test + mockito）未建立
-- [x] GitHub Actions CI：构建并打包命名归档 `SyncthingIgnoreGUI-v1.20.4-windows-x64.zip`（`.github/workflows/ci.yml`）
+- [x] GitHub Actions CI：构建并打包命名归档 `SyncthingIgnoreGUI-v1.21.0-windows-x64.zip`（`.github/workflows/ci.yml`）
 - [ ] 发布包说明（VC++ 运行库 / Flutter AOT 运行时）或 Inno Setup 安装包
 - [ ] 规则更新后须同步 `app/assets/.stignore` 副本
 
@@ -331,17 +338,33 @@ SyncthingIgnorePatterns/
 
 | 模块 | 职责 |
 |------|------|
-| `lib/main.dart` | 入口，`runApp` 前 `await AppState.loadSettings()` 恢复用户偏好，再经 `ChangeNotifierProvider` 注入 |
+| `lib/main.dart` | 入口，`runApp` 前 `await AppState.loadSettings()` 恢复用户偏好；首帧后 `restoreWindowBounds()`/`startWindowTracking()` 恢复并采样窗口几何 |
 | `lib/app.dart` | `MaterialApp` + 明暗主题（`ThemeMode` 跟随设置） |
 | `lib/i18n.dart` | 中英双语字典，键与 PowerShell `$T` 一致；`t(key, args)` 支持 `{0}` 占位 |
 | `lib/models/manifest.dart` | `StignoreRecord` / `Manifest`，对齐 PowerShell manifest JSON 结构 |
+| `lib/models/window_bounds.dart` | `WindowBounds`（x/y/width/height 纯数据）：JSON 往返、可用性校验（v1.21.0） |
 | `lib/services/scanner.dart` | DFS 异步遍历找 `.stignore`（跳过 `.git`/规则源/应用自身 exe 目录子树，v1.19.1），每根目录一个 isolate 并行（默认 4）；`findStignoreFilesRaw` 支持 `maxDepth`/`skipLargeDirs`/`maxFilesPerDir`（v1.20.0），流式计数避免巨目录卡死，纯函数可单测 |
 | `lib/services/applier.dart` | 应用标准规则：SHA-256 比对跳过一致文件、写前 `.bak.<时间戳>` 备份、`<base>.bak.*` 轮转保留 ≤3、仅 `force` 清理失效路径；`applyRules` 支持 `skipRoots`（v1.19.1）自动跳过应用自身目录子树 |
 | `lib/services/rules_source.dart` | 从 `assets/.stignore` 加载标准规则并计算 SHA-256 |
 | `lib/services/platform_io.dart` | Windows 固定驱动器枚举（win32 `GetLogicalDrives` / `GetDriveType`） |
-| `lib/services/settings_store.dart` | 用户偏好（语言 / 主题）JSON 持久化：`%APPDATA%\SyncthingIgnoreGUI\settings.json`；纯 `dart:io`，无新增依赖，缺失/损坏回退默认值 |
-| `lib/state/app_state.dart` | 扫描/应用编排，进度/状态/日志/结果状态，Stop 取消；`loadSettings()`/`setLanguage()`/`setTheme()` 负责偏好恢复与写盘 |
-| `lib/ui/home_page.dart` | 主界面：根目录/清单路径输入、选项勾选、扫描/应用/停止/清空、进度条、结果与日志列表；AppBar「设置」按钮 → 语言/主题对话框 |
+| `lib/services/window_bounds.dart` | 经 win32 按窗口类名 `FLUTTER_RUNNER_WIN32_WINDOW` 找宿主窗口，`GetWindowRect` 读取 / `SetWindowPos` 恢复几何；越界/过小几何忽略，非 Windows 为 no-op（v1.21.0） |
+| `lib/services/settings_store.dart` | 用户偏好（语言 / 主题 / 窗口几何）JSON 持久化：`%APPDATA%\SyncthingIgnoreGUI\settings.json`；纯 `dart:io`，无新增依赖，缺失/损坏回退默认值 |
+| `lib/state/app_state.dart` | 组合下列 mixin，仅保留 `version`/`appDirectory`/`stop()`/`rulesPathLabel`（v1.21.0 拆分） |
+| `lib/state/preferences_state.dart` | mixin：语言/主题/窗口几何的恢复与写盘（含窗口几何采样 Timer） |
+| `lib/state/scan_options_state.dart` | mixin：预览/强制/备份 + 扫描深度/大目录过滤阈值（改动即 `notifyListeners`） |
+| `lib/state/log_state.dart` | mixin：`LogEntry` 与日志缓冲、`logTranslated` 解析 applier 的 `key::arg` |
+| `lib/state/progress_state.dart` | mixin：`isBusy`/`cancelled`/`progress`/`status`/`summary`/`results` + `begin()`/`finish()`/`elapsed()` |
+| `lib/state/pickers_state.dart` | mixin：`rootText`/`manifestPath` 字段与「浏览」选择（`pickRoot`/`pickManifest`） |
+| `lib/state/scan_flow.dart` | mixin：`scan()`——解析根目录（留空=固定驱动器）→ `scanRoots` → 写清单 |
+| `lib/state/apply_flow.dart` | mixin：`apply()`——载入标准规则 → `applyRules`（预览/强制/备份）→ 回写清单 |
+| `lib/ui/home_page.dart` | 主界面装配壳（Scaffold + 子组件 + 关于对话框）；子组件按职责拆至同目录（v1.21.0） |
+| `lib/ui/settings_dialog.dart` | 语言/主题设置对话框（`SettingsDialog.show`） |
+| `lib/ui/root_field.dart` | 根目录/清单路径输入（`TextEditingController`，可反映「浏览」结果） |
+| `lib/ui/options_row.dart` | 预览/强制/备份复选行（经 `setPreview`/`setForce`/`setBackup` 触发刷新） |
+| `lib/ui/scan_options.dart` | 扫描深度滑块 + 大目录过滤开关/阈值滑块 |
+| `lib/ui/action_row.dart` | 扫描/应用/清空/停止按钮 |
+| `lib/ui/results_list.dart` | 结果列表（点击打开所在目录） |
+| `lib/ui/log_list.dart` | 分级着色的日志列表 |
 
 ### 9.2 构建为 exe
 
@@ -379,7 +402,7 @@ dart run coverage:format_coverage --packages=.dart_tool/package_config.json \
 ### 9.4 实现分工
 
 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
-**Dart + Flutter 桌面版（v1.20.4）为主实现**，构建为独立 `.exe` 分发。两者共享同一
+**Dart + Flutter 桌面版（v1.21.0）为主实现**，构建为独立 `.exe` 分发。两者共享同一
 `.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等项与工程化待办，
 见 [开发任务清单](development-tasks.md)。
 
@@ -407,4 +430,4 @@ CI 构建的发布包统一命名（与全局约定一致）：
 - Release 资产**仅上传归档**（`*.zip` / `*.tar.gz`），不上传构建目录树。
 - 预发布版本以 GitHub Release 的 `prerelease` 标记区分，**不在文件名加后缀**。
 
-示例：`SyncthingIgnoreGUI-v1.20.4-windows-x64.zip`
+示例：`SyncthingIgnoreGUI-v1.21.0-windows-x64.zip`

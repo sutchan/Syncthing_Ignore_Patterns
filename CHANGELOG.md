@@ -5,6 +5,23 @@
 
 ---
 
+## [v1.21.0] - 2026-09-23
+
+### 新增
+- feat(app): 记住窗口大小与位置——新增 `lib/models/window_bounds.dart`（纯数据模型）与 `lib/services/window_bounds.dart`（win32：按窗口类名 `FLUTTER_RUNNER_WIN32_WINDOW` 定位宿主窗口，`GetWindowRect` 读取 / `SetWindowPos` 恢复）；窗口几何随偏好写入 `%APPDATA%\SyncthingIgnoreGUI\settings.json`，启动即恢复、运行中每 2 秒采样变更并落盘；越界（显示器已移除）或过小几何会被忽略
+
+### 修复
+- fix(app): 修复「选项点击后界面不更新」——预览 / 强制 / 备份原为裸字段（`preview`/`force`/`backup`），直接赋值不会触发 `notifyListeners`，界面因此不刷新；改为 `setPreview`/`setForce`/`setBackup`（统一 `notifyListeners`）
+- fix(app): 根目录 / 清单路径输入改用 `TextEditingController`，「浏览」选择后能即时反映到输入框（原 `initialValue` 只在首次构建生效）
+
+### 重构
+- refactor(app): 拆分超过 200 行的源码文件——`state/app_state.dart`（326 行）拆出 `preferences_state` / `scan_options_state` / `log_state` / `progress_state` / `pickers_state` / `scan_flow` / `apply_flow` 七个 mixin（`AppState` 组合而成，公开 API 不变）；`ui/home_page.dart`（415 行）拆为 `settings_dialog` / `root_field` / `options_row` / `scan_options` / `action_row` / `results_list` / `log_list`，并为主要容器与交互控件补充语义化 `Key`（便于调试与测试定位）
+
+### 测试
+- `settings_store_test`：新增窗口几何往返、缺失/损坏几何回退、几何可用性校验
+- `widget_test`：新增「选项复选框点击后状态与界面同步更新」回归测试
+- 本地 `flutter analyze` 无问题、`flutter test` **19/19** 通过
+
 ## [v1.20.4] - 2026-09-23
 
 ### 修复 / CI

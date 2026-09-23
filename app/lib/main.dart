@@ -19,4 +19,10 @@ Future<void> main() async {
       child: const App(),
     ),
   );
+  // The runner window exists once the first frame is scheduled: restore the
+  // saved geometry there, then keep sampling it for the next run.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    state.restoreWindowBounds();
+    state.startWindowTracking();
+  });
 }

@@ -35,7 +35,7 @@ Dart + Flutter Windows 桌面应用，提供 `.stignore` 规则的批量扫描�
 ### REQ-3 国际化
 - AppBar「设置」齿轮按钮 → 语言/主题设置对话框（v1.19.0 起，原右上角独立下拉收敛为单一入口）；即时切换全部界面与日志文案
 - 字典 `i18n.dart` 键与 PowerShell `$T` 对齐；`t(key, args)` 支持 `{0}` 占位
-- 语言/主题选择持久化到 `%APPDATA%\SyncthingIgnoreGUI\settings.json`（`settings_store.dart`，v1.19.0 起，纯 `dart:io` JSON；`AppState.loadSettings()` 启动恢复、`setLanguage()`/`setTheme()` 变更即写盘）
+- 语言/主题选择持久化到 `%APPDATA%\SyncthingIgnoreGUI\settings.json`（`settings_store.dart`，v1.19.0 起，纯 `dart:io` JSON；`AppState.loadSettings()` 启动恢复、`setLanguage()`/`setTheme()` 变更即写盘）；v1.21.0 起该文件亦记录窗口几何（`window` 字段，见 REQ-7）
 
 ### REQ-4 版本与项目信息
 - 「关于」对话框显示版本（`AppState.version`）与项目地址
@@ -46,12 +46,18 @@ Dart + Flutter Windows 桌面应用，提供 `.stignore` 规则的批量扫描�
 - Material 3 主题，`colorSchemeSeed` 取 teal
 
 ### REQ-6 交互
-- 根目录 / 清单路径输入（支持 `file_picker` 浏览；当前未实现拖拽填入）
-- 选项勾选：仅预览 / 强制 / 备份
+- 根目录 / 清单路径输入（支持 `file_picker` 浏览；当前未实现拖拽填入）；v1.21.0 起改用 `TextEditingController`，「浏览」选择即时反映到输入框
+- 选项勾选：仅预览 / 强制 / 备份；v1.21.0 修复：勾选即时反映到界面（`setPreview`/`setForce`/`setBackup` 触发 `notifyListeners`，此前裸字段赋值不刷新）
 - 按钮：扫描 / 应用 / 停止 / 清空日志
 - 进度条 + 状态行 + 结果与日志列表（日志按级别着色）
 - 结果列表点击打开所在文件夹（当前未实现双击打开文件本身）
 - 标准规则随资源打包，运行时 `rootBundle` 加载；更新规则须同步 `app/assets/.stignore` 副本
+
+### REQ-7 窗口（v1.21.0）
+- 记忆主窗口大小与位置：下次启动恢复到上次几何
+- 实现：`lib/services/window_bounds.dart` 经 win32 按窗口类名 `FLUTTER_RUNNER_WIN32_WINDOW` 定位宿主窗口，`GetWindowRect` 读取 / `SetWindowPos` 恢复；无新增依赖、无原生插件
+- 持久化：随偏好写入 `settings.json` 的 `window` 字段；启动首帧后 `restoreWindowBounds()` 恢复，运行中每 2 秒采样一次变更并落盘（移动/缩放通知需原生钩子，故采用轮询）
+- 稳健性：过小（<320×240）或完全落在虚拟屏幕（所有显示器并集）之外的几何被忽略，避免显示器变更后窗口出现在屏幕外
 
 ## 非目标
 - 不做云端同步、不做规则冲突合并
@@ -60,5 +66,6 @@ Dart + Flutter Windows 桌面应用，提供 `.stignore` 规则的批量扫描�
 ## 状态
 - 代码已完成：扫描 / 应用 / 备份轮转 / 中英双语 / 明暗主题 / 清单 manifest
 - `flutter analyze` 零告警已达成（v1.18.7 清零 52 项，CI `build-windows` 强制校验）；GitHub Actions `build-windows` 已落地，自动构建并发布 `SyncthingIgnoreGUI-vX.Y.Z-windows-x64.zip`（版本取自根 `VERSION`）
+- v1.21.0：新增窗口大小/位置记忆（REQ-7）；修复选项勾选不刷新与输入框不反映「浏览」选择；按 ≤200 行规则拆分 `app_state.dart`/`home_page.dart`（本地 `flutter analyze` 0 问题、`flutter test` 19/19）
 - 待办：测试覆盖率门禁（≥80%）、UI 部件测试（flutter_test + mockito）、发布包说明（VC++ 运行库 / Flutter AOT）或 Inno Setup
 - 详见 [开发任务清单](../../development-tasks.md)

@@ -1,326 +1,56 @@
-/// Application state: owns scan/apply orchestration, settings, logs and status.
+/// Application state: composes the scan/apply flows with the preferences,
+/// options, logging, picker and progress mixins.
 ///
-/// Mirrors the PowerShell script's shared UI state. Uses [ChangeNotifier] so
-/// widgets rebuild on changes. Long operations run off the UI thread; a
-/// [_cancelled] flag provides Stop support.
+/// Each concern lives in its own file — `preferences_state.dart`,
+/// `scan_options_state.dart`, `log_state.dart`, `progress_state.dart`,
+/// `pickers_state.dart`, `scan_flow.dart`, `apply_flow.dart` — so no single
+/// file grows unbounded. [ChangeNotifier] lets widgets rebuild on changes.
 library;
 
-import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
-import '../i18n.dart';
-import '../models/manifest.dart';
-import '../services/applier.dart';
-import '../services/platform_io.dart';
-import '../services/rules_source.dart';
-import '../services/scanner.dart';
 import '../services/settings_store.dart';
+import 'apply_flow.dart';
+import 'log_state.dart';
+import 'pickers_state.dart';
+import 'preferences_state.dart';
+import 'progress_state.dart';
+import 'scan_flow.dart';
+import 'scan_options_state.dart';
 
-class LogEntry {
-  const LogEntry(this.text, this.level);
-  final String text;
-  final String level; // 'info' | 'warn' | 'error' | 'muted'
-}
+class AppState extends ChangeNotifier
+    with
+        PreferencesState,
+        ScanOptionsState,
+        LogState,
+        ProgressState,
+        PickersState,
+        ScanFlow,
+        ApplyFlow {
+  AppState({this.version = '1.21.0', SettingsStore? settingsStore}) {
+    initPreferences(settingsStore ?? SettingsStore());
+  }
 
-class AppState extends ChangeNotifier {
-  AppState({this.version = '1.20.4', SettingsStore? settingsStore})
-      : _settings = settingsStore ?? SettingsStore();
-
+  /// Application version shown in the About dialog and written into manifests.
+  @override
   final String version;
-  final AppLocalizations _en = AppLocalizations('en');
-  final AppLocalizations _zh = AppLocalizations('zh');
-
-  /// Disk-backed store for the language/theme preferences.
-  final SettingsStore _settings;
-
-  AppLocalizations get loc => _lang == 'zh' ? _zh : _en;
-
-  String _lang = 'en';
-  String get lang => _lang;
-  void setLanguage(String v) {
-    if (!AppLocalizations.supported.contains(v) || _lang == v) return;
-    _lang = v;
-    _persistSettings();
-    notifyListeners();
-  }
-
-  bool _dark = false;
-  bool get dark => _dark;
-  void setTheme(bool isDark) {
-    if (_dark == isDark) return;
-    _dark = isDark;
-    _persistSettings();
-    notifyListeners();
-  }
-
-  /// Restores the persisted preferences. Call once before `runApp` so the
-  /// first frame already uses the saved language and theme.
-  Future<void> loadSettings() async {
-    final saved = await _settings.load();
-    _lang = AppLocalizations.supported.contains(saved.lang) ? saved.lang : 'en';
-    _dark = saved.dark;
-    notifyListeners();
-  }
-
-  void _persistSettings() {
-    unawaited(_settings.save(AppSettings(lang: _lang, dark: _dark)));
-  }
-
-  String rootText = '';
-  String manifestPath = 'config${Platform.pathSeparator}stignore-paths.json';
 
   /// Directory of the running executable. Its `.stignore` files (the bundled
   /// standard rules) are excluded from scan/apply so the tool never rewrites
   /// its own files.
+  @override
   String get appDirectory => p.dirname(Platform.resolvedExecutable);
 
-  bool preview = false;
-  bool force = false;
-  bool backup = true;
-
-  int _maxDepth = 3;
-  int get maxDepth => _maxDepth;
-  void setMaxDepth(int v) {
-    final c = v.clamp(1, 10);
-    if (_maxDepth == c) return;
-    _maxDepth = c;
-    notifyListeners();
-  }
-
-  bool _filterLargeDirs = true;
-  bool get filterLargeDirs => _filterLargeDirs;
-  void setFilterLargeDirs(bool v) {
-    if (_filterLargeDirs == v) return;
-    _filterLargeDirs = v;
-    notifyListeners();
-  }
-
-  int _maxFilesPerDir = 100;
-  int get maxFilesPerDir => _maxFilesPerDir;
-  void setMaxFilesPerDir(int v) {
-    final c = v < 1 ? 1 : v;
-    if (_maxFilesPerDir == c) return;
-    _maxFilesPerDir = c;
-    notifyListeners();
-  }
-
-  bool isBusy = false;
-  bool _cancelled = false;
-  double? progress; // null => indeterminate
-  String status = '';
-  String summary = '';
-
-  final List<String> results = [];
-  final List<LogEntry> logs = [];
-
+  /// Aborts the running scan/apply at the next checkpoint.
   void stop() {
-    _cancelled = true;
+    cancelled = true;
     log(loc.t('stopped'), 'warn');
     notifyListeners();
   }
 
-  void clearLog() {
-    logs.clear();
-    notifyListeners();
-  }
-
-  void log(String message, String level) {
-    logs.add(LogEntry(message, level));
-    notifyListeners();
-  }
-
-  /// Translate the raw keys emitted by [applyRules] into localized, colored logs.
-  void _translateApplyLog(String raw, String level) {
-    final parts = raw.split('::');
-    final key = parts.first;
-    final args = parts.skip(1).toList();
-    log(loc.t(key, args), level);
-  }
-
-  Future<void> pickRoot() async {
-    final dir = await FilePicker.getDirectoryPath(
-      dialogTitle: loc.t('folderTitle'),
-    );
-    if (dir != null) {
-      rootText = dir;
-      notifyListeners();
-    }
-  }
-
-  Future<void> pickManifest() async {
-    // file_picker 13+ 的 saveFile 会写入 bytes 并返回 Uri；此处写入占位空字节，
-    // 实际清单内容由 scan()/apply() 覆盖写入。
-    final uri = await FilePicker.saveFile(
-      dialogTitle: loc.t('fileTitle'),
-      fileName: 'stignore-paths.json',
-      bytes: Uint8List(0),
-    );
-    if (uri != null) {
-      manifestPath = uri.toFilePath();
-      notifyListeners();
-    }
-  }
-
-  List<String> _resolveRoots() {
-    final root = rootText.trim();
-    if (root.isEmpty) return listFixedDrives();
-    if (Directory(root).existsSync()) return [root];
-    throw Exception(loc.t('rootNotFound', [root]));
-  }
-
-  Future<void> scan() async {
-    _begin();
-    status = loc.t('statusPrep');
-    notifyListeners();
-    List<String> roots;
-    try {
-      roots = _resolveRoots();
-    } on Exception catch (e) {
-      _finish();
-      log(e.toString(), 'error');
-      return;
-    }
-
-    log('${loc.t('ready')} (${roots.length} roots)', 'info');
-    try {
-      final records = await scanRoots(
-        roots,
-        maxThreads: 4,
-        skipDir: appDirectory,
-        maxDepth: _maxDepth,
-        maxFilesPerDir: _maxFilesPerDir,
-        skipLargeDirs: _filterLargeDirs,
-      );
-      if (_cancelled) {
-        _finish();
-        log(loc.t('stopped'), 'warn');
-        return;
-      }
-      final manifest = Manifest(
-        version: version,
-        scannedAt: DateTime.now().toUtc().toIso8601String(),
-        roots: roots,
-        files: records,
-      );
-      final out = File(manifestPath);
-      await out.parent.create(recursive: true);
-      await out.writeAsString(const JsonEncoder.withIndent('  ').convert(manifest.toJson()));
-
-      results
-        ..clear()
-        ..addAll(records.map((r) => r.path));
-      summary = loc.t('summary', [records.length]);
-      status = loc.t('statusScanDone', [records.length, _elapsed(_start!)]);
-      log(loc.t('scanDone'), 'info');
-    } on Exception catch (e) {
-      log('${loc.t('failed')}: $e', 'error');
-    } finally {
-      _finish();
-    }
-  }
-
-  Future<void> apply() async {
-    _begin();
-    status = loc.t('statusPrep');
-    notifyListeners();
-
-    if (!File(manifestPath).existsSync()) {
-      _finish();
-      log(loc.t('noManifest'), 'error');
-      return;
-    }
-
-    String sourceContent;
-    try {
-      sourceContent = await loadStandardRules();
-    } on Exception catch (e) {
-      _finish();
-      log(e.toString(), 'error');
-      return;
-    }
-    final sourceHash = sha256OfString(sourceContent);
-    log('${loc.t('repo')} SHA256: $sourceHash', 'muted');
-
-    late final Manifest manifest;
-    try {
-      final json = jsonDecode(await File(manifestPath).readAsString()) as Map<String, dynamic>;
-      manifest = Manifest.fromJson(json);
-    } on Exception {
-      _finish();
-      log(loc.t('manifestParseFailed', [manifestPath]), 'error');
-      return;
-    }
-    if (manifest.files.isEmpty) {
-      _finish();
-      log(loc.t('noManifest'), 'error');
-      return;
-    }
-
-    final result = await applyRules(
-      manifest: manifest,
-      sourceContent: sourceContent,
-      sourceHash: sourceHash,
-      sourcePath: manifestPath, // placeholder path; source is bundled asset
-      skipRoots: [appDirectory],
-      whatIf: preview,
-      force: force,
-      backup: backup,
-      log: _translateApplyLog,
-    );
-
-    if (!preview && (result.replaced > 0 || result.errors > 0)) {
-      // Re-write the manifest dropping paths that were cleaned.
-      final kept = manifest.files
-          .where((r) => File(r.path).existsSync())
-          .toList();
-      final updated = Manifest(
-        version: version,
-        scannedAt: manifest.scannedAt,
-        roots: manifest.roots,
-        files: kept,
-      );
-      await File(manifestPath)
-          .writeAsString(const JsonEncoder.withIndent('  ').convert(updated.toJson()));
-    }
-
-    summary = loc.t('statusApplyDone', [result.replaced, _elapsed(_start!)]);
-    status = loc.t('applyDone');
-    log(loc.t('applyDone'), 'info');
-    _finish();
-  }
-
-  DateTime? _start;
-  void _begin() {
-    _cancelled = false;
-    isBusy = true;
-    progress = null;
-    _start = DateTime.now();
-    results.clear();
-    notifyListeners();
-  }
-
-  void _finish() {
-    isBusy = false;
-    progress = 1;
-    _start = null;
-    notifyListeners();
-  }
-
-  String _elapsed(DateTime start) {
-    final ts = DateTime.now().difference(start);
-    if (ts.inHours >= 1) {
-      return '${ts.inHours}:${ts.inMinutes.remainder(60).toString().padLeft(2, '0')}:'
-          '${ts.inSeconds.remainder(60).toString().padLeft(2, '0')}';
-    }
-    return '${ts.inMinutes.remainder(60).toString().padLeft(2, '0')}:'
-        '${ts.inSeconds.remainder(60).toString().padLeft(2, '0')}';
-  }
-
-  /// Convenience for building the standard rules source path label.
+  /// Convenience label for the standard rules source path.
   String get rulesPathLabel => p.basename(manifestPath);
 }

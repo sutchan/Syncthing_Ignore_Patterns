@@ -10,9 +10,11 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import '../models/window_bounds.dart';
+
 /// Immutable snapshot of the persisted preferences.
 class AppSettings {
-  const AppSettings({this.lang = 'en', this.dark = false});
+  const AppSettings({this.lang = 'en', this.dark = false, this.window});
 
   /// UI language code, one of `en` / `zh`.
   final String lang;
@@ -20,13 +22,24 @@ class AppSettings {
   /// `true` for the dark theme.
   final bool dark;
 
-  Map<String, Object?> toJson() => <String, Object?>{'lang': lang, 'dark': dark};
+  /// Last known window position/size, or `null` when never saved.
+  final WindowBounds? window;
+
+  Map<String, Object?> toJson() {
+    final bounds = window;
+    return <String, Object?>{
+      'lang': lang,
+      'dark': dark,
+      if (bounds != null) 'window': bounds.toJson(),
+    };
+  }
 
   /// Rebuilds settings from a decoded JSON object, falling back to defaults
   /// for missing or wrongly-typed fields.
   factory AppSettings.fromJson(Map<String, dynamic> json) => AppSettings(
         lang: json['lang'] is String ? json['lang'] as String : 'en',
         dark: json['dark'] is bool ? json['dark'] as bool : false,
+        window: WindowBounds.fromJson(json['window']),
       );
 }
 

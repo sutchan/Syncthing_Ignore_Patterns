@@ -43,4 +43,31 @@ void main() {
 
     expect(find.text('Syncthing .stignore 管理器'), findsOneWidget);
   });
+
+  testWidgets('option checkboxes update their state when tapped',
+      (tester) async {
+    final state = AppState();
+    await tester.pumpWidget(
+      ChangeNotifierProvider<AppState>.value(value: state, child: const App()),
+    );
+    await tester.pumpAndSettle();
+
+    CheckboxListTile previewTile() => tester.widget<CheckboxListTile>(
+          find.byKey(const Key('preview-checkbox')),
+        );
+
+    expect(state.preview, isFalse);
+    expect(previewTile().value, isFalse);
+
+    await tester.ensureVisible(find.byKey(const Key('preview-checkbox')));
+    await tester.tap(find.byKey(const Key('preview-checkbox')));
+    await tester.pumpAndSettle();
+
+    expect(state.preview, isTrue);
+    expect(previewTile().value, isTrue);
+
+    await tester.tap(find.byKey(const Key('preview-checkbox')));
+    await tester.pumpAndSettle();
+    expect(state.preview, isFalse);
+  });
 }
