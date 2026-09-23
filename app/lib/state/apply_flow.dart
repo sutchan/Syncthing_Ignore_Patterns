@@ -29,6 +29,18 @@ mixin ApplyFlow on ChangeNotifier,
   /// The running executable's directory, excluded from applying.
   String get appDirectory;
 
+  /// Number of paths in the manifest that [apply] would touch, or `0` when the
+  /// manifest is missing/corrupt. Used for the pre-apply confirmation prompt.
+  Future<int> pendingApplyCount() async {
+    try {
+      final json = jsonDecode(await File(manifestPath).readAsString())
+          as Map<String, dynamic>;
+      return Manifest.fromJson(json).files.length;
+    } on Exception {
+      return 0;
+    }
+  }
+
   Future<void> apply() async {
     begin();
     status = loc.t('statusPrep');
@@ -80,6 +92,7 @@ mixin ApplyFlow on ChangeNotifier,
       whatIf: preview,
       force: force,
       backup: backup,
+      isCancelled: () => cancelled,
       log: logTranslated,
     );
 
@@ -95,6 +108,14 @@ mixin ApplyFlow on ChangeNotifier,
       );
       await File(manifestPath).writeAsString(
           const JsonEncoder.withIndent('  ').convert(updated.toJson()));
+    }
+
+    if (result.cancelled) {
+      summary = loc.t('statusApplyDone', [result.replaced, elapsed()]);
+      status = loc.t('statusStopped');
+      log(loc.t('stopped'), 'warn');
+      finish();
+      return;
     }
 
     summary = loc.t('statusApplyDone', [result.replaced, elapsed()]);

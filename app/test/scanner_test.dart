@@ -49,6 +49,24 @@ void main() {
     }
   });
 
+  test('scanRoots reports progress for each batch of roots', () async {
+    final a = Directory.systemTemp.createTempSync('prog_a');
+    final b = Directory.systemTemp.createTempSync('prog_b');
+    try {
+      File(p.join(a.path, '.stignore')).writeAsStringSync('a');
+      File(p.join(b.path, '.stignore')).writeAsStringSync('b');
+      final seen = <String>[];
+      await scanRoots([a.path, b.path], onProgress: (done, total, found, cur) {
+        seen.add('$done/$total');
+      });
+      expect(seen, isNotEmpty);
+      expect(seen.first, '0/2');
+    } finally {
+      a.deleteSync(recursive: true);
+      b.deleteSync(recursive: true);
+    }
+  });
+
   test('maxDepth limits how deep .stignore files are found', () async {
     final root = Directory.systemTemp.createTempSync('depth_test');
     try {

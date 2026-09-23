@@ -57,6 +57,7 @@ mixin ScanFlow on ChangeNotifier,
         maxDepth: maxDepth,
         maxFilesPerDir: maxFilesPerDir,
         skipLargeDirs: filterLargeDirs,
+        onProgress: _reportScanProgress,
       );
       if (cancelled) {
         finish();
@@ -85,5 +86,32 @@ mixin ScanFlow on ChangeNotifier,
     } finally {
       finish();
     }
+  }
+
+  /// Renders the live status line while roots are being walked.
+  void _reportScanProgress(int done, int total, int found, String current) {
+    status = total > 1
+        ? loc.t('statusScan', [done + 1, total, found, current, elapsed()])
+        : loc.t('statusScanOne', [found, current, elapsed()]);
+    notifyListeners();
+  }
+
+  /// Surfaces an existing manifest at startup: loads its paths into the results
+  /// list and logs how many were found, so the tool opens showing prior state
+  /// instead of an empty list. Missing or corrupt manifest is not an error.
+  Future<void> loadExistingManifest() async {
+    final file = File(manifestPath);
+    if (!file.existsSync()) return;
+    try {
+      final json = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+      final manifest = Manifest.fromJson(json);
+      results
+        ..clear()
+        ..addAll(manifest.files.map((r) => r.path));
+      log(loc.t('manifestLoaded', [manifest.files.length]), 'info');
+    } on Exception {
+      // Ignore: Scan will rebuild the manifest.
+    }
+    notifyListeners();
   }
 }

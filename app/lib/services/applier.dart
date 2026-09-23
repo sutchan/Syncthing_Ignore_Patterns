@@ -32,6 +32,7 @@ class ApplyResult {
     this.identicalCount = 0,
     this.cleaned = 0,
     this.errors = 0,
+    this.cancelled = false,
   });
 
   final int replaced;
@@ -39,9 +40,12 @@ class ApplyResult {
   final int cleaned;
   final int errors;
 
+  /// `true` when the run stopped early because the caller cancelled it.
+  final bool cancelled;
+
   @override
-  String toString() =>
-      'replaced=$replaced identical=$identicalCount cleaned=$cleaned errors=$errors';
+  String toString() => 'replaced=$replaced identical=$identicalCount '
+      'cleaned=$cleaned errors=$errors cancelled=$cancelled';
 }
 
 /// Keeps at most [keep] newest `<base>.bak.*` files, deleting older extras.
@@ -75,7 +79,9 @@ int limitBackups(String base, {int keep = 3}) {
 ///
 /// [whatIf] = preview only; [force] = also clean stale paths; [backup] = back up
 /// before writing. [log] receives a message and a level string ('info'/'warn'/
-/// 'error'/'muted'). Returns the outcome counters.
+/// 'error'/'muted'). When [isCancelled] returns `true` the loop stops at the
+/// next record and the result is flagged `cancelled`. Returns the outcome
+/// counters.
 Future<ApplyResult> applyRules({
   required Manifest manifest,
   required String sourceContent,
@@ -85,12 +91,14 @@ Future<ApplyResult> applyRules({
   required bool force,
   required bool backup,
   List<String>? skipRoots,
+  bool Function()? isCancelled,
   required void Function(String message, String level) log,
 }) async {
   var replaced = 0;
   var identicalCount = 0;
   var cleaned = 0;
   var errors = 0;
+  var stopped = false;
 
   final timestamp =
       DateTime.now().toIso8601String().replaceAll(RegExp(r'[:.-]'), '').substring(0, 14);
@@ -98,6 +106,10 @@ Future<ApplyResult> applyRules({
       File(sourcePath).absolute.resolveSymbolicLinksSyncSafe();
 
   for (final rec in manifest.files) {
+    if (isCancelled?.call() ?? false) {
+      stopped = true;
+      break;
+    }
     final target = File(rec.path);
 
     // Never rewrite `.stignore` files that belong to the tool itself
@@ -151,6 +163,7 @@ Future<ApplyResult> applyRules({
     identicalCount: identicalCount,
     cleaned: cleaned,
     errors: errors,
+    cancelled: stopped,
   );
 }
 

@@ -25,7 +25,7 @@ class ActionRow extends StatelessWidget {
         ),
         ElevatedButton.icon(
           key: const Key('apply-button'),
-          onPressed: state.isBusy ? null : state.apply,
+          onPressed: state.isBusy ? null : () => _onApply(context),
           icon: const Icon(Icons.upload),
           label: Text(loc.t('apply')),
         ),
@@ -44,5 +44,38 @@ class ActionRow extends StatelessWidget {
           ),
       ],
     );
+  }
+
+  /// Runs Apply, but first asks for confirmation when the run would actually
+  /// write files (i.e. not preview-only and not force) — mirroring the safety
+  /// prompt in the PowerShell tool.
+  Future<void> _onApply(BuildContext context) async {
+    if (!state.preview && !state.force) {
+      final count = await state.pendingApplyCount();
+      if (!context.mounted) return;
+      final loc = state.loc;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          key: const Key('apply-confirm-dialog'),
+          title: Text(loc.t('applyTitle')),
+          content: Text(loc.t('applyConfirm', [count])),
+          actions: [
+            TextButton(
+              key: const Key('apply-confirm-cancel'),
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(loc.t('cancel')),
+            ),
+            FilledButton(
+              key: const Key('apply-confirm-ok'),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(loc.t('apply')),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+    await state.apply();
   }
 }

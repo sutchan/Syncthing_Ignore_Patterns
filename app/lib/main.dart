@@ -16,6 +16,8 @@ Future<void> main() async {
   // Ruleset metadata is read from disk (no network), so the version is visible
   // on the first frame.
   await state.loadRulesetInfo();
+  // Show any manifest left over from a previous session ("loaded N file(s)").
+  await state.loadExistingManifest();
   runApp(
     ChangeNotifierProvider<AppState>.value(
       value: state,

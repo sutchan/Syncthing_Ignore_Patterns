@@ -70,4 +70,27 @@ void main() {
     await tester.pumpAndSettle();
     expect(state.preview, isFalse);
   });
+
+  testWidgets('Apply asks for confirmation, and cancelling aborts it',
+      (tester) async {
+    final state = AppState();
+    await tester.pumpWidget(
+      ChangeNotifierProvider<AppState>.value(value: state, child: const App()),
+    );
+    await tester.pumpAndSettle();
+
+    final applyButton = find.byKey(const Key('apply-button'));
+    await tester.ensureVisible(applyButton);
+    await tester.tap(applyButton);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('apply-confirm-dialog')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('apply-confirm-cancel')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('apply-confirm-dialog')), findsNothing);
+    // Cancelled at the dialog: no apply run was started.
+    expect(state.isBusy, isFalse);
+  });
 }

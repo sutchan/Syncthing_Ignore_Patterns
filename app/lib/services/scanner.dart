@@ -139,6 +139,11 @@ Future<List<Map<String, dynamic>>> _scanRoot(Map<String, dynamic> args) =>
 /// (roots are processed in batches of [maxThreads]). [skipDir] is the directory
 /// of the standard rules source, excluded to avoid re-scanning the tool's own
 /// `.stignore`.
+///
+/// [onProgress] is invoked at the start of each batch with the number of roots
+/// already completed, the total root count, the records found so far and a root
+/// currently being scanned. It lets the UI show a live status line without
+/// crossing the isolate boundary.
 Future<List<StignoreRecord>> scanRoots(
   List<String> roots, {
   int maxThreads = 4,
@@ -146,11 +151,13 @@ Future<List<StignoreRecord>> scanRoots(
   int maxDepth = 3,
   int maxFilesPerDir = 100,
   bool skipLargeDirs = false,
+  void Function(int done, int total, int found, String current)? onProgress,
 }) async {
   final records = <StignoreRecord>[];
   for (var i = 0; i < roots.length; i += maxThreads) {
     final batch =
         roots.sublist(i, min(i + maxThreads, roots.length));
+    onProgress?.call(i, roots.length, records.length, batch.first);
     final tasks = batch.map(
       (r) => Isolate.run<List<Map<String, dynamic>>>(
         () => _scanRoot({

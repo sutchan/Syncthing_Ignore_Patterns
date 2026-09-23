@@ -122,6 +122,52 @@ void main() {
     }
   });
 
+  test('applyRules stops early when isCancelled returns true', () async {
+    final dir = Directory.systemTemp.createTempSync('apply_cancel');
+    try {
+      final source = File(p.join(dir.path, 'source.stignore'))
+        ..writeAsStringSync('NEW');
+      final targets = <File>[];
+      for (var i = 0; i < 3; i++) {
+        final d = Directory(p.join(dir.path, 't$i'))..createSync();
+        targets
+            .add(File(p.join(d.path, '.stignore'))..writeAsStringSync('OLD'));
+      }
+      final manifest = Manifest(
+        version: '1.0',
+        scannedAt: '',
+        roots: [],
+        files: [
+          for (final t in targets)
+            StignoreRecord(
+                path: t.path, size: 0, lastWriteUtc: '', foundAtUtc: ''),
+        ],
+      );
+
+      var checks = 0;
+      final res = await applyRules(
+        manifest: manifest,
+        sourceContent: 'NEW',
+        sourceHash: sha256OfString('NEW'),
+        sourcePath: source.path,
+        whatIf: false,
+        force: false,
+        backup: false,
+        // Stop before the second record is handled.
+        isCancelled: () => checks++ >= 1,
+        log: (m, l) {},
+      );
+
+      expect(res.cancelled, isTrue);
+      expect(res.replaced, 1);
+      expect(targets[0].readAsStringSync(), 'NEW');
+      expect(targets[1].readAsStringSync(), 'OLD');
+      expect(targets[2].readAsStringSync(), 'OLD');
+    } finally {
+      dir.deleteSync(recursive: true);
+    }
+  });
+
   test('limitBackups keeps at most 3 newest', () {
     final dir = Directory.systemTemp.createTempSync('bak_test');
     try {
