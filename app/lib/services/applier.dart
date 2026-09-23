@@ -10,8 +10,20 @@ library;
 
 import 'dart:io';
 
+import 'package:path/path.dart' as p;
+
 import '../models/manifest.dart';
 import 'rules_source.dart';
+
+/// `true` when [child] is [parent] or lives somewhere underneath it.
+/// Comparison is case-insensitive (Windows paths).
+bool _within(String parent, String child) {
+  final np = parent.trim().toLowerCase();
+  final nc = child.trim().toLowerCase();
+  return nc == np ||
+      nc.startsWith('$np${p.separator}') ||
+      nc.startsWith('$np/');
+}
 
 /// Outcome counters for one Apply run.
 class ApplyResult {
@@ -72,6 +84,7 @@ Future<ApplyResult> applyRules({
   required bool whatIf,
   required bool force,
   required bool backup,
+  List<String>? skipRoots,
   required void Function(String message, String level) log,
 }) async {
   var replaced = 0;
@@ -86,6 +99,14 @@ Future<ApplyResult> applyRules({
 
   for (final rec in manifest.files) {
     final target = File(rec.path);
+
+    // Never rewrite `.stignore` files that belong to the tool itself
+    // (e.g. the bundled rules next to the executable).
+    if (skipRoots != null && skipRoots.any((r) => _within(r, target.path))) {
+      log('skippedAppDir::${rec.path}', 'muted');
+      continue;
+    }
+
     if (!target.existsSync()) {
       // Stale path: only cleaned when force is requested.
       if (force) {

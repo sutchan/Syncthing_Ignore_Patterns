@@ -88,6 +88,40 @@ void main() {
     }
   });
 
+  test('applyRules skips paths inside skipRoots', () async {
+    final dir = Directory.systemTemp.createTempSync('apply_skip');
+    try {
+      final targetDir = Directory(p.join(dir.path, 'target'))..createSync();
+      final target =
+          File(p.join(targetDir.path, '.stignore'))
+            ..writeAsStringSync('OLD');
+      final manifest = Manifest(
+        version: '1.0',
+        scannedAt: '',
+        roots: [],
+        files: [
+          StignoreRecord(
+              path: target.path, size: 0, lastWriteUtc: '', foundAtUtc: ''),
+        ],
+      );
+      final res = await applyRules(
+        manifest: manifest,
+        sourceContent: 'NEW',
+        sourceHash: sha256OfString('NEW'),
+        sourcePath: p.join(dir.path, 'x.stignore'),
+        whatIf: false,
+        force: false,
+        backup: false,
+        skipRoots: [dir.path],
+        log: (m, l) {},
+      );
+      expect(res.replaced, 0);
+      expect(target.readAsStringSync(), 'OLD');
+    } finally {
+      dir.deleteSync(recursive: true);
+    }
+  });
+
   test('limitBackups keeps at most 3 newest', () {
     final dir = Directory.systemTemp.createTempSync('bak_test');
     try {

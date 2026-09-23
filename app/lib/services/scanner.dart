@@ -15,6 +15,21 @@ import 'package:path/path.dart' as p;
 
 import '../models/manifest.dart';
 
+/// Directory that holds the running executable. `.stignore` files under it
+/// (e.g. the bundled standard rules extracted next to the exe) must never be
+/// scanned or rewritten by the tool itself.
+String get _appDirectory => p.dirname(Platform.resolvedExecutable);
+
+/// `true` when [child] is [parent] or lives somewhere underneath it.
+/// Comparison is case-insensitive (Windows paths).
+bool _isWithinOrEquals(String parent, String child) {
+  final np = parent.trim().toLowerCase();
+  final nc = child.trim().toLowerCase();
+  return nc == np ||
+      nc.startsWith('$np${p.separator}') ||
+      nc.startsWith('$np/');
+}
+
 /// Walks [root] depth-first and returns raw record maps for every `.stignore`.
 /// Exposed as a top-level function so it can run inside an isolate.
 List<Map<String, dynamic>> findStignoreFilesRaw(
@@ -24,7 +39,15 @@ List<Map<String, dynamic>> findStignoreFilesRaw(
   final records = <Map<String, dynamic>>[];
   if (!Directory(root).existsSync()) return records;
 
-  final skip = skipDir?.trim().toLowerCase();
+  // Always skip the tool's own directory so it never scans or rewrites its own
+  // bundled rules; an explicit [skipDir] (the standard rules source) is also
+  // skipped when supplied. Both are matched as subtrees (the directory and
+  // everything beneath it).
+  final skip = <String>{
+    _appDirectory,
+    if (skipDir != null && skipDir.trim().isNotEmpty) skipDir.trim(),
+  };
+
   final stack = <String>[root];
   while (stack.isNotEmpty) {
     final dir = stack.removeLast();
@@ -38,7 +61,7 @@ List<Map<String, dynamic>> findStignoreFilesRaw(
     for (final e in entries) {
       if (e is Directory) {
         if (p.basename(e.path) == '.git') continue;
-        if (skip != null && e.path.toLowerCase() == skip) continue;
+        if (skip.any((s) => _isWithinOrEquals(s, e.path))) continue;
         stack.add(e.path);
       } else if (e is File) {
         if (p.basename(e.path) == '.stignore') {

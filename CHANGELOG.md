@@ -5,6 +5,21 @@
 
 ---
 
+## [v1.19.1] - 2026-09-23
+
+### 修复
+- fix(app): 扫描与替换时自动忽略应用自身目录（运行中的 exe 所在目录）子树内的 `.stignore`，避免工具扫描/覆盖自带的打包规则（`assets/.stignore`）而自伤
+  - `services/scanner.dart`：`findStignoreFilesRaw` 始终把 `p.dirname(Platform.resolvedExecutable)` 加入跳过集；`skipDir` 由「精确匹配单个目录」改为「目录及其全部子目录」整体跳过
+  - `services/applier.dart`：`applyRules` 新增 `skipRoots` 参数；命中应用目录的清单项直接跳过（不备份/不写），作为既存清单的兜底
+  - `state/app_state.dart`：新增 `appDirectory` getter；`scan()` 传 `skipDir: appDirectory`、`apply()` 传 `skipRoots: [appDirectory]`
+  - `i18n.dart`：新增 `skippedAppDir`（en/zh），替换时命中应用目录即静默跳过
+- chore: 同步版本至 v1.19.1（VERSION / pubspec `1.19.1+1` / `AppState.version` / `manifest.dart` 示例 / README 徽章）
+
+### 测试
+- `scanner_test`：`skipDir` 改为子树跳过（嵌套 `.stignore` 同样被排除）
+- `applier_test`：新增 `applyRules skips paths inside skipRoots`（命中 `skipRoots` 的 `.stignore` 不被替换/不备份）
+- 本地 `flutter analyze` 无问题、`flutter test` **13/13** 通过
+
 ## [v1.19.0] - 2026-09-22
 
 ### 新增

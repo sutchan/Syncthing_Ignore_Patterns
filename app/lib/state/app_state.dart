@@ -28,7 +28,7 @@ class LogEntry {
 }
 
 class AppState extends ChangeNotifier {
-  AppState({this.version = '1.19.0', SettingsStore? settingsStore})
+  AppState({this.version = '1.19.1', SettingsStore? settingsStore})
       : _settings = settingsStore ?? SettingsStore();
 
   final String version;
@@ -73,6 +73,11 @@ class AppState extends ChangeNotifier {
 
   String rootText = '';
   String manifestPath = 'config${Platform.pathSeparator}stignore-paths.json';
+
+  /// Directory of the running executable. Its `.stignore` files (the bundled
+  /// standard rules) are excluded from scan/apply so the tool never rewrites
+  /// its own files.
+  String get appDirectory => p.dirname(Platform.resolvedExecutable);
 
   bool preview = false;
   bool force = false;
@@ -157,7 +162,7 @@ class AppState extends ChangeNotifier {
 
     log('${loc.t('ready')} (${roots.length} roots)', 'info');
     try {
-      final records = await scanRoots(roots, maxThreads: 4);
+      final records = await scanRoots(roots, maxThreads: 4, skipDir: appDirectory);
       if (_cancelled) {
         _finish();
         log(loc.t('stopped'), 'warn');
@@ -228,6 +233,7 @@ class AppState extends ChangeNotifier {
       sourceContent: sourceContent,
       sourceHash: sourceHash,
       sourcePath: manifestPath, // placeholder path; source is bundled asset
+      skipRoots: [appDirectory],
       whatIf: preview,
       force: force,
       backup: backup,

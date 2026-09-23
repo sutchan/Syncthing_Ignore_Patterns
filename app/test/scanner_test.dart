@@ -15,6 +15,11 @@ void main() {
       File(p.join(git.path, '.stignore')).writeAsStringSync('c');
       final skip = Directory(p.join(root.path, 'skipme'))..createSync();
       File(p.join(skip.path, '.stignore')).writeAsStringSync('d');
+      // A nested `.stignore` under the skipped dir must also be excluded
+      // (subtree skip, not just the exact directory).
+      final skipDeep =
+          Directory(p.join(skip.path, 'nested', 'x'))..createSync(recursive: true);
+      File(p.join(skipDeep.path, '.stignore')).writeAsStringSync('e');
 
       final recs = findStignoreFiles(root.path, skipDir: skip.path);
       final paths = recs.map((r) => r.path).toList();
@@ -23,6 +28,7 @@ void main() {
       expect(paths, contains(p.join(sub.path, '.stignore')));
       expect(paths, isNot(contains(p.join(git.path, '.stignore'))));
       expect(paths, isNot(contains(p.join(skip.path, '.stignore'))));
+      expect(paths, isNot(contains(p.join(skipDeep.path, '.stignore'))));
       expect(recs.length, 2);
     } finally {
       root.deleteSync(recursive: true);
