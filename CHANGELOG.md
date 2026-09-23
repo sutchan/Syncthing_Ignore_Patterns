@@ -5,6 +5,12 @@
 
 ---
 
+## [v1.20.2] - 2026-09-23
+
+### 构建 / CI
+- perf(ci): 减小发布包体积——`flutter build windows` 增加 `--tree-shake-icons`（仅保留用到的 Material 图标字形）；发布包改用 .NET `CompressionLevel.SmallestSize` 高压缩（替代 `Compress-Archive` 默认 Deflate），并剔除调试符号 `*.pdb`/`*.exp`/`*.lib`
+- chore: 同步版本至 v1.20.2（VERSION / pubspec `1.20.2+1` / `AppState.version` / `manifest.dart` 示例 / README 徽章）
+
 ## [v1.20.1] - 2026-09-23
 
 ### 文档
