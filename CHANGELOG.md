@@ -5,6 +5,12 @@
 
 ---
 
+## [v1.20.4] - 2026-09-23
+
+### 修复 / CI
+- fix(ci): 修复发布产物「二次压缩」——`upload-artifact` 会给上传内容再包一层 zip，此前上传已压缩的 `.zip` 导致产物内「zip 套 zip」。改为 `build-windows` 暂存运行文件为**目录**产物，归档仅在 `release` 作业压缩生成（唯一一次压缩）
+- chore: 同步版本至 v1.20.4（VERSION / pubspec `1.20.4+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
 ## [v1.20.3] - 2026-09-23
 
 ### 修复

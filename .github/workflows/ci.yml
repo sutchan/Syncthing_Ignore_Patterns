@@ -10,6 +10,8 @@
 #   产品名 = env.APP_NAME（PascalCase 无空格）；os ∈ windows|macos|linux；arch ∈ x64|arm64；
 #   Windows/macOS 用 zip、Linux 用 tar.gz；版本取自根 VERSION（needs.version.outputs.version），
 #   禁止硬编码；Release 仅上传归档（不上传构建目录树）；预发布以 Release prerelease 标记区分。
+#   CI 产物以「目录」形式在作业间传递（避免产物内再套一层压缩包导致二次压缩），
+#   发布归档仅在 release 作业压缩生成。
 #
 # 版本三轨独立（见 docs/project.md §4）：
 #   Flutter 主实现  = VERSION（pubspec / AppState.version / manifest 示例 / README 徽章）
@@ -211,41 +213,31 @@ jobs:
       - name: Build Windows release
         working-directory: app
         run: flutter build windows --release --tree-shake-icons
-      - name: Package artifact
+      - name: Stage release files
         shell: pwsh
         run: |
-          # 命名规范：<产品名>-v<版本>-<os>-<arch>.<扩展名>（docs/project.md §9.5）
-          $ver = "${{ needs.version.outputs.version }}"
-          $zip = "${{ env.APP_NAME }}-v$ver-windows-x64.zip"
+          # 收集运行所需文件到 staging 目录（剔除调试符号 *.pdb/*.exp/*.lib）。
+          # 归档改在 release 作业压缩——CI 产物以「目录」形式传递，
+          # 避免产物（upload-artifact 自带一层压缩）内再套一层压缩包导致二次压缩。
           $src = "app/build/windows/x64/runner/Release"
-          # 用 .NET SmallestSize 高压缩（优于 Compress-Archive 默认 Deflate），
-          # 并剔除调试符号（*.pdb/*.exp/*.lib）以减小发布包体积
-          # 注意：CreateEntryFromFile 是扩展方法（ZipFileExtensions），PowerShell 无法作为静态成员调用，
-          # 故改用实例方法 CreateEntry + 流拷贝逐文件写入
-          if (Test-Path $zip) { Remove-Item $zip -Force }
-          $level = [System.IO.Compression.CompressionLevel]::SmallestSize
-          $base = [System.IO.Path]::GetFullPath($src)
-          $fs = [System.IO.File]::Create($zip)
-          $za = [System.IO.Compression.ZipArchive]::new($fs, [System.IO.Compression.ZipArchiveMode]::Create)
+          $dst = "app/build/package"
+          if (Test-Path $dst) { Remove-Item $dst -Recurse -Force }
+          New-Item -ItemType Directory -Force -Path $dst | Out-Null
+          $base = (Get-Item -LiteralPath $src).FullName
           Get-ChildItem $src -Recurse -File |
             Where-Object { $_.Extension -notin '.pdb', '.exp', '.lib' } |
             ForEach-Object {
-              $rel = $_.FullName.Substring($base.Length + 1).Replace('\', '/')
-              $entry = $za.CreateEntry($rel, $level)
-              $out = $entry.Open()
-              $in = [System.IO.File]::OpenRead($_.FullName)
-              $in.CopyTo($out)
-              $in.Dispose()
-              $out.Dispose()
+              $rel = $_.FullName.Substring($base.Length + 1)
+              $target = Join-Path $dst $rel
+              New-Item -ItemType Directory -Force -Path (Split-Path $target -Parent) | Out-Null
+              Copy-Item -LiteralPath $_.FullName -Destination $target
             }
-          $za.Dispose()
-          $fs.Dispose()
-          Write-Host "Created $zip"
+          Write-Host "Staged $((Get-ChildItem $dst -Recurse -File).Count) files to $dst"
       - name: Upload app artifact
         uses: actions/upload-artifact@v7
         with:
           name: ${{ env.APP_NAME }}-v${{ needs.version.outputs.version }}-windows-x64
-          path: ${{ env.APP_NAME }}-v*-windows-x64.zip
+          path: app/build/package
           if-no-files-found: error
       - name: Upload coverage artifact
         if: always()
@@ -271,6 +263,33 @@ jobs:
         with:
           name: ${{ env.APP_NAME }}-v${{ needs.version.outputs.version }}-windows-x64
           path: dist
+      - name: Package release archive
+        shell: pwsh
+        run: |
+          # 归档命名规范：<产品名>-v<版本>-<os>-<arch>.<扩展名>（docs/project.md §9.5）
+          # 产物以「目录」形式在 build-windows 与 release 作业间传递，此处压缩为发布归档
+          # 用 .NET SmallestSize 高压缩；CreateEntryFromFile 为扩展方法不可用，故用 CreateEntry + 流拷贝
+          $ver = "${{ needs.version.outputs.version }}"
+          $zip = "${{ env.APP_NAME }}-v$ver-windows-x64.zip"
+          $src = "dist"
+          if (Test-Path $zip) { Remove-Item $zip -Force }
+          $level = [System.IO.Compression.CompressionLevel]::SmallestSize
+          $base = (Get-Item -LiteralPath $src).FullName
+          $fs = [System.IO.File]::Create($zip)
+          $za = [System.IO.Compression.ZipArchive]::new($fs, [System.IO.Compression.ZipArchiveMode]::Create)
+          Get-ChildItem $src -Recurse -File |
+            ForEach-Object {
+              $rel = $_.FullName.Substring($base.Length + 1).Replace('\', '/')
+              $entry = $za.CreateEntry($rel, $level)
+              $out = $entry.Open()
+              $in = [System.IO.File]::OpenRead($_.FullName)
+              $in.CopyTo($out)
+              $in.Dispose()
+              $out.Dispose()
+            }
+          $za.Dispose()
+          $fs.Dispose()
+          Write-Host "Created $zip"
       - name: Extract release notes from CHANGELOG
         shell: pwsh
         run: |
@@ -293,7 +312,7 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v3
         with:
-          files: dist/${{ env.APP_NAME }}-v*-windows-x64.zip
+          files: ${{ env.APP_NAME }}-v*-windows-x64.zip
           body_path: release_notes.md
           generate_release_notes: false
           fail_on_unmatched_files: true
