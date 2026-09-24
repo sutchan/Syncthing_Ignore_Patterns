@@ -9,11 +9,13 @@ Dart + Flutter Windows 桌面应用，提供 `.stignore` 规则的批量扫描�
 
 ### REQ-1 扫描
 - 系统：Windows 桌面（Flutter Windows target）；非 Windows 下驱动器枚举回退到当前目录以可测
-- 输入：扫描根目录（留空=所有固定驱动器；或指定单目录），由 `file_picker` 选择
+- 输入：扫描根目录（留空=所有固定驱动器 + 映射网络驱动器；或指定单目录 / UNC 路径 `\\server\share`），由 `file_picker` 选择或窗口拖拽填入
 - 行为：
   - 每根目录一个 isolate 并行（默认 4），根目录分批送入（`scanRoots`）
   - 显式栈深度优先遍历 + 异步流式 `list`（v1.20.0 起改为异步，避免巨目录卡死）；支持扫描深度上限 `maxDepth`（默认 3，1–10 可调）与大目录过滤 `skipLargeDirs`/`maxFilesPerDir`（默认跳过 >100 文件子目录，可开闭/调值）
   - 自动跳过应用自身目录子树（`p.dirname(Platform.resolvedExecutable)`，v1.19.1 起）：扫描与替换均不触及 exe 目录内 `.stignore`，避免工具自伤打包规则；同时排除 `.git` 与规则源目录；无权限目录跳过并累计，不中断整根
+  - 扫描范围覆盖映射网络驱动器（DRIVE_REMOTE）：`platform_io.listScanDrives` 由仅枚举固定盘扩展为固定 + 远程盘（v1.26.0）；`normalizeRootPath` 归一化裸盘符 `Z:`→`Z:\`、正斜杠→反斜杠，UNC 路径（如 `\\server\share`）可直接填入根目录（v1.26.0）
+  - `_resolveRoots` 改用 `FileSystemEntity.isDirectorySync` 校验根目录（替代原盘符枚举假设），留空根目录回退到 `listScanDrives()` 结果（v1.26.0）
   - 扫描阶段不做逐文件 UI 刷新，不做哈希计算
 - 输出：`stignore-paths.json`（UTF-8，含 version/scannedAt/roots/files）
   - 每条记录：path / size / lastWriteUtc / foundAtUtc
@@ -91,7 +93,7 @@ Dart + Flutter Windows 桌面应用，提供 `.stignore` 规则的批量扫描�
 - 代码已完成：扫描 / 应用 / 备份轮转 / 中英双语 / 明暗主题 / 清单 manifest / 窗口记忆 / 忽略清单在线更新 / 应用确认与停止 / 扫描实时状态行 / 应用更新检查 / 窗口拖拽填入 / 一键下载并安装更新
 - `flutter analyze` 零告警已达成（v1.18.7 清零 52 项，CI `build-windows` 强制校验）
 - GitHub Actions `build-windows` 已落地，自动构建并发布 `SyncthingIgnoreGUI-vX.Y.Z-windows-x64.zip`（版本取自根 `VERSION`）
-- 里程碑：v1.21.0 窗口记忆 + 选项刷新修复 + ≤200 行拆分；v1.22.0 忽略清单在线更新；v1.23.0 应用确认 + 应用阶段停止 + 扫描实时状态行 + 双击打开文件 + 启动加载清单（本地 34/34 测试通过）；v1.23.1 补齐根 `LICENSE`（MIT）+ CI 规则副本一致性检查改阻断；v1.23.2 补充测试使 `lib/` 行覆盖率达 83.46%（55/55 用例通过）+ CI 覆盖率门禁 ≥80%；v1.24.0 应用更新检查 + exe 名统一为 `SyncthingIgnoreGUI` + 发布包说明（本地 64/64，覆盖率 85.67%）；v1.25.0 窗口拖拽填入 + 一键下载并安装更新（本地 79/79，覆盖率 85.60%；原生拖放与替换环节由 CI 编译验证）；v1.25.1 文档口径统一（任务清单仅列未完成项，当前为空）；v1.25.2 修复扫描崩溃（`scanner.scanRoots` 的 `Isolate.run` 闭包误捕获不可发送的 `AppState` 上下文，真实扫描会中断）
+- 里程碑：v1.21.0 窗口记忆 + 选项刷新修复 + ≤200 行拆分；v1.22.0 忽略清单在线更新；v1.23.0 应用确认 + 应用阶段停止 + 扫描实时状态行 + 双击打开文件 + 启动加载清单（本地 34/34 测试通过）；v1.23.1 补齐根 `LICENSE`（MIT）+ CI 规则副本一致性检查改阻断；v1.23.2 补充测试使 `lib/` 行覆盖率达 83.46%（55/55 用例通过）+ CI 覆盖率门禁 ≥80%；v1.24.0 应用更新检查 + exe 名统一为 `SyncthingIgnoreGUI` + 发布包说明（本地 64/64，覆盖率 85.67%）；v1.25.0 窗口拖拽填入 + 一键下载并安装更新（本地 79/79，覆盖率 85.60%；原生拖放与替换环节由 CI 编译验证）；v1.25.1 文档口径统一（任务清单仅列未完成项，当前为空）；v1.25.2 修复扫描崩溃（`scanner.scanRoots` 的 `Isolate.run` 闭包误捕获不可发送的 `AppState` 上下文，真实扫描会中断）；v1.25.3 新增功能与 UI 完善改进建议（`docs/specs/stignore-gui-flutter/spec.md`「改进建议（评估中）」按 P0/P1/P2 分级）；v1.26.0 扫描支持局域网路径与映射盘符（空根目录扩展为固定 + 映射网络驱动器，`listScanDrives`/`normalizeRootPath`/`_resolveRoots` 改进）
 
 ## 改进建议（评估中）
 
@@ -111,7 +113,7 @@ Dart + Flutter Windows 桌面应用，提供 `.stignore` 规则的批量扫描�
 - 影响：`ui/results_list.dart`、`i18n.dart`（新增 `resultCount` / `copyPath` / `filterResults` 等键）。
 
 **PROP-3 支持多扫描根**
-- 现状：`scan_flow._resolveRoots()` 仅支持「留空=所有固定驱动器」或「单个目录」；拖拽填入（`pickers_state.applyDrop`）也只替换单根 `rootText`。
+- 现状：`scan_flow._resolveRoots()` 仅支持「留空=固定 + 映射网络驱动器」或「单个目录 / UNC 路径」；拖拽填入（`pickers_state.applyDrop`）也只替换单根 `rootText`。
 - 建议：将扫描根改为可增删列表；`file_picker` 多选目录 + 拖拽追加（而非替换）；`_resolveRoots` 展开为多个根。`scanRoots` 已接受 `List<String>`，改动成本低。
 - 影响：`state/pickers_state.dart`、`state/scan_flow.dart`、`ui/root_field.dart`、`i18n.dart`。
 

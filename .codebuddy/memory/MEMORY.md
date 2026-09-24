@@ -23,7 +23,7 @@
 - **扫描约定**：始终跳 `dirname(Platform.resolvedExecutable)`；`maxDepth`(默认3)/`skipLargeDirs`(默认true)/`maxFilesPerDir`(默认100) 大目录流式判定。
 - **覆盖率基线**（v1.25.0）：`lib/` 85.60%（927/1083），`flutter test` 79/79；低覆盖 `results_list` 25%/`pickers_state` 38%/`window_bounds` 51%。须 `flutter test --coverage`（非 `test_with_coverage`）。
 - **Dart+Flutter 重写**（v1.18.7 起 `flutter analyze` 零告警）：本机可离线 `pub get`/`analyze`/`test`；非 offline 的 pub get 失败，`build windows` 交 CI。`dart format` 新版对 >80 列重排勿全量套用。
-- **任务文档约定**：`docs/development-tasks.md` 只列未完成任务，已完成移除不归档，历史见 CHANGELOG+project.md §7；当前（v1.25.3）剩余任务为空。
+- **任务文档约定**：`docs/development-tasks.md` 仅列未完成任务（已完成移除不归档），历史见 CHANGELOG+project.md §7；当前（v1.26.0）剩余任务为空，文档含「版本说明」与「后续方向（评估中）」指针（链接 spec.md 改进建议）。
 
 ## 环境约束
 - 本机可 `powershell -File` 但 GUI 脚本不实跑；git 提交由用户本地执行。

@@ -400,7 +400,7 @@ SyncthingIgnorePatterns/
 | `lib/services/scanner.dart` | DFS 异步遍历找 `.stignore`（跳过 `.git`/规则源/应用自身 exe 目录子树，v1.19.1），每根目录一个 isolate 并行（默认 4）；`findStignoreFilesRaw` 支持 `maxDepth`/`skipLargeDirs`/`maxFilesPerDir`（v1.20.0），流式计数避免巨目录卡死；`scanRoots` 新增 `onProgress` 回调按根上报进度（v1.23.0），纯函数可单测 |
 | `lib/services/applier.dart` | 应用标准规则：SHA-256 比对跳过一致文件、写前 `.bak.<时间戳>` 备份、`<base>.bak.*` 轮转保留 ≤3、仅 `force` 清理失效路径；`applyRules` 支持 `skipRoots`（v1.19.1）自动跳过应用自身目录子树、`isCancelled` 回调支持应用阶段中止（`ApplyResult.cancelled`，v1.23.0） |
 | `lib/services/rules_source.dart` | 从 `assets/.stignore` 加载标准规则并计算 SHA-256 |
-| `lib/services/platform_io.dart` | Windows 固定驱动器枚举（win32 `GetLogicalDrives` / `GetDriveType`） |
+| `lib/services/platform_io.dart` | Windows 驱动器枚举（win32 `GetLogicalDrives` / `GetDriveType`）；v1.26.0 起 `listScanDrives` 由仅固定盘扩展为固定 + 映射网络驱动器（DRIVE_REMOTE），新增 `normalizeRootPath` 归一化裸盘符 `Z:`→`Z:\`、正斜杠→反斜杠、UNC 路径可直填 |
 | `lib/services/window_bounds.dart` | 经 win32 按窗口类名 `FLUTTER_RUNNER_WIN32_WINDOW` 找宿主窗口，`GetWindowRect` 读取 / `SetWindowPos` 恢复几何；越界/过小几何忽略，非 Windows 为 no-op（v1.21.0） |
 | `lib/services/settings_store.dart` | 用户偏好（语言 / 主题 / 窗口几何）JSON 持久化：`%APPDATA%\SyncthingIgnoreGUI\settings.json`；纯 `dart:io`，无新增依赖，缺失/损坏回退默认值 |
 | `lib/services/app_paths.dart` | 共享的用户数据目录（`%APPDATA%\SyncthingIgnoreGUI`），`settings_store` 与清单缓存复用（v1.22.0） |
@@ -417,7 +417,7 @@ SyncthingIgnorePatterns/
 | `lib/state/pickers_state.dart` | mixin：`rootText`/`manifestPath` 字段与「浏览」选择（`pickRoot`/`pickManifest`）；`applyDrop`/`listenForFileDrops` 处理窗口拖放（v1.25.0） |
 | `lib/state/ruleset_state.dart` | mixin：清单版本/来源/更新状态；`loadRulesetInfo()`（不联网）、`effectiveRules()`（Apply 实际使用的清单）、`checkRulesetUpdate()`（下载并按版本采纳）（v1.22.0） |
 | `lib/state/app_update_state.dart` | mixin：应用更新检查；`checkAppUpdate()` 比较最新 Release 与当前版本，暴露 `availableAppVersion`/`appUpdateStatus`/`checkingAppUpdate`（v1.24.0） |
-| `lib/state/scan_flow.dart` | mixin：`scan()`——解析根目录（留空=固定驱动器）→ `scanRoots` → 写清单；`_reportScanProgress` 刷新实时状态行、`loadExistingManifest()` 启动回填既有清单（v1.23.0） |
+| `lib/state/scan_flow.dart` | mixin：`scan()`——解析根目录（留空=固定 + 映射网络驱动器）→ `scanRoots` → 写清单；`_resolveRoots` 改用 `isDirectorySync` 校验（v1.26.0）并接 `normalizeRootPath` 归一化、`_reportScanProgress` 刷新实时状态行、`loadExistingManifest()` 启动回填既有清单（v1.23.0） |
 | `lib/state/apply_flow.dart` | mixin：`apply()`——载入标准规则 → `applyRules`（预览/强制/备份/`isCancelled`）→ 回写清单；`pendingApplyCount()` 供确认框（v1.23.0） |
 | `lib/ui/home_page.dart` | 主界面装配壳（Scaffold + 子组件 + 关于对话框）；子组件按职责拆至同目录（v1.21.0） |
 | `lib/ui/settings_dialog.dart` | 语言/主题设置对话框（`SettingsDialog.show`） |

@@ -107,7 +107,7 @@ flutter build windows        # output: build/windows/x64/runner/Release/Syncthin
 
 - **UI**: root / manifest-path inputs, Preview / Force / Backup toggles, Scan / Apply / Stop / Clear-log buttons, progress bar, results & log lists
 - **Language / Theme**: switch `English` / `中文` and `Light` / `Dark` at the top-right, applied instantly
-- **Scan**: one isolate per root (4 by default), skips `.git` and the rules-source dir, tolerates access-denied folders
+- **Scan**: one isolate per root (4 by default), skips `.git` and the rules-source dir, tolerates access-denied folders; blank root covers fixed + mapped network drives, UNC paths `\\server\share` accepted (v1.26.0)
 - **Apply**: SHA-256 compare skips identical files, `.bak.<timestamp>` backup before writing, `<base>.bak.*` rotation ≤3, `Force` cleans stale paths
 - **Standard rules**: bundled as `assets/.stignore`, loaded via `rootBundle` at runtime; sync that copy when rules change
 - **Drag & drop**: drop a folder or a `.stignore` / `.json` file onto the window to fill the scan root / manifest path (v1.25.0)
