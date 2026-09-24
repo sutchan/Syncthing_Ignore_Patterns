@@ -6,17 +6,6 @@ import 'package:syncthing_ignore_gui/models/window_bounds.dart';
 import 'package:syncthing_ignore_gui/services/settings_store.dart';
 import 'package:syncthing_ignore_gui/state/app_state.dart';
 
-/// Polls [store] until the persisted language/theme match, so the test does not
-/// depend on the exact timing of [AppState]'s fire-and-forget save.
-Future<AppSettings> _waitFor(SettingsStore store, String lang, bool dark) async {
-  for (var i = 0; i < 100; i++) {
-    final saved = await store.load();
-    if (saved.lang == lang && saved.dark == dark) return saved;
-    await Future<void>.delayed(const Duration(milliseconds: 20));
-  }
-  return store.load();
-}
-
 void main() {
   test('load returns defaults when the file is missing', () async {
     final dir = await Directory.systemTemp.createTemp('sig_settings_');
@@ -74,7 +63,8 @@ void main() {
     state.setLanguage('klingon'); // unsupported codes must be ignored
     state.setTheme(false);
 
-    final saved = await _waitFor(store, 'zh', false);
+    await store.idle; // wait for the serialised writes to land on disk
+    final saved = await store.load();
     expect(saved.lang, 'zh');
     expect(saved.dark, isFalse);
   });

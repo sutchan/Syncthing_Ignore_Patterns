@@ -5,6 +5,17 @@
 
 ---
 
+## [v1.26.0] - 2026-09-24
+
+### 功能
+- feat(app): 扫描支持局域网路径与映射盘符——空根目录扫描范围从「固定驱动器」扩展为「固定 + 映射网络驱动器（DRIVE_REMOTE）」（`listFixedDrives` 更名 `listScanDrives`）；新增 `normalizeRootPath` 归一化裸盘符 `Z:`→`Z:\`、正斜杠→反斜杠，UNC 路径（如 `\\server\share`）可直接填入根目录；`_resolveRoots` 改用 `FileSystemEntity.isDirectorySync` 校验根目录是否存在（`state/scan_flow.dart`）；根目录标签与输入提示（i18n）同步更新为支持 UNC/映射盘
+
+### 测试
+- `platform_io_test`：覆盖 `listScanDrives` 与 `normalizeRootPath`；`scan_flow_test`：新增「文件作为根目录被拒绝」用例
+
+### 说明
+- 规则集内容未改动（仍为 1.18.5）；PowerShell 遗留版版本不变（1.18.5）
+
 ## [v1.25.3] - 2026-09-23
 
 ### 文档

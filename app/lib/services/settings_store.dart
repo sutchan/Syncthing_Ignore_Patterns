@@ -86,6 +86,10 @@ class SettingsStore {
     return next;
   }
 
+  /// Completes once every queued write has finished. Lets callers (mainly
+  /// tests) wait for the serialised saves to land without polling the file.
+  Future<void> get idle => _queue;
+
   Future<void> _write(AppSettings settings) async {
     try {
       final file = File(path);

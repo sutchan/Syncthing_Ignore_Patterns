@@ -27,11 +27,12 @@ mixin ScanFlow on ChangeNotifier,
   /// The running executable's directory, excluded from scanning.
   String get appDirectory;
 
-  /// Resolves the roots to scan: the typed root, or every fixed drive.
+  /// Resolves the roots to scan: the typed root (normalized), or every local
+  /// and network-mapped drive when blank.
   List<String> _resolveRoots() {
-    final root = rootText.trim();
-    if (root.isEmpty) return listFixedDrives();
-    if (Directory(root).existsSync()) return [root];
+    final root = normalizeRootPath(rootText);
+    if (root.isEmpty) return listScanDrives();
+    if (FileSystemEntity.isDirectorySync(root)) return [root];
     throw Exception(loc.t('rootNotFound', [root]));
   }
 

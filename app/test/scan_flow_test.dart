@@ -54,6 +54,20 @@ void main() {
     expect(state.logs.any((e) => e.level == 'error'), isTrue);
   });
 
+  test('scan rejects a file used as the root', () async {
+    final state = newState();
+    final file = File(p.join(tmp.path, 'not-a-dir.txt'))..writeAsStringSync('x');
+    state.rootText = file.path;
+    final manifest = p.join(tmp.path, 'file.json');
+    state.manifestPath = manifest;
+
+    await state.scan();
+
+    expect(state.isBusy, isFalse);
+    expect(File(manifest).existsSync(), isFalse);
+    expect(state.logs.any((e) => e.level == 'error'), isTrue);
+  });
+
   test('loadExistingManifest surfaces an existing manifest', () async {
     final manifest = File(p.join(tmp.path, 'existing.json'))
       ..writeAsStringSync(jsonEncode(Manifest(
