@@ -5,6 +5,15 @@
 
 ---
 
+## [v1.26.1] - 2026-09-25
+
+### 文档
+- docs: 更新 `docs/development-tasks.md` 进度状态——核对 REQ-1~REQ-10 全部完成、`flutter test` 82/82 通过、`flutter analyze` 零告警、版本三轨一致；明确 13 条评估中增强建议未列入待办
+
+### 说明
+- 规则集内容未改动（仍为 1.18.5）；PowerShell 遗留版版本不变（1.18.5）
+- chore: 同步版本至 v1.26.1（VERSION / pubspec `1.26.1+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
 ## [v1.26.0] - 2026-09-24
 
 ### 功能

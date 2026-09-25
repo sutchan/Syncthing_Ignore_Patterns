@@ -137,7 +137,6 @@
 **/.pnpm-local-store/
 **/.pnpm-store/
 **/.pub-cache/
-**/.venv/
 **/.venv-*/
 **/.yarn/cache/
 **/.yarn/install-state.gz

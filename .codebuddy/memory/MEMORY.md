@@ -8,7 +8,7 @@
 
 ## 项目约定（SyncthingIgnorePatterns）
 - 提交：`type: 描述`（首字母小写、动词开头、≤50字）。
-- **版本三轨独立**：① Flutter 主轨（当前 **v1.26.0**，CI 单一来源 `VERSION`；同步 `VERSION`↔`pubspec.yaml`↔`app_state.dart`的`AppState.version`↔`manifest.dart`示例↔`README*`徽章/正文，共 6 处须全等）② PowerShell 遗留轨（`SyncthingIgnoreGUI.ps1` 头 `//Version`+`$ScriptVersion`，v1.18.5）③ `.stignore` 规则集轨（根与 `app/assets/.stignore` 一致，头 `//Version: 1.18.5`，`//Updated` 为修订日）。动版本前必 `cat VERSION`+`git log` 实查（会话间隙常被外部 bump）。
+- **版本三轨独立**：① Flutter 主轨（当前 **v1.26.1**，CI 单一来源 `VERSION`；同步 `VERSION`↔`pubspec.yaml`↔`app_state.dart`的`AppState.version`↔`manifest.dart`示例↔`README*`徽章/正文，共 6 处须全等）② PowerShell 遗留轨（`SyncthingIgnoreGUI.ps1` 头 `//Version`+`$ScriptVersion`，v1.18.5）③ `.stignore` 规则集轨（根与 `app/assets/.stignore` 一致，头 `//Version: 1.18.5`，`//Updated` 为修订日）。动版本前必 `cat VERSION`+`git log` 实查（会话间隙常被外部 bump）。
 - **CI/CD**（`.github/workflows/ci.yml`，4 作业）：`version` 读根 `VERSION` 校验 `v*` 标签；`validate` 做 ps1 语法 + 规则副本一致性(不一致即 exit 1) + 三轨版本一致性(6 处正则全等)；`build-windows`(windows-latest) pub get / analyze(零告警) / test --coverage / build --release，覆盖率门禁 ≥80%；`release`(仅 `v*` 标签) 产 `SyncthingIgnoreGUI-v<版本>-windows-x64.zip`（版本取自 `needs.version.outputs.version`，禁硬编码）。
 - **规则副本一致性（v1.23.1 起阻断）**：改规则集须同时改根 `.stignore` 与 `app/assets/.stignore`，否则 CI 失败。
 - **CHANGELOG 双副本**：根 `CHANGELOG.md` + `docs/project.md` §7 同写。
@@ -21,9 +21,9 @@
 - **扫描支持局域网/映射盘（v1.26.0）**：`listFixedDrives`→`listScanDrives`（`platform_io.dart`）纳入 DRIVE_REMOTE 映射网络盘；新增 `normalizeRootPath`（`Z:`→`Z:\`、/→\）；UNC（`\\server\share`）可直接填根目录；`_resolveRoots` 改用 `FileSystemEntity.isDirectorySync` 校验（文件作根目录会被拒绝而非静默无结果）；i18n 标签/提示更新。扫描 UNC/映射盘依赖网络可达与权限，已断开的映射盘在 isolate 内被跳过不报错。
 - **UI 选项不刷新坑**：可写通知态须走会 notify 的 setter（`setPreview`/`setForce`/`setBackup`），`root_field` 用 `TextEditingController`+监听 `AppState`。
 - **扫描约定**：始终跳 `dirname(Platform.resolvedExecutable)`；`maxDepth`(默认3)/`skipLargeDirs`(默认true)/`maxFilesPerDir`(默认100) 大目录流式判定。
-- **覆盖率基线**（v1.25.0）：`lib/` 85.60%（927/1083），`flutter test` 79/79；低覆盖 `results_list` 25%/`pickers_state` 38%/`window_bounds` 51%。须 `flutter test --coverage`（非 `test_with_coverage`）。
+- **覆盖率基线**（v1.25.0）：`lib/` 85.60%（927/1083），`flutter test` **82/82**（v1.26.0 起，含映射盘/UNC 用例）；低覆盖 `results_list` 25%/`pickers_state` 38%/`window_bounds` 51%。须 `flutter test --coverage`（非 `test_with_coverage`）。
 - **Dart+Flutter 重写**（v1.18.7 起 `flutter analyze` 零告警）：本机可离线 `pub get`/`analyze`/`test`；非 offline 的 pub get 失败，`build windows` 交 CI。`dart format` 新版对 >80 列重排勿全量套用。
-- **任务文档约定**：`docs/development-tasks.md` 仅列未完成任务（已完成移除不归档），历史见 CHANGELOG+project.md §7；当前（v1.26.0）剩余任务为空，文档含「版本说明」与「后续方向（评估中）」指针（链接 spec.md 改进建议）。
+- **任务文档约定**：`docs/development-tasks.md` 仅列未完成任务（已完成移除不归档），历史见 CHANGELOG+project.md §7；当前（v1.26.1）剩余任务为空，文档含「版本说明」与「后续方向（评估中）」指针（链接 spec.md 改进建议）。
 
 ## 环境约束
 - 本机可 `powershell -File` 但 GUI 脚本不实跑；git 提交由用户本地执行。
