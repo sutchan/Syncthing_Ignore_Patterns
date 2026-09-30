@@ -35,7 +35,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 SyncthingIgnorePatterns/
 ├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
-├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.28.2）
+├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.28.3）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
 │   ├── lib/
 │   │   ├── main.dart         # 入口，注入 AppState；首帧后恢复/采样窗口几何
@@ -47,7 +47,7 @@ SyncthingIgnorePatterns/
 │   │   └── ui/               # home_page.dart（装配）+ settings_dialog / root_field / options_row / scan_options / ruleset_card / action_row / results_list / log_list / about_dialog
 │   ├── windows/runner/resources/app_icon.ico   # Windows 应用图标（品牌资产，见 §10）
 │   ├── assets/.stignore      # 标准规则集（运行时 rootBundle 加载）
-│   ├── tool/                 # 性能基准脚本（perf_benchmark.dart，v1.28.2）
+│   ├── tool/                 # 性能基准脚本（perf_benchmark.dart，v1.28.3）
 │   └── test/                 # 20 个测试文件（单元 / 流程 / 部件 / 性能基准）；CI 强制行覆盖率 ≥80%
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档
@@ -69,7 +69,7 @@ SyncthingIgnorePatterns/
 
 - 语义化版本 `MAJOR.MINOR.PATCH`；文档/配置类变更默认升级 `PATCH`，新功能升级 `MINOR`。
 - **主实现（Flutter 桌面版）版本单一来源**：
-  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.28.2+1`）
+  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.28.3+1`）
   - `app/lib/state/app_state.dart` 的 `AppState.version`（关于框 / 日志展示）
   - `README.md` / `README_EN.md` 版本徽章
   - 根目录 `VERSION` 文件（CI 读取的主实现版本单一来源）
@@ -114,28 +114,32 @@ SyncthingIgnorePatterns/
 
 ## 7. CHANGELOG
 
-### v1.28.2
+### v1.28.3 (2026-09-30)
+- docs: 校正 §9.3 与 development-tasks.md 当前行覆盖率至真实值（85.20% 956/1122），补全 spec.md 里程碑至 v1.28.2 与 §7/CHANGELOG 自 v1.27.0 缺失日期
+- chore: 同步版本至 v1.28.3（VERSION / pubspec `1.28.3+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
+### v1.28.2 (2026-09-30)
 - fix(app): 修复构建后启动"有进程但无窗口"——错误边界 `PlatformDispatcher.instance.onError` 返回 `true` 压制 Flutter 错误界面，任何构建/首帧/初始化异常被静默吞掉后 `runApp` 不执行或首帧错误无界面；改为返回 `false` 始终显示可见错误界面，并对内置规则加载失败兜底、初始化失败也保证 `runApp` 执行
 - chore: 同步版本至 v1.28.2（VERSION / pubspec `1.28.2+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
 
-### v1.28.1
+### v1.28.1 (2026-09-30)
 - docs(app): 新增 `docs/performance.md` 性能基准报告（实测缓冲上限/HTTP 复用/Sliver 首帧构建的前后对比与复现命令）
 - test(app): 新增 `perf_layout_bench_test.dart`（2 用例，首帧构建计数兼性能回归守卫）与 `tool/perf_benchmark.dart` 纯 Dart 基准脚本；`flutter test` 88/88、零告警、行覆盖率 85.51%（956/1118）
 - chore: 同步版本至 v1.28.1（VERSION / pubspec `1.28.1+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
 
-### v1.28.0
+### v1.28.0 (2026-09-30)
 - perf(app): 新增 `services/http_client.dart` 进程级共享 `HttpClient`（连接池 + 15s 连接超时 / 30s 空闲保活），规则集更新检查、应用更新检查与安装包下载三处复用连接，移除每请求新建/关闭客户端
 - perf(app): 日志环形缓冲上限 1000 条（`maxLogEntries`）、扫描结果上限 5000 条（`maxResultEntries`），超限逐出最旧条目，防止超大目录扫描后内存无界增长
 - perf(app): 主界面改 `CustomScrollView` + Sliver 单滚动结构——表单为 `SliverToBoxAdapter` 急切构建，结果/日志列表改造为懒加载 `SliverList.builder`，替换嵌套定高 `ListView` 的全量行构建
 - test(app): 新增 2 个缓冲上限用例；`flutter test` 86/86、`flutter analyze` 零告警、行覆盖率 85.51%（956/1118）
 - chore: 同步版本至 v1.28.0（VERSION / pubspec `1.28.0+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
 
-### v1.27.1
+### v1.27.1 (2026-09-30)
 - fix(app): Apply 的规则源身份判断路径由 `manifestPath`（清单 JSON）修正为 `rulesetPath`（规则集文件），修复"清单记录规则源自身且内容需更新时产生 `.stignore.bak.*` 自备份"问题，恢复"永不备份规则源自身"契约
 - test(app): 新增 applier 服务层契约测试与 apply flow 接线回归测试（旧代码下后者如期失败）；`flutter test` 84/84、零告警、覆盖率 85.39%（947/1109）
 - chore: 同步版本至 v1.27.1（VERSION / pubspec `1.27.1+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
 
-### v1.27.0
+### v1.27.0 (2026-09-30)
 - perf(app): UI 订阅粒度重构——组件由统一 `context.watch<AppState>()` 改 `context.select` 精准订阅各自切片，`HomePage` 仅订阅语言、进度条/状态行抽为 `_ProgressSection`，扫描/应用期间仅相关叶子重建；日志 `notifyListeners` 按帧合并（Apply 重建次数 ≤60 次/秒）；`main()` 规则集读取与清单加载改 `Future.wait` 并行；`results`/`logs` 变更改列表实例替换（新增 `ProgressState.replaceResults`）；`RootField` 弃用手动 listener 改 select（消除泄漏隐患与输入竞态）
 - test(app): `flutter test` 82/82、`flutter analyze` 零告警、行覆盖率 85.30%（946/1109）
 - chore: 同步版本至 v1.27.0（VERSION / pubspec `1.27.0+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
@@ -496,9 +500,9 @@ flutter build windows --release --tree-shake-icons        # 产物：build/windo
 （含 `applyDrop`）、`scan_flow_test`、`apply_flow_test`、`platform_io_test`、
 `window_bounds_service_test`、`ruleset_info_test`、`ruleset_update_test`、`ruleset_fetch_test`、
 `app_paths_test`、`app_update_test`、`app_update_state_test`、`file_drop_test`、
-`update_installer_test`、`perf_layout_bench_test`（首帧构建计数，兼性能回归守卫，v1.28.2）
+`update_installer_test`、`perf_layout_bench_test`（首帧构建计数，兼性能回归守卫，v1.28.3）
 与 `widget_test`（应用壳 + 设置对话框 + 选项 + Apply 确认框 + 关于对话框）
-共 20 个文件 / 88 个用例。当前行覆盖率 **85.51%**（956/1118），CI `build-windows` 强制
+共 20 个文件 / 88 个用例。当前行覆盖率 **85.20%**（956/1122），CI `build-windows` 强制
 **≥80%** 门禁（`Coverage check (>= 80% lines)`）。生成 LCOV：
 
 ```bash
@@ -514,7 +518,7 @@ flutter test --coverage                 # 生成 coverage/lcov.info（含每文�
 ### 9.4 实现分工
 
 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
-**Dart + Flutter 桌面版（v1.28.2）为主实现**，构建为独立 `.exe` 分发。两者共享同一
+**Dart + Flutter 桌面版（v1.28.3）为主实现**，构建为独立 `.exe` 分发。两者共享同一
 `.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等状态与验证边界，
 见 [开发任务清单](development-tasks.md)；功能与 UI 的后续完善建议集中维护于
 [`docs/specs/stignore-gui-flutter/spec.md`](specs/stignore-gui-flutter/spec.md) 的「改进建议（评估中）」一节。
@@ -545,7 +549,7 @@ CI 构建的发布包统一命名（与全局约定一致）：
 - Release 资产**仅上传归档**（`*.zip` / `*.tar.gz`），不上传构建目录树。
 - 预发布版本以 GitHub Release 的 `prerelease` 标记区分，**不在文件名加后缀**。
 
-示例：`SyncthingIgnoreGUI-v1.28.2-windows-x64.zip`
+示例：`SyncthingIgnoreGUI-v1.28.3-windows-x64.zip`
 
 ### 9.6 忽略清单在线更新（v1.22.0）
 

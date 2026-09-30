@@ -5,7 +5,18 @@
 
 ---
 
-## [v1.28.2]
+## [v1.28.3] - 2026-09-30
+
+### 文档
+- docs: 校正 `docs/project.md` §9.3 与 `development-tasks.md` 当前行覆盖率至真实测量值——`flutter test --coverage` 实算 956/1122 = 85.20%（v1.28.2 新增错误边界代码约 4 行未覆盖，分母 1118→1122；用例数仍为 88/88）；20 个测试文件不变
+- docs: 补全 `spec.md` 里程碑至 v1.28.2，并补 `CHANGELOG.md` 与 `project.md` §7 自 v1.27.0 起缺失的发布日期（均为 2026-09-30）
+- chore: 同步版本至 v1.28.3（VERSION / pubspec `1.28.3+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
+### 说明
+- 规则集内容未改动（仍为 1.18.5）；PowerShell 遗留版版本不变（1.18.5）
+- 无代码/行为改动，仅文档与版本号同步
+
+## [v1.28.2] - 2026-09-30
 
 ### 修复
 - fix(app): 修复构建后启动"有进程但无窗口"——全局错误边界 `PlatformDispatcher.instance.onError` 返回 `true` 会压制 Flutter 错误界面，任何构建/首帧/初始化异常（如内置 `.stignore` 规则集经 `rootBundle` 加载失败）被静默吞掉后 `runApp` 不执行或首帧错误无界面，只剩原生空窗口；改为返回 `false` 让 Flutter 始终显示可见错误界面，并对内置规则加载失败兜底（不再冒泡中断）、初始化即便失败也保证 `runApp` 执行
@@ -14,7 +25,7 @@
 - 无生产行为/功能变更；仅修复启动可见性与健壮性
 - chore: 同步版本至 v1.28.2（VERSION / pubspec `1.28.2+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
 
-## [v1.28.1]
+## [v1.28.1] - 2026-09-30
 
 ### 文档
 - docs(app): 新增 `docs/performance.md` 性能基准报告——以可复现脚本实测 v1.28.0 三项优化的前后对比：日志追加 50,000 次由 52.0s 降至 0.75s（约 69×，保留量 50× 更少）、20 万条结果内存保留降 40×、loopback 顺序请求 1.95× 且新建 TCP 连接 100→2、首帧离屏行构建 42→14；含环境、复现命令与测量口径说明
@@ -29,7 +40,7 @@
 - 规则集内容未改动（仍为 1.18.5）；PowerShell 遗留版版本不变（1.18.5）
 - chore: 同步版本至 v1.28.1（VERSION / pubspec `1.28.1+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
 
-## [v1.28.0]
+## [v1.28.0] - 2026-09-30
 
 ### 性能
 - perf(app): 进程级共享 `HttpClient`——新增 `services/http_client.dart` 提供带连接池的单一客户端（15s 连接超时 / 30s 空闲保活）；规则集更新检查、应用更新检查与安装包下载三处网络调用改用该共享实例，移除每请求新建并立即关闭客户端的重复 TCP/TLS 握手
@@ -45,7 +56,7 @@
 - 规则集内容未改动（仍为 1.18.5）；PowerShell 遗留版版本不变（1.18.5）
 - chore: 同步版本至 v1.28.0（VERSION / pubspec `1.28.0+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
 
-## [v1.27.1]
+## [v1.27.1] - 2026-09-30
 
 ### 修复
 - fix(app): Apply 传给规则写入器的规则源路径修正为 `rulesetPath`（原误传 `manifestPath` 清单 JSON 路径）——该路径用于识别"目标是否就是规则源文件本身"并据此跳过自备份；误传导致身份判断恒为否，当清单记录了正在使用的规则源文件且内容需更新时，会产生多余的 `.stignore.bak.*` 自备份副本，破坏"永不备份规则源自身"契约（对齐 PowerShell 版 `Start-ApplyJob` 行为）
@@ -58,7 +69,7 @@
 - 规则集内容未改动（仍为 1.18.5）；PowerShell 遗留版版本不变（1.18.5）
 - chore: 同步版本至 v1.27.1（VERSION / pubspec `1.27.1+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
 
-## [v1.27.0]
+## [v1.27.0] - 2026-09-30
 
 ### 性能
 - perf(app): UI 状态订阅粒度重构——各组件由统一 `context.watch<AppState>()`（任一字段变化都重建整棵页面子树）改为 `context.select` 精准订阅各自渲染的切片；`HomePage` 仅订阅语言，进度条/状态行抽为独立 `_ProgressSection`，扫描与应用期间只有相关叶子组件重建
