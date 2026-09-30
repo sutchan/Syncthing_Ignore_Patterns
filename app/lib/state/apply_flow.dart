@@ -88,7 +88,7 @@ mixin ApplyFlow on ChangeNotifier,
       manifest: manifest,
       sourceContent: sourceContent,
       sourceHash: sourceHash,
-      sourcePath: manifestPath, // placeholder path; source is bundled asset
+      sourcePath: rulesetPath,
       skipRoots: [appDirectory],
       whatIf: preview,
       force: force,

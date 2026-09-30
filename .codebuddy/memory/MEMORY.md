@@ -28,3 +28,6 @@
 ## 环境约束
 - 本机可 `powershell -File` 但 GUI 脚本不实跑；git 提交由用户本地执行。
 - 本机 Flutter SDK 经 UAC `icacls` 修复，借 pub 缓存可离线 `pub get`/`analyze`/`test`；无外网，非 offline pub get 失败，`build windows` 交 CI。
+- **勿并行跑 `flutter analyze` 与 `flutter test`**：二者争抢 Flutter 启动锁，`flutter test` 会因此大量假阴性（曾现 19 个异步用例被误判失败）。务必分开单独跑。
+- **Flutter SDK 版本**：`E:\Program Files\Flutter`（beta 3.40 / Dart 3.11）。该 SDK 的 `SchedulerBinding` 仅有非可空 `static SchedulerBinding get instance`，**无 `maybeInstance`**（grep 确认，`BindingBase` 也没有）；需可空绑定用 `WidgetsBinding.instance`（`WidgetsBinding?`）。
+- **工作树会被外部自动改动**：会话间隙文件常被改写（如 `main.dart` 由串行 await 变 `Future.wait`、`log_state.dart` 被修正）。编辑前务必重新读取，否则 `replace_in_file` 的 `old_str` 与真实内容不符会写坏文件（曾因此把 main.dart 写坏，需整文件重写）。
