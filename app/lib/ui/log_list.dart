@@ -1,43 +1,51 @@
-/// Coloured log view.
+/// Lazy sliver rendering the coloured log view.
 ///
-/// Subscribes only to the `logs` slice. The state layer coalesces log
-/// notifications to at most one per frame, so a large Apply run rebuilds this
-/// list ≤60 times per second instead of once per emitted line.
+/// Rendered as a `SliverList.builder` inside the page's [CustomScrollView], so
+/// lines are built only when scrolled into view (no nested viewport). The
+/// state layer coalesces log notifications to at most one per frame, so a
+/// large Apply run rebuilds this section ≤60 times per second instead of once
+/// per emitted line.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../i18n.dart';
 import '../state/app_state.dart';
 import '../state/log_state.dart';
 
-class LogList extends StatelessWidget {
-  const LogList({super.key});
+class LogSliver extends StatelessWidget {
+  const LogSliver({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.select<AppState, AppLocalizations>((s) => s.loc);
     final logs = context.select<AppState, List<LogEntry>>((s) => s.logs);
-    return SizedBox(
+
+    return SliverPadding(
       key: const Key('log-list'),
-      height: 200,
-      child: Card(
-        child: ListView.builder(
-          itemCount: logs.length,
-          itemBuilder: (_, i) {
-            final LogEntry entry = logs[i];
-            final color = switch (entry.level) {
-              'error' => Colors.red,
-              'warn' => Colors.orange,
-              'muted' => Colors.grey,
-              _ => Theme.of(context).textTheme.bodyMedium?.color,
-            };
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      sliver: SliverList.builder(
+        itemCount: logs.length + 1,
+        itemBuilder: (context, i) {
+          if (i == 0) {
             return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
-              child: Text(entry.text,
-                  style: TextStyle(fontSize: 12, color: color)),
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(loc.t('log'),
+                  key: const Key('log-label'),
+                  style: Theme.of(context).textTheme.titleMedium),
             );
-          },
-        ),
+          }
+          final LogEntry entry = logs[i - 1];
+          final color = switch (entry.level) {
+            'error' => Colors.red,
+            'warn' => Colors.orange,
+            'muted' => Colors.grey,
+            _ => Theme.of(context).textTheme.bodyMedium?.color,
+          };
+          return Text(entry.text,
+              style: TextStyle(fontSize: 12, color: color));
+        },
       ),
     );
   }

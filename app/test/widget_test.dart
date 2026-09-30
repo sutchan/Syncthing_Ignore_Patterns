@@ -80,7 +80,13 @@ void main() {
     await tester.pumpAndSettle();
 
     final applyButton = find.byKey(const Key('apply-button'));
-    await tester.ensureVisible(applyButton);
+    // The page is a CustomScrollView whose form lives in a
+    // SliverToBoxAdapter; tester.ensureVisible can only reveal the sliver
+    // edge for box descendants inside it, so drag the page like a real user
+    // until the off-screen Apply button is hittable.
+    await tester.drag(
+        find.byKey(const Key('home-scroll')), const Offset(0, -400));
+    await tester.pumpAndSettle();
     await tester.tap(applyButton);
     await tester.pumpAndSettle();
 

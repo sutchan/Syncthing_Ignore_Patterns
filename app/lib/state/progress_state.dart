@@ -5,6 +5,14 @@ library;
 
 import 'package:flutter/foundation.dart';
 
+/// Maximum number of scan-result paths kept in memory for the results view.
+///
+/// This is a display-only buffer: Apply reads targets from the manifest file
+/// on disk, which always keeps the full record set. Capping the in-memory list
+/// prevents a scan of a very large tree from growing the UI state without
+/// bound. Only the most recently scanned paths are retained.
+const int maxResultEntries = 5000;
+
 mixin ProgressState on ChangeNotifier {
   /// `true` while a scan/apply is running.
   bool isBusy = false;
@@ -30,9 +38,15 @@ mixin ProgressState on ChangeNotifier {
   List<String> _results = [];
 
   /// Replaces the result paths. Called by the scan flow after a scan or when
-  /// an existing manifest is loaded at startup.
+  /// an existing manifest is loaded at startup. The list is capped to
+  /// [maxResultEntries] newest entries for the UI; the manifest on disk keeps
+  /// every record.
   void replaceResults(Iterable<String> paths) {
-    _results = paths.toList();
+    final list = paths.toList();
+    if (list.length > maxResultEntries) {
+      list.removeRange(0, list.length - maxResultEntries);
+    }
+    _results = list;
   }
 
   DateTime? _start;

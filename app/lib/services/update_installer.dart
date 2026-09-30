@@ -10,6 +10,8 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import 'http_client.dart';
+
 /// Direct download URL of the release archive published for [version].
 String releaseAssetUrl(String version) =>
     'https://github.com/sutchan/Syncthing_Ignore_Patterns/releases/download/'
@@ -110,44 +112,40 @@ Future<void> downloadReleaseZip(
   Duration timeout = const Duration(seconds: 15),
   void Function(int received, int total)? onProgress,
 }) async {
-  final client = HttpClient()..connectionTimeout = timeout;
+  // The shared client stays open so its keep-alive connection pool is reused.
+  final client = sharedHttpClient(connectionTimeout: timeout);
+  final request = await client.getUrl(uri).timeout(timeout);
+  request.headers.set(HttpHeaders.userAgentHeader, 'SyncthingIgnoreGUI');
+  final response = await request.close().timeout(timeout);
+  if (response.statusCode != HttpStatus.ok) {
+    throw HttpException('HTTP ${response.statusCode}', uri: uri);
+  }
+  final total = response.contentLength;
+  final head = <int>[];
+  var received = 0;
+  final sink = destination.openWrite();
   try {
-    final request = await client.getUrl(uri).timeout(timeout);
-    request.headers.set(HttpHeaders.userAgentHeader, 'SyncthingIgnoreGUI');
-    final response = await request.close().timeout(timeout);
-    if (response.statusCode != HttpStatus.ok) {
-      throw HttpException('HTTP ${response.statusCode}', uri: uri);
-    }
-    final total = response.contentLength;
-    final head = <int>[];
-    var received = 0;
-    final sink = destination.openWrite();
-    try {
-      await for (final chunk in response.timeout(timeout)) {
-        received += chunk.length;
-        if (received > maxReleaseZipBytes) {
-          throw const HttpException('update archive exceeded the size limit');
-        }
-        if (head.length < zipMagic.length) {
-          head.addAll(chunk.take(zipMagic.length - head.length));
-        }
-        sink.add(chunk);
-        onProgress?.call(received, total);
+    await for (final chunk in response.timeout(timeout)) {
+      received += chunk.length;
+      if (received > maxReleaseZipBytes) {
+        throw const HttpException('update archive exceeded the size limit');
       }
-    } finally {
-      await sink.close();
-    }
-    if (!looksLikeZip(head)) {
-      try {
-        await destination.delete();
-      } on Exception {
-        // best effort: leaving a stray file behind is harmless
+      if (head.length < zipMagic.length) {
+        head.addAll(chunk.take(zipMagic.length - head.length));
       }
-      throw const HttpException('downloaded file is not a zip archive');
+      sink.add(chunk);
+      onProgress?.call(received, total);
     }
-    return;
   } finally {
-    client.close(force: true);
+    await sink.close();
+  }
+  if (!looksLikeZip(head)) {
+    try {
+      await destination.delete();
+    } on Exception {
+      // best effort: leaving a stray file behind is harmless
+    }
+    throw const HttpException('downloaded file is not a zip archive');
   }
 }
 

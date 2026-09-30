@@ -4,6 +4,8 @@ library;
 import 'dart:convert';
 import 'dart:io';
 
+import 'http_client.dart';
+
 /// GitHub API endpoint that returns the latest published release.
 const String appReleasesApiUrl =
     'https://api.github.com/repos/sutchan/Syncthing_Ignore_Patterns/releases/latest';
@@ -47,30 +49,27 @@ Future<String> fetchLatestReleaseTag({
   Duration timeout = const Duration(seconds: 15),
 }) async {
   final target = uri ?? Uri.parse(appReleasesApiUrl);
-  final client = HttpClient()..connectionTimeout = timeout;
-  try {
-    final request = await client.getUrl(target).timeout(timeout);
-    request.headers
-      ..set(HttpHeaders.userAgentHeader, 'SyncthingIgnoreGUI')
-      ..set(HttpHeaders.acceptHeader, 'application/vnd.github+json');
-    final response = await request.close().timeout(timeout);
-    if (response.statusCode != HttpStatus.ok) {
-      throw HttpException('HTTP ${response.statusCode}', uri: target);
-    }
-    final bytes = <int>[];
-    await for (final chunk in response.timeout(timeout)) {
-      bytes.addAll(chunk);
-      if (bytes.length > maxReleaseJsonBytes) {
-        throw const HttpException('release payload exceeded the size limit');
-      }
-    }
-    final tag =
-        latestTagFromReleaseJson(utf8.decode(bytes, allowMalformed: true));
-    if (tag == null) {
-      throw const HttpException('release payload has no tag_name');
-    }
-    return tag;
-  } finally {
-    client.close(force: true);
+  // The shared client stays open so its keep-alive connection pool is reused.
+  final client = sharedHttpClient(connectionTimeout: timeout);
+  final request = await client.getUrl(target).timeout(timeout);
+  request.headers
+    ..set(HttpHeaders.userAgentHeader, 'SyncthingIgnoreGUI')
+    ..set(HttpHeaders.acceptHeader, 'application/vnd.github+json');
+  final response = await request.close().timeout(timeout);
+  if (response.statusCode != HttpStatus.ok) {
+    throw HttpException('HTTP ${response.statusCode}', uri: target);
   }
+  final bytes = <int>[];
+  await for (final chunk in response.timeout(timeout)) {
+    bytes.addAll(chunk);
+    if (bytes.length > maxReleaseJsonBytes) {
+      throw const HttpException('release payload exceeded the size limit');
+    }
+  }
+  final tag =
+      latestTagFromReleaseJson(utf8.decode(bytes, allowMalformed: true));
+  if (tag == null) {
+    throw const HttpException('release payload has no tag_name');
+  }
+  return tag;
 }

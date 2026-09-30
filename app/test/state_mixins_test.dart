@@ -5,6 +5,8 @@ import 'package:path/path.dart' as p;
 import 'package:syncthing_ignore_gui/services/ruleset_store.dart';
 import 'package:syncthing_ignore_gui/services/settings_store.dart';
 import 'package:syncthing_ignore_gui/state/app_state.dart';
+import 'package:syncthing_ignore_gui/state/log_state.dart';
+import 'package:syncthing_ignore_gui/state/progress_state.dart';
 
 void main() {
   late Directory tmp;
@@ -65,7 +67,27 @@ void main() {
     expect(s.logs, isEmpty);
   });
 
-  test('applyDrop fills the matching input', () {
+  test('log buffer is capped to the newest maxLogEntries lines', () {
+    final s = newState();
+    for (var i = 0; i < maxLogEntries + 5; i++) {
+      s.log('line-$i', 'info');
+    }
+    expect(s.logs.length, maxLogEntries);
+    // Five oldest lines were dropped; the newest line survives.
+    expect(s.logs.first.text, 'line-5');
+    expect(s.logs.last.text, 'line-${maxLogEntries + 4}');
+  });
+
+  test('replaceResults caps the in-memory list but keeps newest entries', () {
+    final s = newState();
+    s.replaceResults(
+        List.generate(maxResultEntries + 3, (i) => 'p$i'));
+    expect(s.results.length, maxResultEntries);
+    expect(s.results.first, 'p3');
+    expect(s.results.last, 'p${maxResultEntries + 2}');
+  });
+
+  test('applyDrop fills the matching input', () async {
     final s = newState();
     final dir = Directory(p.join(tmp.path, 'dropped'))..createSync();
     s.applyDrop(dir.path);

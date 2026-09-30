@@ -1,10 +1,12 @@
-/// Scrollable list of the found `.stignore` files.
+/// Lazy sliver listing the found `.stignore` files.
 ///
 /// Tapping a row reveals its containing folder in the OS file manager; double
 /// clicking opens the file itself with the default editor.
 ///
-/// Only the `results` slice is subscribed to, so high-frequency notifications
-/// from other concerns (logging, progress) never rebuild this list.
+/// Rendered as a `SliverList.builder` inside the page's [CustomScrollView], so
+/// rows are built only when scrolled into view (no nested viewport). Only the
+/// `results` slice is subscribed to, so high-frequency notifications from
+/// other concerns (logging, progress) never rebuild this section.
 library;
 
 import 'dart:io';
@@ -13,44 +15,52 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
+import '../i18n.dart';
 import '../state/app_state.dart';
 
-class ResultsList extends StatelessWidget {
-  const ResultsList({super.key});
+class ResultsSliver extends StatelessWidget {
+  const ResultsSliver({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.select<AppState, AppLocalizations>((s) => s.loc);
     final results = context.select<AppState, List<String>>((s) => s.results);
-    return SizedBox(
+
+    return SliverPadding(
       key: const Key('results-list'),
-      height: 160,
-      child: Card(
-        child: ListView.builder(
-          itemCount: results.length,
-          itemBuilder: (_, i) {
-            final path = results[i];
-            return InkWell(
-              // Single click reveals the file; double click opens it.
-              onTap: () => _openFolder(path),
-              onDoubleTap: () => _openFile(path),
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  children: [
-                    const Icon(Icons.description, size: 18),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(path,
-                          style: const TextStyle(fontSize: 12),
-                          overflow: TextOverflow.ellipsis),
-                    ),
-                  ],
-                ),
-              ),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      sliver: SliverList.builder(
+        itemCount: results.length + 1,
+        itemBuilder: (context, i) {
+          if (i == 0) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(loc.t('results'),
+                  key: const Key('results-label'),
+                  style: Theme.of(context).textTheme.titleMedium),
             );
-          },
-        ),
+          }
+          final path = results[i - 1];
+          return InkWell(
+            // Single click reveals the file; double click opens it.
+            onTap: () => _openFolder(path),
+            onDoubleTap: () => _openFile(path),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                children: [
+                  const Icon(Icons.description, size: 18),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(path,
+                        style: const TextStyle(fontSize: 12),
+                        overflow: TextOverflow.ellipsis),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

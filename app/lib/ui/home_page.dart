@@ -4,6 +4,13 @@
 /// each sub-widget selects the narrow slice of `AppState` it actually renders,
 /// so high-frequency notifications (scan progress, apply logs) rebuild only
 /// the affected leaf instead of the whole column.
+///
+/// The page is one [CustomScrollView] of slivers: the short form is one eager
+/// box, while the result/log sections are lazy `SliverList.builder`s. This
+/// replaces a `SingleChildScrollView` wrapping two nested fixed-height
+/// `ListView`s — the nested viewports built their item rows inside an
+/// already-eager column; the sliver lists build rows only when they scroll
+/// into view and share a single scroll position.
 library;
 
 import 'package:flutter/material.dart';
@@ -47,34 +54,36 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: CustomScrollView(
         key: const Key('home-scroll'),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const RootField(),
-            const SizedBox(height: 12),
-            const OptionsRow(),
-            const SizedBox(height: 12),
-            const ScanOptions(),
-            const SizedBox(height: 12),
-            const RulesetCard(),
-            const SizedBox(height: 12),
-            const ActionRow(),
-            const SizedBox(height: 12),
-            const _ProgressSection(),
-            Text(loc.t('results'),
-                key: const Key('results-label'),
-                style: Theme.of(context).textTheme.titleMedium),
-            const ResultsList(),
-            const SizedBox(height: 12),
-            Text(loc.t('log'),
-                key: const Key('log-label'),
-                style: Theme.of(context).textTheme.titleMedium),
-            const LogList(),
-          ],
-        ),
+        slivers: [
+          // The form is short and cheap, so it is built eagerly as one box.
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  RootField(),
+                  SizedBox(height: 12),
+                  OptionsRow(),
+                  SizedBox(height: 12),
+                  ScanOptions(),
+                  SizedBox(height: 12),
+                  RulesetCard(),
+                  SizedBox(height: 12),
+                  ActionRow(),
+                  SizedBox(height: 12),
+                  _ProgressSection(),
+                ],
+              ),
+            ),
+          ),
+          // The lists are the only potentially long parts; their rows are
+          // built lazily and share the page's single scroll position.
+          const ResultsSliver(),
+          const LogSliver(),
+        ],
       ),
     );
   }
@@ -112,7 +121,6 @@ class _ProgressSection extends StatelessWidget {
         Text(summary,
             key: const Key('summary-text'),
             style: Theme.of(context).textTheme.titleSmall),
-        const SizedBox(height: 12),
       ],
     );
   }

@@ -4,6 +4,8 @@ library;
 import 'dart:convert';
 import 'dart:io';
 
+import 'http_client.dart';
+
 /// Raw URL of the ruleset maintained in the project repository.
 const String rulesetRepoUrl =
     'https://raw.githubusercontent.com/sutchan/Syncthing_Ignore_Patterns/main/.stignore';
@@ -28,23 +30,22 @@ Future<String> fetchRulesetFromRepo({
   Uri? uri,
   Duration timeout = rulesetTimeout,
 }) async {
-  final client = HttpClient()..connectionTimeout = timeout;
-  try {
-    final request = await client.getUrl(uri ?? Uri.parse(rulesetRepoUrl)).timeout(timeout);
-    request.headers.set(HttpHeaders.userAgentHeader, 'SyncthingIgnoreGUI');
-    final response = await request.close().timeout(timeout);
-    if (response.statusCode != HttpStatus.ok) {
-      throw HttpException('HTTP ${response.statusCode}', uri: uri ?? Uri.parse(rulesetRepoUrl));
-    }
-    final bytes = <int>[];
-    await for (final chunk in response.timeout(timeout)) {
-      bytes.addAll(chunk);
-      if (bytes.length > maxRulesetBytes) {
-        throw const HttpException('ruleset exceeded the size limit');
-      }
-    }
-    return utf8.decode(bytes, allowMalformed: true);
-  } finally {
-    client.close(force: true);
+  // The shared client stays open so its keep-alive connection pool is reused.
+  final client = sharedHttpClient(connectionTimeout: timeout);
+  final request =
+      await client.getUrl(uri ?? Uri.parse(rulesetRepoUrl)).timeout(timeout);
+  request.headers.set(HttpHeaders.userAgentHeader, 'SyncthingIgnoreGUI');
+  final response = await request.close().timeout(timeout);
+  if (response.statusCode != HttpStatus.ok) {
+    throw HttpException('HTTP ${response.statusCode}',
+        uri: uri ?? Uri.parse(rulesetRepoUrl));
   }
+  final bytes = <int>[];
+  await for (final chunk in response.timeout(timeout)) {
+    bytes.addAll(chunk);
+    if (bytes.length > maxRulesetBytes) {
+      throw const HttpException('ruleset exceeded the size limit');
+    }
+  }
+  return utf8.decode(bytes, allowMalformed: true);
 }

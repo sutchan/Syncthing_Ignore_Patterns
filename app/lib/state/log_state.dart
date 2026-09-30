@@ -16,6 +16,11 @@ class LogEntry {
   final String level;
 }
 
+/// Maximum number of log lines kept in memory. A long Apply run can emit one
+/// line per touched file; without a cap the buffer (and the log view) would
+/// grow without bound. Only the newest lines are retained.
+const int maxLogEntries = 1000;
+
 /// Owns the log buffer; mixed into `AppState`.
 mixin LogState on ChangeNotifier {
   /// Localizations provider, supplied by the preferences mixin.
@@ -38,7 +43,13 @@ mixin LogState on ChangeNotifier {
   }
 
   void log(String message, String level) {
-    _logs = [..._logs, LogEntry(message, level)];
+    final next = List<LogEntry>.of(_logs)
+      ..add(LogEntry(message, level));
+    // Ring-buffer cap: drop the oldest lines once the limit is exceeded.
+    if (next.length > maxLogEntries) {
+      next.removeRange(0, next.length - maxLogEntries);
+    }
+    _logs = next;
     _scheduleNotify();
   }
 
