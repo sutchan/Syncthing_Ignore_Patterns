@@ -40,3 +40,4 @@ app/.dart_tool/
 app/build/
 app/.flutter-plugins-dependencies
 app/coverage/
+*.sync-conflict-*

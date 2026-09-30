@@ -4,6 +4,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'i18n.dart';
 import 'state/app_state.dart';
 import 'ui/home_page.dart';
 

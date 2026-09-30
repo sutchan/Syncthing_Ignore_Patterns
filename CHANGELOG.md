@@ -7,6 +7,9 @@
 
 ## [v1.28.5] - 2026-09-30
 
+### CI
+- ci: 完善 CI/CD 工作流——validate 作业新增文档与 CHANGELOG 当前版本引用检查（防版本漂移，覆盖 `tasks.md`/`project.md` 全部当前版本展示位）；release 作业为归档附 SHA256 校验和并同时发布 `.stignore` 规则集资产
+
 ### 文档
 - docs: 将 `docs/development-tasks.md` 重命名为 `docs/tasks.md`（用途不变：记录剩余 / 未完成任务），并更新 `docs/specs/stignore-gui-flutter/spec.md` 与 `docs/project.md` 中指向该清单的链接
 - docs: 任务记录集中化——将 `spec.md`「改进建议（评估中）」PROP-1~13 整体迁移至 `tasks.md`「评估中建议（Backlog）」，`spec.md` 改为仅保留指针；确立 `tasks.md` 为项目所有任务记录的唯一来源（Single Source of Truth）

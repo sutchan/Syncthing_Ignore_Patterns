@@ -173,13 +173,16 @@ jobs:
       - name: Docs & changelog reference current version
         shell: pwsh
         run: |
-          # 文档与变更日志须引用当前主实现版本，防止版本漂移（见 docs/project.md §4、development-tasks.md）。
+          # 文档与变更日志须引用当前主实现版本，防止版本漂移（见 docs/project.md §4、docs/tasks.md）。
           # 版本三轨独立：Flutter 主实现版本 = VERSION，文档中的「当前版本」展示位须与之相等。
           $ver = (Get-Content VERSION | Out-String).Trim()
           $checks = @(
-            @{ file = 'docs/development-tasks.md'; pat = "Flutter 桌面版：v$ver" }
+            @{ file = 'docs/tasks.md'; pat = "Flutter 桌面版：v$ver" }
             @{ file = 'docs/project.md';            pat = "构建为 exe，v$ver" }
             @{ file = 'docs/project.md';            pat = "（v$ver）为主实现" }
+            @{ file = 'docs/project.md';            pat = "如 \`$ver+1\`" }
+            @{ file = 'docs/project.md';            pat = "SyncthingIgnoreGUI-v$ver-windows-x64.zip" }
+            @{ file = 'docs/project.md';            pat = "perf_benchmark.dart，v$ver" }
             @{ file = 'CHANGELOG.md';               pat = "## [v$ver]" }
           )
           foreach ($c in $checks) {

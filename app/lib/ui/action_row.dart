@@ -64,7 +64,7 @@ class ActionRow extends StatelessWidget {
     bool force,
   ) async {
     if (!preview && !force) {
-      final count = await state.pendingApplyCount();
+      final count = state.pendingApplyCount();
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(

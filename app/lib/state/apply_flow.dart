@@ -32,9 +32,9 @@ mixin ApplyFlow on ChangeNotifier,
   /// Number of paths in the manifest that [apply] would touch, or `0` when the
   /// manifest is missing/corrupt. Read synchronously so the pre-apply prompt can
   /// be shown within the button handler without an async gap.
-  Future<int> pendingApplyCount() async {
+  int pendingApplyCount() {
     try {
-      final decoded = jsonDecode(await File(manifestPath).readAsString());
+      final decoded = jsonDecode(File(manifestPath).readAsStringSync());
       if (decoded is! Map<String, dynamic>) return 0;
       return Manifest.fromJson(decoded).files.length;
     } on Object {

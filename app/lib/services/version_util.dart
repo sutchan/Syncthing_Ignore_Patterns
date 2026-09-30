@@ -8,4 +8,4 @@ library;
 /// malicious/transient tag containing `..` or `/` escape the intended location
 /// (path traversal). Restricting versions to `^[0-9][0-9.]*$` closes that gap.
 bool isValidVersion(String version) =>
-    RegExp(r'^[0-9][0-9.]*$').hasMatch(version.trim());
+    RegExp(r'^[0-9]+(\.[0-9]+)*$').hasMatch(version.trim());
