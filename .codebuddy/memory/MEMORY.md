@@ -8,13 +8,14 @@
 
 ## 项目约定（SyncthingIgnorePatterns）
 - 提交：`type: 描述`（首字母小写、动词开头、≤50字）。
-- **版本三轨独立**：① Flutter 主轨（当前 **v1.26.2**，CI 单一来源 `VERSION`；同步 `VERSION`↔`pubspec.yaml`↔`app_state.dart`的`AppState.version`↔`manifest.dart`示例↔`README*`徽章/正文，共 6 处须全等）② PowerShell 遗留轨（`SyncthingIgnoreGUI.ps1` 头 `//Version`+`$ScriptVersion`，v1.18.5）③ `.stignore` 规则集轨（根与 `app/assets/.stignore` 一致，头 `//Version: 1.18.5`，`//Updated` 为修订日）。动版本前必 `cat VERSION`+`git log` 实查（会话间隙常被外部 bump）。
+- **版本三轨独立**：① Flutter 主轨（当前 **v1.28.2**，CI 单一来源 `VERSION`；同步 `VERSION`↔`pubspec.yaml`↔`app_state.dart`的`AppState.version`↔`manifest.dart`示例↔`README*`徽章/正文，共 6 处须全等）② PowerShell 遗留轨（`SyncthingIgnoreGUI.ps1` 头 `//Version`+`$ScriptVersion`，v1.18.5）③ `.stignore` 规则集轨（根与 `app/assets/.stignore` 一致，头 `//Version: 1.18.5`，`//Updated` 为修订日）。动版本前必 `cat VERSION`+`git log` 实查（会话间隙常被外部 bump）。
 - **CI/CD**（`.github/workflows/ci.yml`，4 作业）：`version` 读根 `VERSION` 校验 `v*` 标签；`validate` 做 ps1 语法 + 规则副本一致性(不一致即 exit 1) + 三轨版本一致性(6 处正则全等)；`build-windows`(windows-latest) pub get / analyze(零告警) / test --coverage / build --release，覆盖率门禁 ≥80%；`release`(仅 `v*` 标签) 产 `SyncthingIgnoreGUI-v<版本>-windows-x64.zip`（版本取自 `needs.version.outputs.version`，禁硬编码）。
 - **规则副本一致性（v1.23.1 起阻断）**：改规则集须同时改根 `.stignore` 与 `app/assets/.stignore`，否则 CI 失败。
 - **CHANGELOG 双副本**：根 `CHANGELOG.md` + `docs/project.md` §7 同写。
 - **许可**：根 `LICENSE`=MIT（`Copyright (c) 2019-2026 Sut`）。
 - **多 agent 并发提交风险**：会话间隙会被他人 `git add -A` 扫入；临时脚本勿放仓库根；动版本/规则集前 `git show HEAD:<file>` 核对真值。
 - **Dart isolate 闭包捕获陷阱**：`Isolate.run(f)` 序列化 `f` 及其捕获上下文；若 `f` 与捕获不可发送对象（`AppState`/`SettingsStore`/`_Future`）的闭包同作用域，Dart 共用 context→抛 `object is unsendable` 致真实运行中断。修复：闭包抽顶层函数仅捕获纯参数，回调只在主 isolate `.then` 调用。
+- **全局错误边界勿 `return true`（v1.28.2 修复"有进程无窗口"bug）**：`PlatformDispatcher.instance.onError` 返回 `true` 会压制 Flutter 错误界面，任何构建/首帧/初始化异常（如 `loadRulesetInfo` 走真实 `rootBundle.loadString` 路径在单测被 mock 覆盖、内置规则加载失败抛错）冒泡出 `main()` 被静默吞掉，致 `runApp` 不执行或首帧错误无界面，只剩原生空窗口。须 `return false`（或交默认处理）始终显示可见错误界面；启动期高风险点 `loadRulesetInfo` 真实 `rootBundle` 路径单测未覆盖，须兜底。
 - **偏好写入须串行化**（v1.22.0）：`SettingsStore.save` 用队列+`flush:true` 避免并发写竞态；`--coverage` 间歇红灯多查并发写/未 await 的 Future。
 - **构建产物/品牌**：`<产品名>-v<语义版本>-<os>-<arch>.<zip|tar.gz>`（`env.APP_NAME=SyncthingIgnoreGUI`）；exe=`SyncthingIgnoreGUI.exe`（`windows/CMakeLists.txt` `BINARY_NAME`，勿改 pubspec `name: syncthing_ignore_gui`）。品牌资产 `tools/generate-brand-assets.ps1` 产 logo+PNG+ico，改色/几何同步 SVG+脚本+`BRAND.md`；`release` 归档内以 `SyncthingIgnoreGUI/` 为顶层目录（由 `env.APP_NAME` 决定），解压不散落根目录（v1.25.3 起的 CI 打包行为，见 `ci.yml` `Package release archive`）。
 - **已实现功能（含复用坑）**：窗口几何记忆(v1.21.0 ffi `calloc` 是 Allocator 实例)、忽略清单在线更新(v1.22.0 `dart:io` 注入式下载器不触网)、应用确认+停止+实时状态行+双击打开(v1.23.0 `pendingApplyCount()` 同步读清单)、应用更新检查(v1.24.0 GitHub Releases API 仅提示无静默安装)、拖拽填入(v1.25.0 C++ `WM_DROPFILES`+MethodChannel `syncthing_ignore_gui/drop`，通道名须一致)+一键下载安装更新(v1.25.0 `update_installer.dart` PowerShell 助手，替换/重启须真实 Windows 验证)。
