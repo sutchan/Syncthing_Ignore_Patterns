@@ -68,8 +68,17 @@ mixin RulesetUpdateState on ChangeNotifier, PreferencesState, LogState {
         return;
       }
     }
-    _ruleset = RulesetInfo.parse(await _bundled());
-    _downloaded = false;
+    // Fall back to the bundled ruleset. If that fails to load (e.g. the asset
+    // is unavailable), start without ruleset metadata rather than throwing —
+    // an exception here would abort startup and leave only a headless window.
+    try {
+      _ruleset = RulesetInfo.parse(await _bundled());
+      _downloaded = false;
+    } on Exception catch (e) {
+      _ruleset = null;
+      _downloaded = false;
+      log('ruleset load failed: $e', 'warn');
+    }
     notifyListeners();
   }
 

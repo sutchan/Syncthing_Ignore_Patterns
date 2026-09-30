@@ -5,6 +5,15 @@
 
 ---
 
+## [v1.28.2]
+
+### 修复
+- fix(app): 修复构建后启动"有进程但无窗口"——全局错误边界 `PlatformDispatcher.instance.onError` 返回 `true` 会压制 Flutter 错误界面，任何构建/首帧/初始化异常（如内置 `.stignore` 规则集经 `rootBundle` 加载失败）被静默吞掉后 `runApp` 不执行或首帧错误无界面，只剩原生空窗口；改为返回 `false` 让 Flutter 始终显示可见错误界面，并对内置规则加载失败兜底（不再冒泡中断）、初始化即便失败也保证 `runApp` 执行
+
+### 说明
+- 无生产行为/功能变更；仅修复启动可见性与健壮性
+- chore: 同步版本至 v1.28.2（VERSION / pubspec `1.28.2+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
 ## [v1.28.1]
 
 ### 文档

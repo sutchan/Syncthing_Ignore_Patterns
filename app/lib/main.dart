@@ -26,6 +26,8 @@ Future<void> main() async {
   };
 
   // Catch asynchronous errors that escape Flutter's framework handling.
+  // Return false so Flutter still shows its error UI — a visible screen
+  // rather than a blank, headless window (returning true would suppress it).
   PlatformDispatcher.instance.onError = (error, stack) {
     developer.log(
       'Uncaught async error: $error',
@@ -33,7 +35,7 @@ Future<void> main() async {
       error: error,
       stackTrace: stack,
     );
-    return true;
+    return false;
   };
 
   // Friendly screen for release builds instead of the red error page.
@@ -57,11 +59,21 @@ Future<void> main() async {
   // message, so it needs the saved locale.
   await state.loadSettings();
   // Ruleset metadata and the previous manifest are independent disk reads, so
-  // run them concurrently instead of serially (async-parallel).
-  await Future.wait([
-    state.loadRulesetInfo(),
-    state.loadExistingManifest(),
-  ]);
+  // run them concurrently instead of serially (async-parallel). A failure here
+  // must never block the window from appearing, so log it and continue.
+  try {
+    await Future.wait([
+      state.loadRulesetInfo(),
+      state.loadExistingManifest(),
+    ]);
+  } on Exception catch (e, st) {
+    developer.log(
+      'startup init failed (continuing): $e',
+      name: 'startup',
+      error: e,
+      stackTrace: st,
+    );
+  }
   // Accept folders / .stignore files dragged onto the window.
   state.listenForFileDrops();
   runApp(
