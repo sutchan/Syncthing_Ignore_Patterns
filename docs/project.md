@@ -35,14 +35,14 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 SyncthingIgnorePatterns/
 ├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
-├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.27.1）
+├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.28.0）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
 │   ├── lib/
 │   │   ├── main.dart         # 入口，注入 AppState；首帧后恢复/采样窗口几何
 │   │   ├── app.dart          # MaterialApp + 明暗主题
 │   │   ├── i18n.dart         # 中英双语字典（键对齐 $T）
 │   │   ├── models/           # manifest.dart / window_bounds.dart / ruleset_info.dart
-│   │   ├── services/         # scanner / applier / rules_source / platform_io / settings_store / window_bounds / app_paths / ruleset_store / ruleset_update / app_update / file_drop / update_installer
+│   │   ├── services/         # scanner / applier / rules_source / platform_io / settings_store / window_bounds / app_paths / ruleset_store / ruleset_update / app_update / file_drop / update_installer / http_client
 │   │   ├── state/            # app_state.dart（组合）+ preferences / scan_options / log / progress / pickers / ruleset / app_update + scan_flow / apply_flow
 │   │   └── ui/               # home_page.dart（装配）+ settings_dialog / root_field / options_row / scan_options / ruleset_card / action_row / results_list / log_list / about_dialog
 │   ├── windows/runner/resources/app_icon.ico   # Windows 应用图标（品牌资产，见 §10）
@@ -67,7 +67,7 @@ SyncthingIgnorePatterns/
 
 - 语义化版本 `MAJOR.MINOR.PATCH`；文档/配置类变更默认升级 `PATCH`，新功能升级 `MINOR`。
 - **主实现（Flutter 桌面版）版本单一来源**：
-  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.27.1+1`）
+  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.28.0+1`）
   - `app/lib/state/app_state.dart` 的 `AppState.version`（关于框 / 日志展示）
   - `README.md` / `README_EN.md` 版本徽章
   - 根目录 `VERSION` 文件（CI 读取的主实现版本单一来源）
@@ -111,6 +111,13 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.28.0
+- perf(app): 新增 `services/http_client.dart` 进程级共享 `HttpClient`（连接池 + 15s 连接超时 / 30s 空闲保活），规则集更新检查、应用更新检查与安装包下载三处复用连接，移除每请求新建/关闭客户端
+- perf(app): 日志环形缓冲上限 1000 条（`maxLogEntries`）、扫描结果上限 5000 条（`maxResultEntries`），超限逐出最旧条目，防止超大目录扫描后内存无界增长
+- perf(app): 主界面改 `CustomScrollView` + Sliver 单滚动结构——表单为 `SliverToBoxAdapter` 急切构建，结果/日志列表改造为懒加载 `SliverList.builder`，替换嵌套定高 `ListView` 的全量行构建
+- test(app): 新增 2 个缓冲上限用例；`flutter test` 86/86、`flutter analyze` 零告警、行覆盖率 85.51%（956/1118）
+- chore: 同步版本至 v1.28.0（VERSION / pubspec `1.28.0+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
 
 ### v1.27.1
 - fix(app): Apply 的规则源身份判断路径由 `manifestPath`（清单 JSON）修正为 `rulesetPath`（规则集文件），修复"清单记录规则源自身且内容需更新时产生 `.stignore.bak.*` 自备份"问题，恢复"永不备份规则源自身"契约
@@ -423,29 +430,30 @@ SyncthingIgnorePatterns/
 | `lib/services/settings_store.dart` | 用户偏好（语言 / 主题 / 窗口几何）JSON 持久化：`%APPDATA%\SyncthingIgnoreGUI\settings.json`；纯 `dart:io`，无新增依赖，缺失/损坏回退默认值 |
 | `lib/services/app_paths.dart` | 共享的用户数据目录（`%APPDATA%\SyncthingIgnoreGUI`），`settings_store` 与清单缓存复用（v1.22.0） |
 | `lib/services/ruleset_store.dart` | 清单（`.stignore`）读写：来源优先级 exe 同目录 → 用户数据目录 → 内置资源；写入优先 exe 同目录、失败回退（v1.22.0） |
-| `lib/services/ruleset_update.dart` | 从仓库 raw 地址下载清单（`dart:io HttpClient`，15 s 超时 / 5 MiB 上限，**无新增依赖**），下载器可注入（v1.22.0） |
-| `lib/services/app_update.dart` | 从 GitHub Releases API 读取最新 `tag_name`（`dart:io HttpClient`，15 s 超时 / 1 MiB 上限，**无新增依赖**）；`latestTagFromReleaseJson` 纯解析可单测（v1.24.0） |
+| `lib/services/http_client.dart` | 进程级共享 `HttpClient` 单一实例（v1.28.0）：开启连接池复用，15 s 连接超时 / 30 s 空闲保活；规则集更新、应用更新、安装包下载共用，避免每请求重复 TCP/TLS 握手 |
+| `lib/services/ruleset_update.dart` | 从仓库 raw 地址下载清单（共享 `httpClient`，15 s 超时 / 5 MiB 上限，**无新增依赖**），下载器可注入（v1.22.0；v1.28.0 起改用共享客户端） |
+| `lib/services/app_update.dart` | 从 GitHub Releases API 读取最新 `tag_name`（共享 `httpClient`，15 s 超时 / 1 MiB 上限，**无新增依赖**）；`latestTagFromReleaseJson` 纯解析可单测（v1.24.0；v1.28.0 起改用共享客户端） |
 | `lib/services/file_drop.dart` | 拖放通道 `syncthing_ignore_gui/drop`（与 `windows/runner/flutter_window.cpp` 对齐）与纯函数 `classifyDrop`（文件夹→根目录 / `.stignore`·`.json`→清单 / 其余忽略）（v1.25.0） |
-| `lib/services/update_installer.dart` | 下载更新归档（zip 魔数校验、200 MiB 上限）并生成/启动 PowerShell 助手脚本（等待退出 → `Expand-Archive` 覆盖 → 重启 → 自删）；下载器/启动器/退出/临时目录均可注入（v1.25.0） |
+| `lib/services/update_installer.dart` | 下载更新归档（共享 `httpClient`、zip 魔数校验、200 MiB 上限）并生成/启动 PowerShell 助手脚本（等待退出 → `Expand-Archive` 覆盖 → 重启 → 自删）；下载器/启动器/退出/临时目录均可注入（v1.25.0；v1.28.0 起改用共享客户端） |
 | `lib/state/app_state.dart` | 组合下列 mixin，仅保留 `version`/`appDirectory`/`stop()`/`rulesPathLabel`（v1.21.0 拆分） |
 | `lib/state/preferences_state.dart` | mixin：语言/主题/窗口几何的恢复与写盘（含窗口几何采样 Timer） |
 | `lib/state/scan_options_state.dart` | mixin：预览/强制/备份 + 扫描深度/大目录过滤阈值（改动即 `notifyListeners`） |
-| `lib/state/log_state.dart` | mixin：`LogEntry` 与日志缓冲（变更替换列表实例）、`logTranslated` 解析 applier 的 `key::arg`；`log()` 按帧合并 `notifyListeners`（v1.27.0，每帧至多一次，无 binding 环境回退同步通知） |
-| `lib/state/progress_state.dart` | mixin：`isBusy`/`cancelled`/`progress`/`status`/`summary`/`results`（变更替换列表实例，`replaceResults()`）+ `begin()`/`finish()`/`elapsed()` |
+| `lib/state/log_state.dart` | mixin：`LogEntry` 与日志缓冲（变更替换列表实例）、`logTranslated` 解析 applier 的 `key::arg`；`log()` 按帧合并 `notifyListeners`（v1.27.0，每帧至多一次，无 binding 环境回退同步通知）；v1.28.0 起缓冲上限 `maxLogEntries`=1000 条，超限逐出最旧 |
+| `lib/state/progress_state.dart` | mixin：`isBusy`/`cancelled`/`progress`/`status`/`summary`/`results`（变更替换列表实例，`replaceResults()`）+ `begin()`/`finish()`/`elapsed()`；v1.28.0 起结果上限 `maxResultEntries`=5000 条，仅保留最新 |
 | `lib/state/pickers_state.dart` | mixin：`rootText`/`manifestPath` 字段与「浏览」选择（`pickRoot`/`pickManifest`）；`applyDrop`/`listenForFileDrops` 处理窗口拖放（v1.25.0） |
 | `lib/state/ruleset_state.dart` | mixin：清单版本/来源/更新状态；`loadRulesetInfo()`（不联网）、`effectiveRules()`（Apply 实际使用的清单）、`checkRulesetUpdate()`（下载并按版本采纳）（v1.22.0） |
 | `lib/state/app_update_state.dart` | mixin：应用更新检查；`checkAppUpdate()` 比较最新 Release 与当前版本，暴露 `availableAppVersion`/`appUpdateStatus`/`checkingAppUpdate`（v1.24.0） |
 | `lib/state/scan_flow.dart` | mixin：`scan()`——解析根目录（留空=固定 + 映射网络驱动器）→ `scanRoots` → 写清单；`_resolveRoots` 改用 `isDirectorySync` 校验（v1.26.0）并接 `normalizeRootPath` 归一化、`_reportScanProgress` 刷新实时状态行、`loadExistingManifest()` 启动回填既有清单（v1.23.0） |
 | `lib/state/apply_flow.dart` | mixin：`apply()`——载入标准规则 → `applyRules`（预览/强制/备份/`isCancelled`，v1.27.1 起规则源身份路径传 `rulesetPath` 而非 `manifestPath`）→ 回写清单；`pendingApplyCount()` 供确认框（v1.23.0） |
-| `lib/ui/home_page.dart` | 主界面装配壳（Scaffold + 子组件 + 关于对话框）；子组件按职责拆至同目录（v1.21.0）；v1.27.0 起壳仅 `select` 订阅语言切片，进度条/状态行在同文件 `_ProgressSection` 内独立订阅 |
+| `lib/ui/home_page.dart` | 主界面装配壳（Scaffold + 子组件 + 关于对话框）；子组件按职责拆至同目录（v1.21.0）；v1.27.0 起壳仅 `select` 订阅语言切片，进度条/状态行在同文件 `_ProgressSection` 内独立订阅；v1.28.0 起为单一 `CustomScrollView`（表单 `SliverToBoxAdapter` + 结果/日志 Sliver） |
 | `lib/ui/settings_dialog.dart` | 语言/主题设置对话框（`SettingsDialog.show`） |
 | `lib/ui/root_field.dart` | 根目录/清单路径输入（`TextEditingController`，可反映「浏览」结果）；v1.27.0 起经 `select` 订阅 `rootText`/`manifestPath` 同步控制器（不再手动 addListener） |
 | `lib/ui/options_row.dart` | 预览/强制/备份复选行（经 `setPreview`/`setForce`/`setBackup` 触发刷新） |
 | `lib/ui/scan_options.dart` | 扫描深度滑块 + 大目录过滤开关/阈值滑块 |
 | `lib/ui/ruleset_card.dart` | 忽略清单卡片：当前版本 / 来源（内置·已下载）/ 修订日 + 存放路径（悬停）+「检查清单更新」按钮 + 结果提示（v1.22.0） |
 | `lib/ui/action_row.dart` | 扫描/应用/清空/停止按钮；非预览非强制时 Apply 先弹确认框（v1.23.0） |
-| `lib/ui/results_list.dart` | 结果列表（单击打开所在目录、双击用默认程序打开文件，v1.23.0） |
-| `lib/ui/log_list.dart` | 分级着色的日志列表 |
+| `lib/ui/results_list.dart` | 结果 Sliver 列表（懒加载 `SliverList.builder`；单击打开所在目录、双击用默认程序打开文件，v1.23.0；v1.28.0 改造为 Sliver） |
+| `lib/ui/log_list.dart` | 分级着色的日志 Sliver 列表（v1.28.0 改造为懒加载 `SliverList.builder`） |
 | `lib/ui/about_dialog.dart` | 关于对话框（`AppAboutDialog.show`）：版本 / 项目信息 + 「检查应用更新」按钮 + 结果提示 + 「打开下载页」（v1.24.0） |
 
 ### 9.2 构建为 exe
@@ -478,7 +486,7 @@ flutter build windows --release --tree-shake-icons        # 产物：build/windo
 `window_bounds_service_test`、`ruleset_info_test`、`ruleset_update_test`、`ruleset_fetch_test`、
 `app_paths_test`、`app_update_test`、`app_update_state_test`、`file_drop_test`、
 `update_installer_test` 与 `widget_test`（应用壳 + 设置对话框 + 选项 + Apply 确认框 + 关于对话框）
-共 19 个文件 / 84 个用例。当前行覆盖率 **85.39%**（947/1109），CI `build-windows` 强制
+共 19 个文件 / 86 个用例。当前行覆盖率 **85.51%**（956/1118），CI `build-windows` 强制
 **≥80%** 门禁（`Coverage check (>= 80% lines)`）。生成 LCOV：
 
 ```bash
@@ -493,7 +501,7 @@ flutter test --coverage                 # 生成 coverage/lcov.info（含每文�
 ### 9.4 实现分工
 
 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
-**Dart + Flutter 桌面版（v1.27.1）为主实现**，构建为独立 `.exe` 分发。两者共享同一
+**Dart + Flutter 桌面版（v1.28.0）为主实现**，构建为独立 `.exe` 分发。两者共享同一
 `.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等状态与验证边界，
 见 [开发任务清单](development-tasks.md)；功能与 UI 的后续完善建议集中维护于
 [`docs/specs/stignore-gui-flutter/spec.md`](specs/stignore-gui-flutter/spec.md) 的「改进建议（评估中）」一节。
@@ -524,7 +532,7 @@ CI 构建的发布包统一命名（与全局约定一致）：
 - Release 资产**仅上传归档**（`*.zip` / `*.tar.gz`），不上传构建目录树。
 - 预发布版本以 GitHub Release 的 `prerelease` 标记区分，**不在文件名加后缀**。
 
-示例：`SyncthingIgnoreGUI-v1.27.1-windows-x64.zip`
+示例：`SyncthingIgnoreGUI-v1.28.0-windows-x64.zip`
 
 ### 9.6 忽略清单在线更新（v1.22.0）
 

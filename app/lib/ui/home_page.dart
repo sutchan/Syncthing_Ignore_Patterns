@@ -54,16 +54,16 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: CustomScrollView(
-        key: const Key('home-scroll'),
+      body: const CustomScrollView(
+        key: Key('home-scroll'),
         slivers: [
           // The form is short and cheap, so it is built eagerly as one box.
           SliverPadding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16),
             sliver: SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   RootField(),
                   SizedBox(height: 12),
                   OptionsRow(),
@@ -81,8 +81,8 @@ class HomePage extends StatelessWidget {
           ),
           // The lists are the only potentially long parts; their rows are
           // built lazily and share the page's single scroll position.
-          const ResultsSliver(),
-          const LogSliver(),
+          ResultsSliver(),
+          LogSliver(),
         ],
       ),
     );

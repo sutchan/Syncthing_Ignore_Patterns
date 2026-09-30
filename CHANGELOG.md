@@ -5,6 +5,22 @@
 
 ---
 
+## [v1.28.0]
+
+### 性能
+- perf(app): 进程级共享 `HttpClient`——新增 `services/http_client.dart` 提供带连接池的单一客户端（15s 连接超时 / 30s 空闲保活）；规则集更新检查、应用更新检查与安装包下载三处网络调用改用该共享实例，移除每请求新建并立即关闭客户端的重复 TCP/TLS 握手
+- perf(app): 日志与扫描结果环形缓冲——`LogState` 日志上限 1000 条（`maxLogEntries`）、`ProgressState` 结果上限 5000 条（`maxResultEntries`），超限时自动逐出最旧条目，防止超大型同步目录扫描后内存无界增长
+- perf(app): 主界面改 `CustomScrollView` + Sliver 单滚动结构——表单收为单个 `SliverToBoxAdapter` 急切构建，结果/日志列表改造为懒加载 `SliverList.builder`（`results_list.dart` / `log_list.dart`），替换原先"单滚动视图内嵌两个定高 `ListView`"导致全部行组件一次性构建的嵌套视口结构；长列表行仅在滚入视口时构建，并共享同一滚动位置
+
+### 测试与质量
+- test(app): 新增 2 个缓冲上限用例——日志保留最新 1000 条、结果保留最新 5000 条，断言最旧条目被逐出且最新条目保留；适配 Sliver 布局修正 Apply 部件测试的离屏按钮定位（以用户拖拽手势滚动替代 `ensureVisible`）
+- test(app): `flutter test` 86/86 通过，`flutter analyze` 零告警；`lib/` 行覆盖率 85.51%（956/1118），CI 门禁 ≥80% 不变
+
+### 说明
+- 对外行为契约不变（REQ-1~REQ-10 保持稳定），仅网络连接复用、内存上限与滚动布局调度优化
+- 规则集内容未改动（仍为 1.18.5）；PowerShell 遗留版版本不变（1.18.5）
+- chore: 同步版本至 v1.28.0（VERSION / pubspec `1.28.0+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
 ## [v1.27.1]
 
 ### 修复
