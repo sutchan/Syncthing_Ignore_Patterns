@@ -5,6 +5,19 @@
 
 ---
 
+## [v1.27.1]
+
+### 修复
+- fix(app): Apply 传给规则写入器的规则源路径修正为 `rulesetPath`（原误传 `manifestPath` 清单 JSON 路径）——该路径用于识别"目标是否就是规则源文件本身"并据此跳过自备份；误传导致身份判断恒为否，当清单记录了正在使用的规则源文件且内容需更新时，会产生多余的 `.stignore.bak.*` 自备份副本，破坏"永不备份规则源自身"契约（对齐 PowerShell 版 `Start-ApplyJob` 行为）
+
+### 测试
+- test(app): 新增 2 个回归用例——`applyRules` 服务层契约（目标即源文件时不创建 `.bak`）与 `apply()` flow 接线回归（经可注入 `RulesetStore` 构造"生效规则≠磁盘字节"场景，断言无自备份；旧代码下该用例如期失败）
+- test(app): `flutter test` 84/84 通过，`flutter analyze` 零告警；`lib/` 行覆盖率 85.39%（947/1109）
+
+### 说明
+- 规则集内容未改动（仍为 1.18.5）；PowerShell 遗留版版本不变（1.18.5）
+- chore: 同步版本至 v1.27.1（VERSION / pubspec `1.27.1+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
 ## [v1.27.0]
 
 ### 性能
