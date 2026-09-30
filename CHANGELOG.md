@@ -5,6 +5,21 @@
 
 ---
 
+## [v1.28.1]
+
+### 文档
+- docs(app): 新增 `docs/performance.md` 性能基准报告——以可复现脚本实测 v1.28.0 三项优化的前后对比：日志追加 50,000 次由 52.0s 降至 0.75s（约 69×，保留量 50× 更少）、20 万条结果内存保留降 40×、loopback 顺序请求 1.95× 且新建 TCP 连接 100→2、首帧离屏行构建 42→14；含环境、复现命令与测量口径说明
+
+### 测试
+- test(app): 新增 `test/perf_layout_bench_test.dart`（2 用例）——以固定行高夹具计数首帧构建行数，量化嵌套定高 `ListView` 与 Sliver 布局差异，并作为"离屏行不构建"的性能回归守卫
+- chore(app): 新增 `tool/perf_benchmark.dart` 纯 Dart 基准脚本（缓冲策略 + HTTP 连接复用，`dart run tool/perf_benchmark.dart`）
+- test(app): `flutter test` 88/88 通过，`flutter analyze` 零告警；`lib/` 行覆盖率 85.51%（956/1118），CI 门禁 ≥80% 不变
+
+### 说明
+- 无生产行为变更（REQ-1~REQ-10 保持稳定）；仅新增基准、文档与回归守卫
+- 规则集内容未改动（仍为 1.18.5）；PowerShell 遗留版版本不变（1.18.5）
+- chore: 同步版本至 v1.28.1（VERSION / pubspec `1.28.1+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
 ## [v1.28.0]
 
 ### 性能
