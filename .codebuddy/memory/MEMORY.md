@@ -9,7 +9,7 @@
 ## 项目约定（SyncthingIgnorePatterns）
 - 提交：`type: 描述`（首字母小写、动词开头、≤50字）。
 - **版本三轨独立**：① Flutter 主轨（当前 **v1.28.5**，CI 单一来源 `VERSION`；同步 `VERSION`↔`pubspec.yaml`↔`app_state.dart`的`AppState.version`↔`manifest.dart`示例↔`README*`徽章/正文，共 6 处须全等）② PowerShell 遗留轨（`SyncthingIgnoreGUI.ps1` 头 `//Version`+`$ScriptVersion`，v1.18.5）③ `.stignore` 规则集轨（根与 `app/assets/.stignore` 一致，头 `//Version: 1.18.5`，`//Updated` 为修订日）。动版本前必 `cat VERSION`+`git log` 实查（会话间隙常被外部 bump）。
-- **CI/CD**（`.github/workflows/ci.yml`，4 作业）：`version` 读根 `VERSION` 校验 `v*` 标签；`validate` 做 ps1 语法 + 规则副本一致性(不一致即 exit 1) + 三轨版本一致性(6 处正则全等)；`build-windows`(windows-latest) pub get / analyze(零告警) / test --coverage / build --release，覆盖率门禁 ≥80%；`release`(仅 `v*` 标签) 产 `SyncthingIgnoreGUI-v<版本>-windows-x64.zip`（版本取自 `needs.version.outputs.version`，禁硬编码）。
+- **CI/CD**（`.github/workflows/ci.yml`，4 作业）：`version` 读根 `VERSION` 校验 `v*` 标签；`validate` 做 ps1 语法 + 规则副本一致性(不一致即 exit 1) + 三轨版本一致性(6 处正则全等) + **文档/CHANGELOG 当前版本引用检查（tasks.md/project.md 全部当前版本展示位 + `## [vX]` 条目，防漂移，v1.28.5 起）**；`build-windows`(windows-latest) pub get / analyze(零告警) / test --coverage / build --release，覆盖率门禁 ≥80%；`release`(仅 `v*` 标签) 产 `SyncthingIgnoreGUI-v<版本>-windows-x64.zip`（版本取自 `needs.version.outputs.version`，禁硬编码），**归档附 SHA256 校验和（写入 release notes）并同时发布 `.stignore` 规则集资产（v1.28.5 起）**。
 - **规则副本一致性（v1.23.1 起阻断）**：改规则集须同时改根 `.stignore` 与 `app/assets/.stignore`，否则 CI 失败。
 - **CHANGELOG 双副本**：根 `CHANGELOG.md` + `docs/project.md` §7 同写。
 - **许可**：根 `LICENSE`=MIT（`Copyright (c) 2019-2026 Sut`）。
