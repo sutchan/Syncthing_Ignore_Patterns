@@ -76,9 +76,7 @@ mixin ScanFlow on ChangeNotifier,
       await out.writeAsString(
           const JsonEncoder.withIndent('  ').convert(manifest.toJson()));
 
-      results
-        ..clear()
-        ..addAll(records.map((r) => r.path));
+      replaceResults(records.map((r) => r.path));
       summary = loc.t('summary', [records.length]);
       status = loc.t('statusScanDone', [records.length, elapsed()]);
       log(loc.t('scanDone'), 'info');
@@ -110,9 +108,7 @@ mixin ScanFlow on ChangeNotifier,
     try {
       final json = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
       final manifest = Manifest.fromJson(json);
-      results
-        ..clear()
-        ..addAll(manifest.files.map((r) => r.path));
+      replaceResults(manifest.files.map((r) => r.path));
       log(loc.t('manifestLoaded', [manifest.files.length]), 'info');
     } on Exception {
       // Ignore: Scan will rebuild the manifest.

@@ -5,6 +5,23 @@
 
 ---
 
+## [v1.27.0]
+
+### 性能
+- perf(app): UI 状态订阅粒度重构——各组件由统一 `context.watch<AppState>()`（任一字段变化都重建整棵页面子树）改为 `context.select` 精准订阅各自渲染的切片；`HomePage` 仅订阅语言，进度条/状态行抽为独立 `_ProgressSection`，扫描与应用期间只有相关叶子组件重建
+- perf(app): 日志通知按帧合并——`LogState.log()` 不再每条日志同步触发 `notifyListeners()`，改为每帧至多一次；Apply 数百个文件时，监听组件重建次数由"每个文件数次"降至 ≤60 次/秒（无 binding 的纯单元测试环境自动回退为同步通知）
+- perf(app): 启动 I/O 并行化——`main()` 中规则集元数据读取与既有清单加载互不依赖，由顺序 `await` 改为 `Future.wait`；语言偏好仍先恢复，保证清单回填日志的语言正确
+- refactor(app): `results` / `logs` 由原地 `clear/add` 变更改为替换为新列表实例，使 `context.select` 的身份比较可可靠感知变化（新增 `ProgressState.replaceResults`）
+- refactor(app): `RootField` 移除手动 `addListener` / `removeListener`，改用 `select` 订阅 `rootText` / `manifestPath`，消除监听器泄漏隐患与程序化赋值覆盖用户输入的竞态
+
+### 测试与质量
+- test: `flutter test` 82/82 通过，`flutter analyze` 零告警；`lib/` 行覆盖率 85.30%（946/1109），CI 门禁 ≥80% 不变
+
+### 说明
+- 对外行为契约不变（REQ-1~REQ-10 保持稳定），仅重建调度、通知时序与启动并行度优化
+- 规则集内容未改动（仍为 1.18.5）；PowerShell 遗留版版本不变（1.18.5）
+- chore: 同步版本至 v1.27.0（VERSION / pubspec `1.27.0+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
 ## [v1.26.2] - 2026-09-27
 
 ### 文档

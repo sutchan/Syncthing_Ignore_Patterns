@@ -1,9 +1,15 @@
 /// Main screen: assembles the scan/apply UI from focused sub-widgets.
+///
+/// This shell only subscribes to the current locale (which changes rarely);
+/// each sub-widget selects the narrow slice of `AppState` it actually renders,
+/// so high-frequency notifications (scan progress, apply logs) rebuild only
+/// the affected leaf instead of the whole column.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../i18n.dart';
 import '../state/app_state.dart';
 import 'about_dialog.dart';
 import 'action_row.dart';
@@ -20,8 +26,7 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<AppState>();
-    final loc = state.loc;
+    final loc = context.select<AppState, AppLocalizations>((s) => s.loc);
 
     return Scaffold(
       key: const Key('home-scaffold'),
@@ -48,43 +53,67 @@ class HomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            RootField(state: state),
+            const RootField(),
             const SizedBox(height: 12),
-            OptionsRow(state: state),
+            const OptionsRow(),
             const SizedBox(height: 12),
-            ScanOptions(state: state),
+            const ScanOptions(),
             const SizedBox(height: 12),
-            RulesetCard(state: state),
+            const RulesetCard(),
             const SizedBox(height: 12),
-            ActionRow(state: state),
+            const ActionRow(),
             const SizedBox(height: 12),
-            if (state.isBusy)
-              LinearProgressIndicator(
-                key: const Key('progress-bar'),
-                value: state.progress,
-                minHeight: 6,
-              ),
-            const SizedBox(height: 6),
-            Text(state.status,
-                key: const Key('status-text'),
-                style: Theme.of(context).textTheme.bodySmall),
-            Text(state.summary,
-                key: const Key('summary-text'),
-                style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 12),
+            const _ProgressSection(),
             Text(loc.t('results'),
                 key: const Key('results-label'),
                 style: Theme.of(context).textTheme.titleMedium),
-            ResultsList(state: state),
+            const ResultsList(),
             const SizedBox(height: 12),
             Text(loc.t('log'),
                 key: const Key('log-label'),
                 style: Theme.of(context).textTheme.titleMedium),
-            LogList(state: state),
+            const LogList(),
           ],
         ),
       ),
     );
   }
+}
 
+/// Progress bar plus the live status/summary lines.
+///
+/// Kept separate from [HomePage] because its slices update frequently while a
+/// scan/apply is running; isolating the subscription keeps the rest of the
+/// form out of the rebuild path.
+class _ProgressSection extends StatelessWidget {
+  const _ProgressSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final isBusy = context.select<AppState, bool>((s) => s.isBusy);
+    final progress = context.select<AppState, double?>((s) => s.progress);
+    final status = context.select<AppState, String>((s) => s.status);
+    final summary = context.select<AppState, String>((s) => s.summary);
+
+    return Column(
+      key: const Key('progress-section'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (isBusy)
+          LinearProgressIndicator(
+            key: const Key('progress-bar'),
+            value: progress,
+            minHeight: 6,
+          ),
+        const SizedBox(height: 6),
+        Text(status,
+            key: const Key('status-text'),
+            style: Theme.of(context).textTheme.bodySmall),
+        Text(summary,
+            key: const Key('summary-text'),
+            style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
 }

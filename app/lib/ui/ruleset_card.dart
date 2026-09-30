@@ -2,23 +2,32 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../i18n.dart';
+import '../models/ruleset_info.dart';
 import '../state/app_state.dart';
 
 class RulesetCard extends StatelessWidget {
-  const RulesetCard({super.key, required this.state});
-
-  final AppState state;
+  const RulesetCard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final loc = state.loc;
+    final loc = context.select<AppState, AppLocalizations>((s) => s.loc);
+    final info = context.select<AppState, RulesetInfo?>((s) => s.ruleset);
+    final downloaded =
+        context.select<AppState, bool>((s) => s.rulesetDownloaded);
+    final rulesetPath =
+        context.select<AppState, String>((s) => s.rulesetPath);
+    final checking =
+        context.select<AppState, bool>((s) => s.checkingRuleset);
+    final status = context.select<AppState, String>((s) => s.rulesetStatus);
+    final state = context.read<AppState>();
+
     final theme = Theme.of(context);
-    final info = state.ruleset;
     final version = info == null ? '—' : 'v${info.version}';
-    final origin = state.rulesetDownloaded
-        ? loc.t('rulesetDownloaded')
-        : loc.t('rulesetBuiltin');
+    final origin =
+        downloaded ? loc.t('rulesetDownloaded') : loc.t('rulesetBuiltin');
     final updated = info?.updated;
 
     return Card(
@@ -31,7 +40,7 @@ class RulesetCard extends StatelessWidget {
             Text(loc.t('ruleset'), style: theme.textTheme.titleSmall),
             const SizedBox(height: 6),
             Tooltip(
-              message: loc.t('rulesetPath', [state.rulesetPath]),
+              message: loc.t('rulesetPath', [rulesetPath]),
               child: Text(
                 '${loc.t('rulesetCurrent', [version])} · $origin'
                 '${updated == null ? '' : ' · ${loc.t('rulesetUpdatedAt', [updated])}'}',
@@ -41,23 +50,22 @@ class RulesetCard extends StatelessWidget {
             const SizedBox(height: 8),
             FilledButton.icon(
               key: const Key('ruleset-check-button'),
-              onPressed:
-                  state.checkingRuleset ? null : state.checkRulesetUpdate,
-              icon: state.checkingRuleset
+              onPressed: checking ? null : state.checkRulesetUpdate,
+              icon: checking
                   ? const SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.refresh),
-              label: Text(state.checkingRuleset
+              label: Text(checking
                   ? loc.t('rulesetChecking')
                   : loc.t('checkRulesetUpdate')),
             ),
-            if (state.rulesetStatus.isNotEmpty) ...[
+            if (status.isNotEmpty) ...[
               const SizedBox(height: 6),
               Text(
-                state.rulesetStatus,
+                status,
                 key: const Key('ruleset-status'),
                 style: theme.textTheme.bodySmall,
               ),

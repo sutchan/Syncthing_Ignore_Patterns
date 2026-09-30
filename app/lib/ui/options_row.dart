@@ -2,17 +2,22 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../i18n.dart';
 import '../state/app_state.dart';
 
 class OptionsRow extends StatelessWidget {
-  const OptionsRow({super.key, required this.state});
-
-  final AppState state;
+  const OptionsRow({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final loc = state.loc;
+    final loc = context.select<AppState, AppLocalizations>((s) => s.loc);
+    final preview = context.select<AppState, bool>((s) => s.preview);
+    final force = context.select<AppState, bool>((s) => s.force);
+    final backup = context.select<AppState, bool>((s) => s.backup);
+    final state = context.read<AppState>();
+
     return Wrap(
       key: const Key('options-row'),
       spacing: 16,
@@ -21,19 +26,19 @@ class OptionsRow extends StatelessWidget {
         _OptionCheckbox(
           id: 'preview-checkbox',
           label: loc.t('preview'),
-          value: state.preview,
+          value: preview,
           onChanged: state.setPreview,
         ),
         _OptionCheckbox(
           id: 'force-checkbox',
           label: loc.t('force'),
-          value: state.force,
+          value: force,
           onChanged: state.setForce,
         ),
         _OptionCheckbox(
           id: 'backup-checkbox',
           label: loc.t('backup'),
-          value: state.backup,
+          value: backup,
           onChanged: state.setBackup,
         ),
       ],

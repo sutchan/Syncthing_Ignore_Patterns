@@ -22,7 +22,18 @@ mixin ProgressState on ChangeNotifier {
   String summary = '';
 
   /// Paths found by the last scan.
-  final List<String> results = [];
+  ///
+  /// A fresh list instance is assigned on every change (rather than mutating
+  /// in place) so `context.select((s) => s.results)` subscribers can detect
+  /// the update by identity without a deep list comparison.
+  List<String> get results => _results;
+  List<String> _results = [];
+
+  /// Replaces the result paths. Called by the scan flow after a scan or when
+  /// an existing manifest is loaded at startup.
+  void replaceResults(Iterable<String> paths) {
+    _results = paths.toList();
+  }
 
   DateTime? _start;
 
@@ -32,7 +43,7 @@ mixin ProgressState on ChangeNotifier {
     isBusy = true;
     progress = null;
     _start = DateTime.now();
-    results.clear();
+    _results = [];
     notifyListeners();
   }
 

@@ -1,17 +1,22 @@
 /// Root directory and manifest path inputs.
 ///
 /// Uses explicit controllers so picks made via the Browse buttons (which update
-/// the state programmatically) are reflected in the fields.
+/// the state programmatically) are reflected in the fields. The narrow
+/// `context.select` subscriptions replace a manual add/remove listener pair:
+/// only changes to these two text values (or the busy flag) rebuild the field,
+/// and programmatic updates are mirrored into the controllers during build
+/// without touching text the user is typing (typing updates state without
+/// notifying, so no rebuild is triggered for it).
 library;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../i18n.dart';
 import '../state/app_state.dart';
 
 class RootField extends StatefulWidget {
-  const RootField({super.key, required this.state});
-
-  final AppState state;
+  const RootField({super.key});
 
   @override
   State<RootField> createState() => _RootFieldState();
@@ -19,37 +24,32 @@ class RootField extends StatefulWidget {
 
 class _RootFieldState extends State<RootField> {
   late final TextEditingController _root =
-      TextEditingController(text: widget.state.rootText);
+      TextEditingController(text: _state.rootText);
   late final TextEditingController _out =
-      TextEditingController(text: widget.state.manifestPath);
+      TextEditingController(text: _state.manifestPath);
 
-  @override
-  void initState() {
-    super.initState();
-    widget.state.addListener(_syncFromState);
-  }
+  AppState get _state => context.read<AppState>();
 
   @override
   void dispose() {
-    widget.state.removeListener(_syncFromState);
     _root.dispose();
     _out.dispose();
     super.dispose();
   }
 
-  /// Mirrors programmatic changes (e.g. folder/file pickers) into the fields
-  /// without clobbering text the user is currently typing.
-  void _syncFromState() {
-    if (_root.text != widget.state.rootText) _root.text = widget.state.rootText;
-    if (_out.text != widget.state.manifestPath) {
-      _out.text = widget.state.manifestPath;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final state = widget.state;
-    final loc = state.loc;
+    final state = _state;
+    final loc = context.select<AppState, AppLocalizations>((s) => s.loc);
+    final rootText = context.select<AppState, String>((s) => s.rootText);
+    final manifestPath =
+        context.select<AppState, String>((s) => s.manifestPath);
+    final isBusy = context.select<AppState, bool>((s) => s.isBusy);
+
+    // Mirror programmatic changes (pickers / drag & drop) into the fields.
+    if (_root.text != rootText) _root.text = rootText;
+    if (_out.text != manifestPath) _out.text = manifestPath;
+
     return Column(
       key: const Key('root-field'),
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,7 +72,7 @@ class _RootFieldState extends State<RootField> {
             const SizedBox(width: 8),
             ElevatedButton(
               key: const Key('root-browse'),
-              onPressed: state.isBusy ? null : state.pickRoot,
+              onPressed: isBusy ? null : state.pickRoot,
               child: Text(loc.t('browse')),
             ),
           ],
@@ -93,7 +93,7 @@ class _RootFieldState extends State<RootField> {
             const SizedBox(width: 8),
             ElevatedButton(
               key: const Key('manifest-browse'),
-              onPressed: state.isBusy ? null : state.pickManifest,
+              onPressed: isBusy ? null : state.pickManifest,
               child: Text(loc.t('browse')),
             ),
           ],

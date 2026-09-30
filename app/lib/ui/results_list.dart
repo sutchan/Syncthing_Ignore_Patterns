@@ -2,30 +2,33 @@
 ///
 /// Tapping a row reveals its containing folder in the OS file manager; double
 /// clicking opens the file itself with the default editor.
+///
+/// Only the `results` slice is subscribed to, so high-frequency notifications
+/// from other concerns (logging, progress) never rebuild this list.
 library;
 
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
+import 'package:provider/provider.dart';
 
 import '../state/app_state.dart';
 
 class ResultsList extends StatelessWidget {
-  const ResultsList({super.key, required this.state});
-
-  final AppState state;
+  const ResultsList({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final results = context.select<AppState, List<String>>((s) => s.results);
     return SizedBox(
       key: const Key('results-list'),
       height: 160,
       child: Card(
         child: ListView.builder(
-          itemCount: state.results.length,
+          itemCount: results.length,
           itemBuilder: (_, i) {
-            final path = state.results[i];
+            final path = results[i];
             return InkWell(
               // Single click reveals the file; double click opens it.
               onTap: () => _openFolder(path),

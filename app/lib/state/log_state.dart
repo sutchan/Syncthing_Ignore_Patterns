@@ -2,6 +2,7 @@
 library;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../i18n.dart';
 
@@ -21,16 +22,24 @@ mixin LogState on ChangeNotifier {
   AppLocalizations get loc;
 
   /// Appended-to log, oldest first.
-  final List<LogEntry> logs = [];
+  ///
+  /// A fresh list instance is assigned on every append/clear (instead of
+  /// mutating in place) so `context.select((s) => s.logs)` subscribers detect
+  /// the change by identity without a deep comparison.
+  List<LogEntry> get logs => _logs;
+  List<LogEntry> _logs = const [];
+
+  /// Whether a frame-coalesced notification is already pending.
+  bool _notifyScheduled = false;
 
   void clearLog() {
-    logs.clear();
+    _logs = const [];
     notifyListeners();
   }
 
   void log(String message, String level) {
-    logs.add(LogEntry(message, level));
-    notifyListeners();
+    _logs = [..._logs, LogEntry(message, level)];
+    _scheduleNotify();
   }
 
   /// Translates the raw `key::arg` strings emitted by the applier into
@@ -38,5 +47,31 @@ mixin LogState on ChangeNotifier {
   void logTranslated(String raw, String level) {
     final parts = raw.split('::');
     log(loc.t(parts.first, parts.skip(1).toList()), level);
+  }
+
+  /// Fires at most one `notifyListeners()` per frame.
+  ///
+  /// During Apply the applier can emit hundreds of lines (one per touched
+  /// file); notifying synchronously per line rebuilds the whole subscribed
+  /// widget subtree hundreds of times. Coalescing to one notification per
+  /// frame keeps the log live while cutting rebuilds to ≤60/s.
+  ///
+  /// main() calls `WidgetsFlutterBinding.ensureInitialized()`, so the binding
+  /// exists in the real app and in `testWidgets`; a plain `test()` that does
+  /// not initialize it falls back to a synchronous notification.
+  void _scheduleNotify() {
+    if (_notifyScheduled) return;
+    final SchedulerBinding binding;
+    try {
+      binding = SchedulerBinding.instance;
+    } on Object {
+      notifyListeners();
+      return;
+    }
+    _notifyScheduled = true;
+    binding.addPostFrameCallback((_) {
+      _notifyScheduled = false;
+      notifyListeners();
+    });
   }
 }
