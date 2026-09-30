@@ -170,6 +170,29 @@ jobs:
           }
           Write-Host "Ruleset track consistent: $rv (independent)"
 
+      - name: Docs & changelog reference current version
+        shell: pwsh
+        run: |
+          # 文档与变更日志须引用当前主实现版本，防止版本漂移（见 docs/project.md §4、development-tasks.md）。
+          # 版本三轨独立：Flutter 主实现版本 = VERSION，文档中的「当前版本」展示位须与之相等。
+          $ver = (Get-Content VERSION | Out-String).Trim()
+          $checks = @(
+            @{ file = 'docs/development-tasks.md'; pat = "Flutter 桌面版：v$ver" }
+            @{ file = 'docs/project.md';            pat = "构建为 exe，v$ver" }
+            @{ file = 'docs/project.md';            pat = "（v$ver）为主实现" }
+            @{ file = 'CHANGELOG.md';               pat = "## [v$ver]" }
+          )
+          foreach ($c in $checks) {
+            $content = Get-Content $c.file -Raw
+            if ($content -like "*$($c.pat)*") {
+              Write-Host "OK: $($c.file) references $ver"
+            } else {
+              Write-Error "Missing current version reference '$($c.pat)' in $($c.file)"
+              exit 1
+            }
+          }
+          Write-Host "Docs & CHANGELOG reference current version: $ver"
+
   build-windows:
     name: Build Flutter Windows (exe)
     needs: [version]
@@ -340,10 +363,20 @@ jobs:
           if ($out.Count -eq 0) { $out.Add("(CHANGELOG.md 中未找到 v$ver 小节)") }
           Set-Content -Path release_notes.md -Value ($out -join "`n") -Encoding utf8
           Write-Host "Extracted $($out.Count) lines for v$ver"
+      - name: Append checksums to release notes
+        shell: pwsh
+        run: |
+          # 为发布归档附 SHA256 校验和，便于用户校验产物完整性（透明、可复现）
+          $zip = "${{ env.APP_NAME }}-v${{ needs.version.outputs.version }}-windows-x64.zip"
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash
+          Add-Content -Path release_notes.md -Value "`n### Checksums`n`n- SHA256: \`$hash\`" -Encoding utf8
+          Write-Host "SHA256: $hash"
       - name: Create release
         uses: softprops/action-gh-release@v3
         with:
-          files: ${{ env.APP_NAME }}-v*-windows-x64.zip
+          files: |
+            ${{ env.APP_NAME }}-v*-windows-x64.zip
+            .stignore
           body_path: release_notes.md
           generate_release_notes: false
           fail_on_unmatched_files: true

@@ -5,6 +5,12 @@
 
 ---
 
+## [v1.28.4] - 2026-09-30
+
+### 文档
+- docs: 将 `docs/development-tasks.md` 重命名为 `docs/tasks.md`（用途不变：记录剩余 / 未完成任务），并更新 `docs/specs/stignore-gui-flutter/spec.md` 与 `docs/project.md` 中指向该清单的链接
+- chore: 同步版本至 v1.28.4（VERSION / pubspec `1.28.4+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
 ## [v1.28.3] - 2026-09-30
 
 ### 文档

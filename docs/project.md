@@ -114,6 +114,10 @@ SyncthingIgnorePatterns/
 
 ## 7. CHANGELOG
 
+### v1.28.4 (2026-09-30)
+- docs: 将 `development-tasks.md` 重命名为 `tasks.md`（记录剩余 / 未完成任务），更新 spec.md 与本文 §8·§9 指向该清单的链接
+- chore: 同步版本至 v1.28.4（VERSION / pubspec `1.28.4+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
+
 ### v1.28.3 (2026-09-30)
 - docs: 校正 §9.3 与 development-tasks.md 当前行覆盖率至真实值（85.20% 956/1122），补全 spec.md 里程碑至 v1.28.2 与 §7/CHANGELOG 自 v1.27.0 缺失日期
 - chore: 同步版本至 v1.28.3（VERSION / pubspec `1.28.3+1` / `AppState.version` / `manifest.dart 示例` / README 徽章）
@@ -421,7 +425,7 @@ SyncthingIgnorePatterns/
 
 ## 8. 任务与已知限制
 
-当前**无未完成任务**。完整任务跟踪（仅列未完成项）与验证边界统一见 [开发任务清单](development-tasks.md)；已完成任务不再保留于清单，历史见 `CHANGELOG.md` 与本文档 §7。
+当前**无未完成任务**。完整任务跟踪（仅列未完成项）与验证边界统一见 [开发任务清单](tasks.md)；已完成任务不再保留于清单，历史见 `CHANGELOG.md` 与本文档 §7。
 
 ## 9. Dart + Flutter 桌面版（主实现）
 
@@ -520,7 +524,7 @@ flutter test --coverage                 # 生成 coverage/lcov.info（含每文�
 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
 **Dart + Flutter 桌面版（v1.28.3）为主实现**，构建为独立 `.exe` 分发。两者共享同一
 `.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等状态与验证边界，
-见 [开发任务清单](development-tasks.md)；功能与 UI 的后续完善建议集中维护于
+见 [开发任务清单](tasks.md)；功能与 UI 的后续完善建议集中维护于
 [`docs/specs/stignore-gui-flutter/spec.md`](specs/stignore-gui-flutter/spec.md) 的「改进建议（评估中）」一节。
 
 ### 9.5 构建产物命名规范
