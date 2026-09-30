@@ -5,6 +5,22 @@
 
 ---
 
+## [v1.28.6] - 2026-09-30
+
+### 修复
+- fix: 加固 JSON 解析与启动错误边界——损坏清单不再引发 `TypeError` 致窗口不显示（`manifest.dart` 防御性 `fromJson`、`scan_flow`/`apply_flow` 解析兜底、`main` 启动期捕获 `Object` 而非仅 `Exception`）
+- fix: 闭环发布版本路径穿越风险——新增 `version_util.isValidVersion`（`^[0-9]+(\.[0-9]+)*$`），发布标签/安装版本经校验后再注入下载 URL 与归档路径（`app_update`/`update_installer`）
+
+### 性能
+- perf: 根组件精准订阅（`app.dart` 由 `watch` 改 `select`），应用重写清单时改用异步 `exists` 避免 UI 线程同步 I/O
+
+### 重构
+- refactor: 拆分超 200 行模块——`i18n_strings`→`i18n_en`/`i18n_zh`、`update_installer`→`updater_script`、`applier_test`→`applier_backup_test`；新增 `version_util`
+- test: 新增版本消毒与备份隔离单测；全量 **90/90** 通过（`flutter analyze` 零告警）
+
+### 文档
+- chore: 同步版本至 v1.28.6（VERSION / pubspec `1.28.6+1` / `AppState.version` / `manifest.dart 示例` / README 徽章 / project.md / tasks.md）
+
 ## [v1.28.5] - 2026-09-30
 
 ### CI
