@@ -12,8 +12,10 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<AppState>();
-    final loc = state.loc;
+    // Subscribe only to the pieces the root theme needs (dark + locale) so a
+    // high-frequency notify during Scan/Apply does not rebuild MaterialApp.
+    final dark = context.select<AppState, bool>((s) => s.dark);
+    final loc = context.select<AppState, AppLocalizations>((s) => s.loc);
     return MaterialApp(
       title: loc.t('title'),
       debugShowCheckedModeBanner: false,
@@ -27,7 +29,7 @@ class App extends StatelessWidget {
         brightness: Brightness.dark,
         colorSchemeSeed: Colors.teal,
       ),
-      themeMode: state.dark ? ThemeMode.dark : ThemeMode.light,
+      themeMode: dark ? ThemeMode.dark : ThemeMode.light,
       home: const HomePage(),
     );
   }

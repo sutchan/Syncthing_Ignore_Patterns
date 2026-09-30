@@ -44,6 +44,7 @@ class LogSliver extends StatelessWidget {
             _ => Theme.of(context).textTheme.bodyMedium?.color,
           };
           return Text(entry.text,
+              key: Key('log-row-${i - 1}'),
               style: TextStyle(fontSize: 12, color: color));
         },
       ),

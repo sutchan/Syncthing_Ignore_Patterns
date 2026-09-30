@@ -106,8 +106,9 @@ mixin ScanFlow on ChangeNotifier,
     final file = File(manifestPath);
     if (!file.existsSync()) return;
     try {
-      final json = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-      final manifest = Manifest.fromJson(json);
+      final decoded = jsonDecode(await file.readAsString());
+      if (decoded is! Map<String, dynamic>) return; // corrupt manifest: ignore
+      final manifest = Manifest.fromJson(decoded);
       replaceResults(manifest.files.map((r) => r.path));
       log(loc.t('manifestLoaded', [manifest.files.length]), 'info');
     } on Exception {

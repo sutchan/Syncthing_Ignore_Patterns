@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'http_client.dart';
+import 'version_util.dart';
 
 /// GitHub API endpoint that returns the latest published release.
 const String appReleasesApiUrl =
@@ -34,7 +35,10 @@ String? latestTagFromReleaseJson(String body) {
   if (decoded is! Map) return null;
   final tag = decoded['tag_name'];
   if (tag is! String || tag.trim().isEmpty) return null;
-  return stripVersionPrefix(tag.trim());
+  final version = stripVersionPrefix(tag.trim());
+  // Reject tags that are not clean versions (e.g. containing `..` or `/`),
+  // preventing a path-traversal-capable value from reaching the download URL.
+  return isValidVersion(version) ? version : null;
 }
 
 /// Fetches the latest release tag; injectable so tests never touch the network.

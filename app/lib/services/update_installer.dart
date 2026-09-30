@@ -11,6 +11,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import 'http_client.dart';
+import 'version_util.dart';
 
 /// Direct download URL of the release archive published for [version].
 String releaseAssetUrl(String version) =>
@@ -183,6 +184,9 @@ class UpdateInstaller {
   /// Throws when the application directory is not writable or the download
   /// fails; on success the process exits, so this normally never returns.
   Future<void> install(String version) async {
+    if (!isValidVersion(version)) {
+      throw ArgumentError('invalid update version: $version');
+    }
     final appDirectory = File(_executable).parent.path;
     _ensureWritable(appDirectory);
 

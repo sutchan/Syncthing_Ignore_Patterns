@@ -42,6 +42,7 @@ class ResultsSliver extends StatelessWidget {
           }
           final path = results[i - 1];
           return InkWell(
+            key: Key('result-row-${i - 1}'),
             // Single click reveals the file; double click opens it.
             onTap: () => _openFolder(path),
             onDoubleTap: () => _openFile(path),

@@ -32,12 +32,12 @@ mixin ApplyFlow on ChangeNotifier,
   /// Number of paths in the manifest that [apply] would touch, or `0` when the
   /// manifest is missing/corrupt. Read synchronously so the pre-apply prompt can
   /// be shown within the button handler without an async gap.
-  int pendingApplyCount() {
+  Future<int> pendingApplyCount() async {
     try {
-      final json = jsonDecode(File(manifestPath).readAsStringSync())
-          as Map<String, dynamic>;
-      return Manifest.fromJson(json).files.length;
-    } on Exception {
+      final decoded = jsonDecode(await File(manifestPath).readAsString());
+      if (decoded is! Map<String, dynamic>) return 0;
+      return Manifest.fromJson(decoded).files.length;
+    } on Object {
       return 0;
     }
   }
@@ -70,10 +70,14 @@ mixin ApplyFlow on ChangeNotifier,
 
     late final Manifest manifest;
     try {
-      final json = jsonDecode(await File(manifestPath).readAsString())
-          as Map<String, dynamic>;
-      manifest = Manifest.fromJson(json);
-    } on Exception {
+      final decoded = jsonDecode(await File(manifestPath).readAsString());
+      if (decoded is! Map<String, dynamic>) {
+        finish();
+        log(loc.t('manifestParseFailed', [manifestPath]), 'error');
+        return;
+      }
+      manifest = Manifest.fromJson(decoded);
+    } on Object {
       finish();
       log(loc.t('manifestParseFailed', [manifestPath]), 'error');
       return;
@@ -98,9 +102,12 @@ mixin ApplyFlow on ChangeNotifier,
     );
 
     if (!preview && (result.replaced > 0 || result.errors > 0)) {
-      // Re-write the manifest dropping paths that were cleaned.
-      final kept =
-          manifest.files.where((r) => File(r.path).existsSync()).toList();
+      // Re-write the manifest dropping paths that no longer exist. `exists()`
+      // is awaited so a large manifest does not block the UI thread.
+      final kept = <StignoreRecord>[];
+      for (final r in manifest.files) {
+        if (await File(r.path).exists()) kept.add(r);
+      }
       final updated = Manifest(
         version: version,
         scannedAt: manifest.scannedAt,

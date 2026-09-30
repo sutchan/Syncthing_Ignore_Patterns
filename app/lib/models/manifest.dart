@@ -2,7 +2,7 @@
 ///
 /// Manifest JSON shape (UTF-8):
 /// {
-///   "version": "1.28.4",
+///   "version": "1.28.5",
 ///   "scannedAt": "2026-09-22T00:00:00.000Z",
 ///   "count": 2,
 ///   "roots": ["C:\\", "D:\\"],
@@ -19,10 +19,13 @@ class StignoreRecord {
   });
 
   factory StignoreRecord.fromJson(Map<String, dynamic> json) => StignoreRecord(
-        path: json['path'] as String,
+        // `as String? ?? ''` instead of `as String` so a missing or
+        // wrong-typed field degrades to an empty string rather than throwing a
+        // TypeError (which `on Exception` handlers cannot catch).
+        path: json['path'] as String? ?? '',
         size: (json['size'] as num?)?.toInt() ?? 0,
-        lastWriteUtc: json['lastWriteUtc'] as String,
-        foundAtUtc: json['foundAtUtc'] as String,
+        lastWriteUtc: json['lastWriteUtc'] as String? ?? '',
+        foundAtUtc: json['foundAtUtc'] as String? ?? '',
       );
 
   final String path;
@@ -49,12 +52,21 @@ class Manifest {
   factory Manifest.fromJson(Map<String, dynamic> json) => Manifest(
         version: json['version'] as String? ?? '0.0.0',
         scannedAt: json['scannedAt'] as String? ?? '',
-        roots: (json['roots'] as List<dynamic>? ?? [])
-            .map((e) => e as String)
-            .toList(),
-        files: (json['files'] as List<dynamic>? ?? [])
-            .map((e) => StignoreRecord.fromJson(e as Map<String, dynamic>))
-            .toList(),
+        // Guard with `is List` before casting so a non-list or null `roots`/
+        // `files` field (hand-edited or corrupt manifest) cannot throw a
+        // TypeError. Malformed entries are skipped rather than crashing Scan/Apply.
+        roots: json['roots'] is List
+            ? (json['roots'] as List)
+                .map((e) => e as String? ?? '')
+                .where((s) => s.isNotEmpty)
+                .toList()
+            : const <String>[],
+        files: json['files'] is List
+            ? (json['files'] as List)
+                .whereType<Map<String, dynamic>>()
+                .map(StignoreRecord.fromJson)
+                .toList()
+            : const <StignoreRecord>[],
       );
 
   final String version;

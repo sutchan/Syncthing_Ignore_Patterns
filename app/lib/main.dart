@@ -66,7 +66,7 @@ Future<void> main() async {
       state.loadRulesetInfo(),
       state.loadExistingManifest(),
     ]);
-  } on Exception catch (e, st) {
+  } on Object catch (e, st) {
     developer.log(
       'startup init failed (continuing): $e',
       name: 'startup',
