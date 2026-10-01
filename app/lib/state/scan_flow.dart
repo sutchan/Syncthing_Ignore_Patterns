@@ -8,11 +8,13 @@ import 'package:flutter/foundation.dart';
 
 import '../models/manifest.dart';
 import '../services/platform_io.dart';
+import '../services/rules_source.dart';
 import '../services/scanner.dart';
 import 'log_state.dart';
 import 'pickers_state.dart';
 import 'preferences_state.dart';
 import 'progress_state.dart';
+import 'ruleset_state.dart';
 import 'scan_options_state.dart';
 
 mixin ScanFlow on ChangeNotifier,
@@ -20,12 +22,27 @@ mixin ScanFlow on ChangeNotifier,
     PreferencesState,
     LogState,
     ScanOptionsState,
-    PickersState {
+    PickersState,
+    RulesetUpdateState {
   /// Application version, provided by the composing class.
   String get version;
 
   /// The running executable's directory, excluded from scanning.
-  String get appDirectory;
+  String get appDirectory => p.dirname(Platform.resolvedExecutable);
+
+  /// Per-result compliance with the effective ruleset: `true` when a file
+  /// already matches the standard rules (Apply would skip it). Empty until
+  /// computed after a scan finishes.
+  Map<String, bool> _compliance = const {};
+
+  /// Path → `true` when it already matches the effective ruleset.
+  Map<String, bool> get compliance => _compliance;
+
+  /// Number of scanned files that would change if Apply were run now.
+  int get needsApplyCount => _compliance.values.where((v) => !v).length;
+
+  /// Number of scanned files already compliant with the effective ruleset.
+  int get compliantCount => _compliance.values.where((v) => v).length;
 
   /// Resolves the roots to scan: the typed root (normalized), or every local
   /// and network-mapped drive when blank.
@@ -77,6 +94,7 @@ mixin ScanFlow on ChangeNotifier,
           const JsonEncoder.withIndent('  ').convert(manifest.toJson()));
 
       replaceResults(records.map((r) => r.path));
+      await _computeCompliance();
       summary = loc.t('summary', [records.length]);
       status = loc.t('statusScanDone', [records.length, elapsed()]);
       log(loc.t('scanDone'), 'info');
@@ -114,6 +132,26 @@ mixin ScanFlow on ChangeNotifier,
     final remaining = ((secs / fraction) - secs).round();
     if (remaining <= 0) return '—';
     return formatDuration(remaining);
+  }
+
+  /// Compares every scanned file's content against the effective ruleset so the
+  /// results list can mark what Apply would change versus leave untouched.
+  Future<void> _computeCompliance() async {
+    final source = await effectiveRules();
+    final sourceHash = sha256OfString(source);
+    final map = <String, bool>{};
+    for (final path in results) {
+      try {
+        final file = File(path);
+        map[path] = file.existsSync()
+            ? sha256OfString(await file.readAsString()) == sourceHash
+            : true; // stale path: nothing to write, so nothing to apply
+      } on Exception {
+        map[path] = false;
+      }
+    }
+    _compliance = map;
+    notifyListeners();
   }
 
   /// Surfaces an existing manifest at startup: loads its paths into the results

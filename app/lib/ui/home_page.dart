@@ -30,6 +30,7 @@ import 'root_field.dart';
 import 'ruleset_card.dart';
 import 'scan_options.dart';
 import 'settings_dialog.dart';
+import 'backup_dialog.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -54,6 +55,12 @@ class HomePage extends StatelessWidget {
             icon: const Icon(Icons.info_outline),
             tooltip: loc.t('about'),
             onPressed: () => AppAboutDialog.show(context),
+          ),
+          IconButton(
+            key: const Key('backups-button'),
+            icon: const Icon(Icons.history),
+            tooltip: loc.t('backups'),
+            onPressed: () => BackupDialog.show(context),
           ),
         ],
       ),

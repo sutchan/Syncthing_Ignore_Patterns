@@ -18,6 +18,7 @@ import '../services/ruleset_update.dart';
 import '../services/settings_store.dart';
 import 'app_update_state.dart';
 import 'apply_flow.dart';
+import 'backup_state.dart';
 import 'log_state.dart';
 import 'pickers_state.dart';
 import 'preferences_state.dart';
@@ -36,9 +37,10 @@ class AppState extends ChangeNotifier
         RulesetUpdateState,
         AppUpdateState,
         ScanFlow,
-        ApplyFlow {
+        ApplyFlow,
+        BackupState {
   AppState({
-    this.version = '1.30.0',
+    this.version = '1.31.0',
     SettingsStore? settingsStore,
     RulesetStore? rulesetStore,
     RulesetFetcher? rulesetFetcher,

@@ -1,6 +1,7 @@
 /// Entry point for the Syncthing .stignore Manager (Flutter Windows desktop).
 library;
 
+import 'dart:async';
 import 'dart:developer' as developer;
 import 'dart:ui';
 
@@ -58,6 +59,9 @@ Future<void> main() async {
   // Language must be restored first: the manifest-load step logs a localized
   // message, so it needs the saved locale.
   await state.loadSettings();
+  // Optional background update checks on startup (default off; user opt-in).
+  if (state.bootCheckAppUpdate) unawaited(state.checkAppUpdate());
+  if (state.bootCheckRuleset) unawaited(state.checkRulesetUpdate());
   // Ruleset metadata and the previous manifest are independent disk reads, so
   // run them concurrently instead of serially (async-parallel). A failure here
   // must never block the window from appearing, so log it and continue.

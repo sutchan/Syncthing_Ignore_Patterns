@@ -132,6 +132,25 @@ class SettingsDialog extends StatelessWidget {
               state.persistPreferences();
             },
           ),
+          const SizedBox(height: 8),
+          Text(loc.t('startupChecks')),
+          const SizedBox(height: 4),
+          SwitchListTile(
+            key: const Key('boot-app-update-switch'),
+            title: Text(loc.t('bootCheckAppUpdate')),
+            value: state.bootCheckAppUpdate,
+            controlAffinity: ListTileControlAffinity.leading,
+            dense: true,
+            onChanged: (v) => state.setBootCheckAppUpdate(v),
+          ),
+          SwitchListTile(
+            key: const Key('boot-ruleset-switch'),
+            title: Text(loc.t('bootCheckRuleset')),
+            value: state.bootCheckRuleset,
+            controlAffinity: ListTileControlAffinity.leading,
+            dense: true,
+            onChanged: (v) => state.setBootCheckRuleset(v),
+          ),
         ],
       ),
       actions: [

@@ -24,6 +24,8 @@ mixin PreferencesState on ChangeNotifier, ScanOptionsState {
   WindowBounds? _windowBounds;
   String _lang = 'en';
   bool _dark = false;
+  bool _bootAppUpdate = false;
+  bool _bootRuleset = false;
 
   /// Wires the persistence layer; must run before [loadSettings].
   void initPreferences(SettingsStore store) => _settings = store;
@@ -36,6 +38,12 @@ mixin PreferencesState on ChangeNotifier, ScanOptionsState {
 
   /// `true` when the dark theme is active.
   bool get dark => _dark;
+
+  /// `true` to check for an app update in the background on startup.
+  bool get bootCheckAppUpdate => _bootAppUpdate;
+
+  /// `true` to check the ruleset repo in the background on startup.
+  bool get bootCheckRuleset => _bootRuleset;
 
   /// Last known window geometry, or `null` when none was saved yet.
   WindowBounds? get windowBounds => _windowBounds;
@@ -54,6 +62,22 @@ mixin PreferencesState on ChangeNotifier, ScanOptionsState {
     notifyListeners();
   }
 
+  /// Opts in/out of a background app-update check when the app starts.
+  void setBootCheckAppUpdate(bool value) {
+    if (_bootAppUpdate == value) return;
+    _bootAppUpdate = value;
+    _persistSettings();
+    notifyListeners();
+  }
+
+  /// Opts in/out of a background ruleset-repo check when the app starts.
+  void setBootCheckRuleset(bool value) {
+    if (_bootRuleset == value) return;
+    _bootRuleset = value;
+    _persistSettings();
+    notifyListeners();
+  }
+
   /// Restores the persisted preferences. Call once before `runApp` so the
   /// first frame already uses the saved language, theme and window geometry.
   Future<void> loadSettings() async {
@@ -65,6 +89,8 @@ mixin PreferencesState on ChangeNotifier, ScanOptionsState {
     setFilterLargeDirs(saved.filterLargeDirs);
     setMaxFilesPerDir(saved.maxFilesPerDir);
     setBackup(saved.backup);
+    _bootAppUpdate = saved.bootCheckAppUpdate;
+    _bootRuleset = saved.bootCheckRuleset;
     notifyListeners();
   }
 
@@ -103,6 +129,8 @@ mixin PreferencesState on ChangeNotifier, ScanOptionsState {
       filterLargeDirs: filterLargeDirs,
       maxFilesPerDir: maxFilesPerDir,
       backup: backup,
+      bootCheckAppUpdate: bootCheckAppUpdate,
+      bootCheckRuleset: bootCheckRuleset,
     )));
   }
 

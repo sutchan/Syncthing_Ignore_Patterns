@@ -23,6 +23,8 @@ class AppSettings {
     this.filterLargeDirs = true,
     this.maxFilesPerDir = 100,
     this.backup = true,
+    this.bootCheckAppUpdate = false,
+    this.bootCheckRuleset = false,
   });
 
   /// UI language code, one of `en` / `zh`.
@@ -46,6 +48,12 @@ class AppSettings {
   /// Default: back up each target before overwriting it.
   final bool backup;
 
+  /// `true` to check for an app update in the background on startup.
+  final bool bootCheckAppUpdate;
+
+  /// `true` to check the ruleset repo in the background on startup.
+  final bool bootCheckRuleset;
+
   Map<String, Object?> toJson() {
     final bounds = window;
     return <String, Object?>{
@@ -56,6 +64,8 @@ class AppSettings {
       'filterLargeDirs': filterLargeDirs,
       'maxFilesPerDir': maxFilesPerDir,
       'backup': backup,
+      'bootCheckAppUpdate': bootCheckAppUpdate,
+      'bootCheckRuleset': bootCheckRuleset,
     };
   }
 
@@ -73,6 +83,12 @@ class AppSettings {
             ? json['maxFilesPerDir'] as int
             : 100,
         backup: json['backup'] is bool ? json['backup'] as bool : true,
+        bootCheckAppUpdate: json['bootCheckAppUpdate'] is bool
+            ? json['bootCheckAppUpdate'] as bool
+            : false,
+        bootCheckRuleset: json['bootCheckRuleset'] is bool
+            ? json['bootCheckRuleset'] as bool
+            : false,
       );
 }
 

@@ -25,6 +25,8 @@ class ResultsSliver extends StatelessWidget {
   Widget build(BuildContext context) {
     final loc = context.select<AppState, AppLocalizations>((s) => s.loc);
     final results = context.select<AppState, List<String>>((s) => s.results);
+    final compliance =
+        context.select<AppState, Map<String, bool>>((s) => s.compliance);
 
     return SliverPadding(
       key: const Key('results-list'),
@@ -33,11 +35,27 @@ class ResultsSliver extends StatelessWidget {
         itemCount: results.length + 1,
         itemBuilder: (context, i) {
           if (i == 0) {
+            final needs = compliance.values.where((v) => !v).length;
+            final ok = compliance.values.where((v) => v).length;
             return Padding(
               padding: const EdgeInsets.only(bottom: 4),
-              child: Text(loc.t('results'),
-                  key: const Key('results-label'),
-                  style: Theme.of(context).textTheme.titleMedium),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(loc.t('results'),
+                      key: const Key('results-label'),
+                      style: Theme.of(context).textTheme.titleMedium),
+                  if (needs > 0 || ok > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        loc.t('complianceSummary', [needs, ok]),
+                        key: const Key('compliance-summary'),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                ],
+              ),
             );
           }
           final path = results[i - 1];
@@ -52,6 +70,16 @@ class ResultsSliver extends StatelessWidget {
                 children: [
                   const Icon(Icons.description, size: 18),
                   const SizedBox(width: 12),
+                  Icon(
+                    (compliance[path] ?? false)
+                        ? Icons.check_circle
+                        : Icons.pending,
+                    size: 16,
+                    color: (compliance[path] ?? false)
+                        ? Colors.green
+                        : Colors.orange,
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(path,
                         style: const TextStyle(fontSize: 12),
