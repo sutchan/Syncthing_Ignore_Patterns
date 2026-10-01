@@ -118,6 +118,8 @@ SyncthingIgnorePatterns/
 - ci: 完善 CI/CD 工作流——拆出 `lint`/`test-unit`/`e2e`/`build`/`commitlint` 作业（PR 提交信息 Conventional Commits 校验、单元测试 + 行覆盖率 ≥80% 门禁、集成/端到端测试 `integration_test`、构建产物目录暂存）；`release` 作业为归档附 SHA256 + commit SHA + SLSA 构建来源证明（`actions/attest-build-provenance`），说明取自 CHANGELOG 对应小节
 - test: 新增 `app/integration_test/`（服务级端到端 `services_integration_test` + 应用冒烟 `app_smoke_test`，无显示环境跳过）；`pubspec` 增 `integration_test` 依赖
 - chore: 同步版本至 v1.32.1（VERSION / pubspec `1.32.1+1` / `AppState.version` / `manifest.dart 示例` / README 徽章 / project.md / tasks.md）
+- fix: 修复设置对话框内容溢出（包裹 `SingleChildScrollView`，小视口不再 `RenderFlex overflowed`，`widget_test` 语言切换用例恢复通过）
+- style: 清理 PROP-2 新增文件 4 个 lint info，`flutter analyze` 零问题
 
 ### v1.32.0 (2026-10-01)
 - feat: 收官增强（第四批）——PROP-1 扫描真正可取消；PROP-2 结果列表增强（搜索/计数/±合规筛选/类型筛选/复制/多选导出，新增 `ResultsViewState` 拆分 `results_list`/`results_filter`）；PROP-3 多扫描根（逗号/换行/「+」/拖拽追加）。

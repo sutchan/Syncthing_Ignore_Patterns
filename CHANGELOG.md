@@ -16,6 +16,10 @@
 ### 杂项
 - chore: 同步版本至 v1.32.1（VERSION / pubspec `1.32.1+1` / `AppState.version` / `manifest.dart 示例` / README 徽章 / project.md / tasks.md）
 
+### 修复
+- fix: 修复设置对话框内容溢出——`content` 包裹 `SingleChildScrollView`，受限于小视口时不再 `RenderFlex overflowed`，`widget_test` 语言切换用例恢复通过
+- style: 清理 PROP-2 新增文件 4 个 lint info（`results_view_state` for 循环缺花括号、`home_page` 多余 `const`、`results_filter` 跨 `await` 使用 `context` 改用提前捕获的 `ScaffoldMessenger`），`flutter analyze` 零问题
+
 ## [v1.32.0] - 2026-10-01
 
 ### 功能
