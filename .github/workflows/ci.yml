@@ -1,9 +1,13 @@
 # .github/workflows/ci.yml
 # SyncthingIgnorePatterns CI/CD
-# - version:       从根 VERSION 读取主实现版本，校验 v* 标签与 VERSION 一致
-# - validate:      校验 PowerShell GUI 语法、.stignore 规则集、规则副本一致性（阻断）、分三轨校验版本一致性
-# - build-windows: 在 windows-latest 构建 Flutter Windows 桌面 exe，跑测试与覆盖率（行覆盖率门禁 ≥80%）并打包产物
-# - release:       仅在推送 v* 标签时创建 GitHub Release（说明取自 CHANGELOG）并上传产物
+# - version:  从根 VERSION 读取主实现版本，校验 v* 标签与 VERSION 一致
+# - validate: 校验 PowerShell GUI 语法、.stignore 规则集、规则副本一致性（阻断）、分三轨校验版本一致性、文档/CHANGELOG 当前版本引用
+# - lint:     静态分析（flutter analyze）
+# - test-unit: 单元测试 + 行覆盖率门禁（≥80%）
+# - e2e:      集成/端到端测试（integration_test：服务级端到端 + 应用冒烟，无显示环境自动跳过）
+# - build:    构建 Flutter Windows 桌面 exe 并暂存产物目录
+# - commitlint: PR 提交信息 Conventional Commits 校验
+# - release:  仅推送 v* 标签时创建 GitHub Release（说明取自 CHANGELOG + commit SHA），附 SHA256 与 SLSA 构建来源证明
 #
 # 构建产物命名规范（与全局约定一致，见 docs/project.md §9.5）：
 #   <产品名>-v<语义版本>-<os>-<arch>.<扩展名>
@@ -181,8 +185,8 @@ jobs:
             @{ file = 'docs/project.md';            pat = "构建为 exe，v$ver" }
             @{ file = 'docs/project.md';            pat = "（v$ver）为主实现" }
             @{ file = 'docs/project.md';            pat = "如 ``$ver+1``" }
-            @{ file = 'docs/project.md';            pat = "SyncthingIgnoreGUI-v$ver-windows-x64.zip" }
             @{ file = 'docs/project.md';            pat = "perf_benchmark.dart，v$ver" }
+            @{ file = 'docs/project.md';            pat = "SyncthingIgnoreGUI-v$ver-windows-x64.zip" }
             @{ file = 'CHANGELOG.md';               pat = "## [v$ver]" }
           )
           foreach ($c in $checks) {
@@ -196,11 +200,11 @@ jobs:
           }
           Write-Host "Docs & CHANGELOG reference current version: $ver"
 
-  build-windows:
-    name: Build Flutter Windows (exe)
+  lint:
+    name: Static analysis
     needs: [version]
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
@@ -215,6 +219,23 @@ jobs:
       - name: Analyze
         working-directory: app
         run: flutter analyze
+
+  test-unit:
+    name: Unit tests (coverage)
+    needs: [version]
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Enable Windows desktop
+        run: flutter config --enable-windows-desktop
+      - name: Pub get
+        working-directory: app
+        run: flutter pub get
       - name: Test (with coverage)
         working-directory: app
         run: flutter test --coverage
@@ -242,6 +263,51 @@ jobs:
             exit 1
           }
           Write-Host "Coverage meets the $min% line threshold"
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-lcov
+          path: app/coverage/lcov.info
+          if-no-files-found: warn
+          retention-days: 7
+
+  e2e:
+    name: Integration & end-to-end tests
+    needs: [version]
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Enable Windows desktop
+        run: flutter config --enable-windows-desktop
+      - name: Pub get
+        working-directory: app
+        run: flutter pub get
+      - name: Run integration tests
+        working-directory: app
+        run: flutter test integration_test
+
+  build:
+    name: Build Flutter Windows (exe)
+    needs: [lint, test-unit, e2e]
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Enable Windows desktop
+        run: flutter config --enable-windows-desktop
+      - name: Pub get
+        working-directory: app
+        run: flutter pub get
       - name: Build Windows release
         working-directory: app
         run: flutter build windows --release --tree-shake-icons
@@ -292,23 +358,31 @@ jobs:
           name: ${{ env.APP_NAME }}-v${{ needs.version.outputs.version }}-windows-x64
           path: app/build/package
           if-no-files-found: error
-      - name: Upload coverage artifact
-        if: always()
-        uses: actions/upload-artifact@v7
+
+  commitlint:
+    name: Conventional commits
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
         with:
-          name: coverage-lcov
-          path: app/coverage/lcov.info
-          if-no-files-found: warn
-          retention-days: 7
+          fetch-depth: 0
+      - name: Validate PR commits follow Conventional Commits
+        uses: amannn/action-for-conventional-commits@v7
+        with:
+          preset: conventional
 
   release:
     name: Publish GitHub Release
-    needs: [version, build-windows]
+    needs: [version, build]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: write
+      attestations: write
+      id-token: write
     steps:
       - uses: actions/checkout@v7
       - name: Download artifact
@@ -320,7 +394,7 @@ jobs:
         shell: pwsh
         run: |
           # 归档命名规范：<产品名>-v<版本>-<os>-<arch>.<扩展名>（docs/project.md §9.5）
-          # 产物以「目录」形式在 build-windows 与 release 作业间传递，此处压缩为发布归档
+          # 产物以「目录」形式在 build 与 release 作业间传递，此处压缩为发布归档
           # 用 .NET SmallestSize 高压缩；CreateEntryFromFile 为扩展方法不可用，故用 CreateEntry + 流拷贝
           $ver = "${{ needs.version.outputs.version }}"
           $zip = "${{ env.APP_NAME }}-v$ver-windows-x64.zip"
@@ -350,13 +424,18 @@ jobs:
       - name: Extract release notes from CHANGELOG
         shell: pwsh
         run: |
+          # 发布说明 = CHANGELOG 对应版本小节 + 顶部可追溯头（commit SHA / 日期 / 标签链接）
           $ver = "${{ needs.version.outputs.version }}"
-          $header = "## [v$ver]"
+          $header = "## SyncthingIgnoreGUI v$ver`n`n" +
+                    "- Commit: ``${{ github.sha }}```n" +
+                    "- Released: $(Get-Date -Format 'yyyy-MM-dd')`n" +
+                    "- Tag: https://github.com/${{ github.repository }}/releases/tag/v$ver`n"
+          $sectionHeader = "## [v$ver]"
           $out = New-Object System.Collections.Generic.List[string]
           $capturing = $false
           foreach ($line in (Get-Content CHANGELOG.md)) {
             if (-not $capturing) {
-              if ($line.StartsWith($header)) { $capturing = $true }
+              if ($line.StartsWith($sectionHeader)) { $capturing = $true }
               continue
             }
             if ($line.StartsWith('## ')) { break }
@@ -364,7 +443,7 @@ jobs:
           }
           while ($out.Count -gt 0 -and $out[0].Trim() -eq '') { $out.RemoveAt(0) }
           if ($out.Count -eq 0) { $out.Add("(CHANGELOG.md 中未找到 v$ver 小节)") }
-          Set-Content -Path release_notes.md -Value ($out -join "`n") -Encoding utf8
+          Set-Content -Path release_notes.md -Value ($header + ($out -join "`n")) -Encoding utf8
           Write-Host "Extracted $($out.Count) lines for v$ver"
       - name: Append checksums to release notes
         shell: pwsh
@@ -372,8 +451,14 @@ jobs:
           # 为发布归档附 SHA256 校验和，便于用户校验产物完整性（透明、可复现）
           $zip = "${{ env.APP_NAME }}-v${{ needs.version.outputs.version }}-windows-x64.zip"
           $hash = (Get-FileHash $zip -Algorithm SHA256).Hash
-          Add-Content -Path release_notes.md -Value "`n### Checksums`n`n- SHA256: \`$hash\`" -Encoding utf8
+          Add-Content -Path release_notes.md -Value "`n### Checksums`n`n- SHA256: ``$hash``" -Encoding utf8
           Write-Host "SHA256: $hash"
+      - name: Attest build provenance
+        # SLSA 构建来源证明：将归档摘要绑定到本次构建的 OIDC 身份，可供
+        # `gh attestation verify` 校验产物确实由本仓库 CI 产出（可追溯、防篡改）
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: ${{ env.APP_NAME }}-v${{ needs.version.outputs.version }}-windows-x64.zip
       - name: Create release
         uses: softprops/action-gh-release@v3
         with:
@@ -383,5 +468,5 @@ jobs:
           body_path: release_notes.md
           generate_release_notes: false
           fail_on_unmatched_files: true
-          # 预发布（版本号含 '-'，如 1.19.0-rc.1）以 prerelease 标记区分，不在文件名加后缀
-          prerelease: ${{ contains(needs.version.outputs.version, '-') }}
+          # 预发布（版本号含 '-'，如 1.19.0-rc.1）不标记为 latest，不在文件名加后缀
+          make_latest: ${{ contains(needs.version.outputs.version, '-') && 'false' || 'true' }}

@@ -5,6 +5,17 @@
 
 ---
 
+## [v1.32.1] - 2026-10-01
+
+### CI
+- ci: 完善 CI/CD 工作流——拆出 `lint`/`test-unit`/`e2e`/`build`/`commitlint` 作业（PR 提交信息 Conventional Commits 校验、单元测试 + 行覆盖率 ≥80% 门禁、集成/端到端测试 `integration_test`、构建产物目录暂存）；`release` 作业为归档附 SHA256 + commit SHA + SLSA 构建来源证明（`actions/attest-build-provenance`），说明取自 CHANGELOG 对应小节；GitHub Release 仅上传 `SyncthingIgnoreGUI-vX.Y.Z-windows-x64.zip` 与 `.stignore` 规则集，可重复且可追溯
+
+### 测试
+- test: 新增 `app/integration_test/`——`services_integration_test`（服务级端到端：扫描临时工程 → 应用内置标准规则，验证磁盘文件被改写）与 `app_smoke_test`（应用冒烟：启动真实 app 验证首帧渲染 MaterialApp，无显示环境自动跳过）；`pubspec` 增 `integration_test` 依赖
+
+### 杂项
+- chore: 同步版本至 v1.32.1（VERSION / pubspec `1.32.1+1` / `AppState.version` / `manifest.dart 示例` / README 徽章 / project.md / tasks.md）
+
 ## [v1.32.0] - 2026-10-01
 
 ### 功能

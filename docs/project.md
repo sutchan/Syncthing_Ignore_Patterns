@@ -35,7 +35,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 SyncthingIgnorePatterns/
 ├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
-├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.32.0）
+├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.32.1）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
 │   ├── lib/
 │   │   ├── main.dart         # 入口，注入 AppState；首帧后恢复/采样窗口几何
@@ -47,7 +47,7 @@ SyncthingIgnorePatterns/
 │   │   └── ui/               # home_page.dart（装配）+ settings_dialog / root_field / options_row / scan_options / ruleset_card / action_row / results_list / log_list / about_dialog
 │   ├── windows/runner/resources/app_icon.ico   # Windows 应用图标（品牌资产，见 §10）
 │   ├── assets/.stignore      # 标准规则集（运行时 rootBundle 加载）
-│   ├── tool/                 # 性能基准脚本（perf_benchmark.dart，v1.32.0）
+│   ├── tool/                 # 性能基准脚本（perf_benchmark.dart，v1.32.1）
 │   └── test/                 # 22 个测试文件，按 lib/ 分层为 models/services/state/ui（单元 / 流程 / 部件 / 性能基准）；CI 强制行覆盖率 ≥80%
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档
@@ -69,7 +69,7 @@ SyncthingIgnorePatterns/
 
 - 语义化版本 `MAJOR.MINOR.PATCH`；文档/配置类变更默认升级 `PATCH`，新功能升级 `MINOR`。
 - **主实现（Flutter 桌面版）版本单一来源**：
-  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.32.0+1`）
+  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.32.1+1`）
   - `app/lib/state/app_state.dart` 的 `AppState.version`（关于框 / 日志展示）
   - `README.md` / `README_EN.md` 版本徽章
   - 根目录 `VERSION` 文件（CI 读取的主实现版本单一来源）
@@ -113,6 +113,11 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.32.1 (2026-10-01)
+- ci: 完善 CI/CD 工作流——拆出 `lint`/`test-unit`/`e2e`/`build`/`commitlint` 作业（PR 提交信息 Conventional Commits 校验、单元测试 + 行覆盖率 ≥80% 门禁、集成/端到端测试 `integration_test`、构建产物目录暂存）；`release` 作业为归档附 SHA256 + commit SHA + SLSA 构建来源证明（`actions/attest-build-provenance`），说明取自 CHANGELOG 对应小节
+- test: 新增 `app/integration_test/`（服务级端到端 `services_integration_test` + 应用冒烟 `app_smoke_test`，无显示环境跳过）；`pubspec` 增 `integration_test` 依赖
+- chore: 同步版本至 v1.32.1（VERSION / pubspec `1.32.1+1` / `AppState.version` / `manifest.dart 示例` / README 徽章 / project.md / tasks.md）
 
 ### v1.32.0 (2026-10-01)
 - feat: 收官增强（第四批）——PROP-1 扫描真正可取消；PROP-2 结果列表增强（搜索/计数/±合规筛选/类型筛选/复制/多选导出，新增 `ResultsViewState` 拆分 `results_list`/`results_filter`）；PROP-3 多扫描根（逗号/换行/「+」/拖拽追加）。
@@ -531,6 +536,8 @@ flutter build windows --release --tree-shake-icons        # 产物：build/windo
 
 ### 9.3 测试与覆盖率
 
+端到端测试位于 `app/integration_test/`：`services_integration_test`（服务级端到端——扫描临时工程 → 应用内置标准规则）与 `app_smoke_test`（启动真实 app 验证首帧渲染，无显示环境自动跳过），由 CI `e2e` 作业运行。
+
 `app/test/` 覆盖纯逻辑、状态、流程与部件：`scanner_test`（遍历/跳过/并行/进度）、
 `applier_test`（替换/跳过/预览/备份轮转/取消）、`settings_store_test`（缺省/往返/损坏回退/
 `AppState` 启动恢复与写盘/并发写）、`manifest_test`、`rules_source_test`、`state_mixins_test`
@@ -555,7 +562,7 @@ flutter test --coverage                 # 生成 coverage/lcov.info（含每文�
 ### 9.4 实现分工
 
 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
-**Dart + Flutter 桌面版（v1.32.0）为主实现**，构建为独立 `.exe` 分发。两者共享同一
+**Dart + Flutter 桌面版（v1.32.1）为主实现**，构建为独立 `.exe` 分发。两者共享同一
 `.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等状态与验证边界，
 见 [开发任务清单](tasks.md)；功能与 UI 的后续完善建议（PROP-1~13，按 P0/P1/P2 分级）
 集中维护于 [任务清单](tasks.md) 的「评估中建议（Backlog）」一节（自 `spec.md` 迁移而来）。
@@ -586,7 +593,7 @@ CI 构建的发布包统一命名（与全局约定一致）：
 - Release 资产**仅上传归档**（`*.zip` / `*.tar.gz`），不上传构建目录树。
 - 预发布版本以 GitHub Release 的 `prerelease` 标记区分，**不在文件名加后缀**。
 
-示例：`SyncthingIgnoreGUI-v1.32.0-windows-x64.zip`
+示例：`SyncthingIgnoreGUI-v1.32.1-windows-x64.zip`
 
 ### 9.6 忽略清单在线更新（v1.22.0）
 

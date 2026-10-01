@@ -42,7 +42,7 @@ class AppState extends ChangeNotifier
         BackupState,
         ResultsViewState {
   AppState({
-    this.version = '1.32.0',
+    this.version = '1.32.1',
     SettingsStore? settingsStore,
     RulesetStore? rulesetStore,
     RulesetFetcher? rulesetFetcher,
