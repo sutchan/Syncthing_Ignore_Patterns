@@ -69,13 +69,21 @@ mixin ProgressState on ChangeNotifier {
     notifyListeners();
   }
 
-  /// Elapsed time since [begin], formatted `mm:ss` (`h:mm:ss` past an hour).
-  String elapsed() {
+  /// Elapsed seconds since [begin].
+  int get elapsedSeconds {
     final start = _start;
-    if (start == null) return '00:00';
-    final ts = DateTime.now().difference(start);
-    final seconds = ts.inSeconds.remainder(60).toString().padLeft(2, '0');
-    final minutes = ts.inMinutes.remainder(60).toString().padLeft(2, '0');
-    return ts.inHours >= 1 ? '${ts.inHours}:$minutes:$seconds' : '$minutes:$seconds';
+    return start == null ? 0 : DateTime.now().difference(start).inSeconds;
+  }
+
+  /// Elapsed time since [begin], formatted `mm:ss` (`h:mm:ss` past an hour).
+  String elapsed() => formatDuration(elapsedSeconds);
+
+  /// Formats a duration in seconds as `mm:ss` (`h:mm:ss` past an hour).
+  String formatDuration(int totalSeconds) {
+    final seconds = totalSeconds.remainder(60).toString().padLeft(2, '0');
+    final minutes = (totalSeconds ~/ 60).remainder(60).toString().padLeft(2, '0');
+    return totalSeconds >= 3600
+        ? '${totalSeconds ~/ 3600}:$minutes:$seconds'
+        : '$minutes:$seconds';
   }
 }

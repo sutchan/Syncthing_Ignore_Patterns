@@ -70,6 +70,14 @@ class RulesetCard extends StatelessWidget {
                 style: theme.textTheme.bodySmall,
               ),
             ],
+            if (state.rulesetAdded > 0 || state.rulesetRemoved > 0) ...[
+              const SizedBox(height: 6),
+              Text(
+                loc.t('rulesetChanges', [state.rulesetAdded, state.rulesetRemoved]),
+                key: const Key('ruleset-diff'),
+                style: theme.textTheme.bodySmall,
+              ),
+            ],
           ],
         ),
       ),

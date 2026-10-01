@@ -9,12 +9,13 @@ import '../i18n.dart';
 import '../models/window_bounds.dart';
 import '../services/settings_store.dart';
 import '../services/window_bounds_service.dart';
+import 'scan_options_state.dart';
 
 /// Preferences shared by the UI; mixed into `AppState`.
 ///
 /// Call [initPreferences] once from the owning class' constructor to supply the
 /// backing store (tests inject a temporary directory).
-mixin PreferencesState on ChangeNotifier {
+mixin PreferencesState on ChangeNotifier, ScanOptionsState {
   final AppLocalizations _en = AppLocalizations('en');
   final AppLocalizations _zh = AppLocalizations('zh');
 
@@ -60,6 +61,10 @@ mixin PreferencesState on ChangeNotifier {
     _lang = AppLocalizations.supported.contains(saved.lang) ? saved.lang : 'en';
     _dark = saved.dark;
     _windowBounds = saved.window;
+    setMaxDepth(saved.maxDepth);
+    setFilterLargeDirs(saved.filterLargeDirs);
+    setMaxFilesPerDir(saved.maxFilesPerDir);
+    setBackup(saved.backup);
     notifyListeners();
   }
 
@@ -90,10 +95,20 @@ mixin PreferencesState on ChangeNotifier {
   }
 
   void _persistSettings() {
-    unawaited(_settings.save(
-      AppSettings(lang: _lang, dark: _dark, window: _windowBounds),
-    ));
+    unawaited(_settings.save(AppSettings(
+      lang: _lang,
+      dark: _dark,
+      window: _windowBounds,
+      maxDepth: maxDepth,
+      filterLargeDirs: filterLargeDirs,
+      maxFilesPerDir: maxFilesPerDir,
+      backup: backup,
+    )));
   }
+
+  /// Persists the current preferences and scan defaults (called after a
+  /// scan-option change in the settings dialog).
+  void persistPreferences() => _persistSettings();
 
   @override
   void dispose() {

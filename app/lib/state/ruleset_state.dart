@@ -23,6 +23,8 @@ mixin RulesetUpdateState on ChangeNotifier, PreferencesState, LogState {
   bool _checking = false;
   String? _availableVersion;
   String _status = '';
+  int _rulesetAdded = 0;
+  int _rulesetRemoved = 0;
 
   static Future<String> _fetchFromRepository(Uri uri) =>
       fetchRulesetFromRepo(uri: uri);
@@ -55,6 +57,12 @@ mixin RulesetUpdateState on ChangeNotifier, PreferencesState, LogState {
 
   /// Localized outcome of the last check (empty before the first one).
   String get rulesetStatus => _status;
+
+  /// Rules added by the last successful ruleset update (vs the previous one).
+  int get rulesetAdded => _rulesetAdded;
+
+  /// Rules removed by the last successful ruleset update (vs the previous one).
+  int get rulesetRemoved => _rulesetRemoved;
 
   /// Loads the ruleset metadata in effect. Never touches the network.
   Future<void> loadRulesetInfo() async {
@@ -91,6 +99,8 @@ mixin RulesetUpdateState on ChangeNotifier, PreferencesState, LogState {
     if (_checking) return;
     _checking = true;
     _status = '';
+    _rulesetAdded = 0;
+    _rulesetRemoved = 0;
     notifyListeners();
     try {
       final content = await _fetcher(Uri.parse(rulesetRepoUrl));
@@ -101,6 +111,11 @@ mixin RulesetUpdateState on ChangeNotifier, PreferencesState, LogState {
         return;
       }
       final current = _ruleset;
+      if (current != null) {
+        final (added, removed) = _diffRules(await effectiveRules(), content);
+        _rulesetAdded = added;
+        _rulesetRemoved = removed;
+      }
       if (current != null &&
           compareRulesetVersions(remote.version, current.version) <= 0) {
         _status = loc.t('rulesetUpToDate', [current.version]);
@@ -120,5 +135,21 @@ mixin RulesetUpdateState on ChangeNotifier, PreferencesState, LogState {
       _checking = false;
       notifyListeners();
     }
+  }
+
+  /// Counts rules added (present in [newText] but not [oldText]) and removed
+  /// (present in [oldText] but not [newText]), ignoring blank and comment lines.
+  (int, int) _diffRules(String oldText, String newText) {
+    Set<String> parse(String s) => s
+        .split('\n')
+        .map((l) => l.trim())
+        .where((l) => l.isNotEmpty && !l.startsWith('#') && !l.startsWith('//'))
+        .toSet();
+    final oldLines = parse(oldText);
+    final newLines = parse(newText);
+    return (
+      newLines.difference(oldLines).length,
+      oldLines.difference(newLines).length,
+    );
   }
 }

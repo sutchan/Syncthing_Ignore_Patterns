@@ -89,14 +89,31 @@ mixin ScanFlow on ChangeNotifier,
 
   /// Renders the live status line while roots are being walked.
   ///
-  /// Multi-root scans know their total, so the bar shows real progress; a
-  /// single root walks a whole drive of unknown size, so it stays indeterminate.
+  /// Multi-root scans know their total, so the bar shows real progress and an
+  /// ETA; a single root walks a whole drive of unknown size, so it stays
+  /// indeterminate with no ETA.
   void _reportScanProgress(int done, int total, int found, String current) {
-    progress = total > 1 ? done / total : null;
-    status = total > 1
-        ? loc.t('statusScan', [done + 1, total, found, current, elapsed()])
-        : loc.t('statusScanOne', [found, current, elapsed()]);
+    if (total > 1) {
+      progress = done / total;
+      status = loc.t('statusScan',
+          [done + 1, total, found, current, elapsed(), _estimateEta(done, total)]);
+    } else {
+      progress = null;
+      status = loc.t('statusScanOne', [found, current, elapsed()]);
+    }
     notifyListeners();
+  }
+
+  /// Estimated remaining time for a multi-root scan, derived from elapsed time
+  /// and the fraction of roots already processed. Returns `—` when unknown.
+  String _estimateEta(int done, int total) {
+    final fraction = done / total;
+    if (fraction <= 0) return '—';
+    final secs = elapsedSeconds;
+    if (secs <= 0) return '—';
+    final remaining = ((secs / fraction) - secs).round();
+    if (remaining <= 0) return '—';
+    return formatDuration(remaining);
   }
 
   /// Surfaces an existing manifest at startup: loads its paths into the results

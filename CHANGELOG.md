@@ -5,6 +5,14 @@
 
 ---
 
+## [v1.30.0] - 2026-10-01
+
+### 功能
+- feat: 增量增强（评估中建议第二批）——PROP-8 扫描默认值持久化（深度 / 跳大目录 / 每目录文件数 / 备份默认，写入 `SettingsStore` 并启动时载入）；PROP-11 规则更新变更摘要（`ruleset_card` 展示新增 / 移除规则数）；PROP-13 扫描进度 ETA（多根时按已用时间估算剩余）
+
+### 杂项
+- chore: 同步版本至 v1.30.0（VERSION / pubspec `1.30.0+1` / `AppState.version` / `manifest.dart 示例` / README 徽章 / project.md / tasks.md）
+
 ## [v1.29.1] - 2026-10-01
 
 ### 修复

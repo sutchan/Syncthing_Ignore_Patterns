@@ -15,7 +15,15 @@ import 'app_paths.dart';
 
 /// Immutable snapshot of the persisted preferences.
 class AppSettings {
-  const AppSettings({this.lang = 'en', this.dark = false, this.window});
+  const AppSettings({
+    this.lang = 'en',
+    this.dark = false,
+    this.window,
+    this.maxDepth = 3,
+    this.filterLargeDirs = true,
+    this.maxFilesPerDir = 100,
+    this.backup = true,
+  });
 
   /// UI language code, one of `en` / `zh`.
   final String lang;
@@ -26,12 +34,28 @@ class AppSettings {
   /// Last known window position/size, or `null` when never saved.
   final WindowBounds? window;
 
+  /// Default scan depth (root directory counts as level 1).
+  final int maxDepth;
+
+  /// Default: skip sub-directories that hold more than [maxFilesPerDir] entries.
+  final bool filterLargeDirs;
+
+  /// Entry threshold used by [filterLargeDirs].
+  final int maxFilesPerDir;
+
+  /// Default: back up each target before overwriting it.
+  final bool backup;
+
   Map<String, Object?> toJson() {
     final bounds = window;
     return <String, Object?>{
       'lang': lang,
       'dark': dark,
       if (bounds != null) 'window': bounds.toJson(),
+      'maxDepth': maxDepth,
+      'filterLargeDirs': filterLargeDirs,
+      'maxFilesPerDir': maxFilesPerDir,
+      'backup': backup,
     };
   }
 
@@ -41,6 +65,14 @@ class AppSettings {
         lang: json['lang'] is String ? json['lang'] as String : 'en',
         dark: json['dark'] is bool ? json['dark'] as bool : false,
         window: WindowBounds.fromJson(json['window']),
+        maxDepth: json['maxDepth'] is int ? json['maxDepth'] as int : 3,
+        filterLargeDirs: json['filterLargeDirs'] is bool
+            ? json['filterLargeDirs'] as bool
+            : true,
+        maxFilesPerDir: json['maxFilesPerDir'] is int
+            ? json['maxFilesPerDir'] as int
+            : 100,
+        backup: json['backup'] is bool ? json['backup'] as bool : true,
       );
 }
 

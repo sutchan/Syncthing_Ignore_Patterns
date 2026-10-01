@@ -67,6 +67,71 @@ class SettingsDialog extends StatelessWidget {
             selected: {state.dark},
             onSelectionChanged: (v) => state.setTheme(v.first),
           ),
+          const SizedBox(height: 20),
+          const Divider(),
+          const SizedBox(height: 8),
+          Text(loc.t('scanDefaults')),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Slider(
+                  key: const Key('scan-depth-slider'),
+                  value: state.maxDepth.toDouble(),
+                  min: 1,
+                  max: 10,
+                  divisions: 9,
+                  onChanged: (v) {
+                    state.setMaxDepth(v.round());
+                    state.persistPreferences();
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text('${state.maxDepth} ${loc.t('level')}'),
+            ],
+          ),
+          SwitchListTile(
+            key: const Key('skip-large-dirs-switch'),
+            title: Text(loc.t('skipLargeDirs')),
+            value: state.filterLargeDirs,
+            controlAffinity: ListTileControlAffinity.leading,
+            dense: true,
+            onChanged: (v) {
+              state.setFilterLargeDirs(v);
+              state.persistPreferences();
+            },
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Slider(
+                  key: const Key('max-files-slider'),
+                  value: state.maxFilesPerDir.toDouble(),
+                  min: 10,
+                  max: 500,
+                  divisions: 49,
+                  onChanged: (v) {
+                    state.setMaxFilesPerDir(v.round());
+                    state.persistPreferences();
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text('${state.maxFilesPerDir}'),
+            ],
+          ),
+          SwitchListTile(
+            key: const Key('backup-default-switch'),
+            title: Text(loc.t('backup')),
+            value: state.backup,
+            controlAffinity: ListTileControlAffinity.leading,
+            dense: true,
+            onChanged: (v) {
+              state.setBackup(v);
+              state.persistPreferences();
+            },
+          ),
         ],
       ),
       actions: [
