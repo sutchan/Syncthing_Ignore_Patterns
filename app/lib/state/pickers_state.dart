@@ -12,7 +12,34 @@ import 'preferences_state.dart';
 
 mixin PickersState on ChangeNotifier, PreferencesState, LogState {
   /// Scan root typed or picked by the user (blank = all fixed drives).
+  ///
+  /// Multiple roots may be entered separated by commas or newlines; [rootPaths]
+  /// splits them. Browse / drag & drop append to the list rather than replace it.
   String rootText = '';
+
+  /// Splits the multi-root field into individual scan roots. Roots are
+  /// separated by commas or newlines; blank segments are ignored.
+  List<String> get rootPaths => rootText
+      .split(RegExp(r'[\n,]'))
+      .map((s) => s.trim())
+      .where((s) => s.isNotEmpty)
+      .toList();
+
+  /// Appends a path to the multi-root field (used by Browse and drag & drop so
+  /// several roots accumulate instead of replacing one another).
+  void addRoot(String path) {
+    final trimmed = path.trim();
+    if (trimmed.isEmpty) return;
+    rootText = rootText.trim().isEmpty ? trimmed : '${rootText.trim()}\n$trimmed';
+    notifyListeners();
+  }
+
+  /// Clears all scan roots.
+  void clearRoots() {
+    if (rootText.isEmpty) return;
+    rootText = '';
+    notifyListeners();
+  }
 
   /// Where the manifest JSON is written.
   String manifestPath = 'config${Platform.pathSeparator}stignore-paths.json';
@@ -22,8 +49,8 @@ mixin PickersState on ChangeNotifier, PreferencesState, LogState {
       dialogTitle: loc.t('folderTitle'),
     );
     if (dir == null) return;
-    rootText = dir;
-    notifyListeners();
+    addRoot(dir);
+    log(loc.t('rootAdded', [1]), 'info');
   }
 
   Future<void> pickManifest() async {
@@ -52,7 +79,7 @@ mixin PickersState on ChangeNotifier, PreferencesState, LogState {
       return;
     }
     if (target == DropTarget.root) {
-      rootText = path;
+      addRoot(path);
       log(loc.t('dropRoot', [path]), 'info');
     } else {
       manifestPath = path;

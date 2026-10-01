@@ -3,6 +3,7 @@ library;
 
 import 'dart:convert';
 import 'dart:io';
+import 'package:path/path.dart' as p;
 
 import 'package:flutter/foundation.dart';
 
@@ -47,10 +48,20 @@ mixin ScanFlow on ChangeNotifier,
   /// Resolves the roots to scan: the typed root (normalized), or every local
   /// and network-mapped drive when blank.
   List<String> _resolveRoots() {
-    final root = normalizeRootPath(rootText);
-    if (root.isEmpty) return listScanDrives();
-    if (FileSystemEntity.isDirectorySync(root)) return [root];
-    throw Exception(loc.t('rootNotFound', [root]));
+    final paths = rootPaths;
+    if (paths.isEmpty) return listScanDrives();
+    final resolved = <String>[];
+    for (final raw in paths) {
+      final root = normalizeRootPath(raw);
+      if (root.isEmpty) continue;
+      if (FileSystemEntity.isDirectorySync(root)) {
+        resolved.add(root);
+      } else {
+        throw Exception(loc.t('rootNotFound', [root]));
+      }
+    }
+    if (resolved.isEmpty) throw Exception(loc.t('rootNotFound', [rootText]));
+    return resolved;
   }
 
   Future<void> scan() async {
@@ -76,8 +87,10 @@ mixin ScanFlow on ChangeNotifier,
         maxFilesPerDir: maxFilesPerDir,
         skipLargeDirs: filterLargeDirs,
         onProgress: _reportScanProgress,
+        isCancelled: () => cancelled,
       );
       if (cancelled) {
+        status = loc.t('statusStopped');
         finish();
         log(loc.t('stopped'), 'warn');
         return;

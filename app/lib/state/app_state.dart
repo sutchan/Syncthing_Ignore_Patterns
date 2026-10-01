@@ -19,6 +19,7 @@ import '../services/settings_store.dart';
 import 'app_update_state.dart';
 import 'apply_flow.dart';
 import 'backup_state.dart';
+import 'results_view_state.dart';
 import 'log_state.dart';
 import 'pickers_state.dart';
 import 'preferences_state.dart';
@@ -29,8 +30,8 @@ import 'scan_options_state.dart';
 
 class AppState extends ChangeNotifier
     with
-        PreferencesState,
         ScanOptionsState,
+        PreferencesState,
         LogState,
         ProgressState,
         PickersState,
@@ -38,9 +39,10 @@ class AppState extends ChangeNotifier
         AppUpdateState,
         ScanFlow,
         ApplyFlow,
-        BackupState {
+        BackupState,
+        ResultsViewState {
   AppState({
-    this.version = '1.31.0',
+    this.version = '1.32.0',
     SettingsStore? settingsStore,
     RulesetStore? rulesetStore,
     RulesetFetcher? rulesetFetcher,

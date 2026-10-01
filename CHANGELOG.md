@@ -5,6 +5,22 @@
 
 ---
 
+## [v1.32.0] - 2026-10-01
+
+### 功能
+- feat: 收官增强（评估中建议第四批）——PROP-1 扫描真正可取消（`scanner.scanRoots` 增 `isCancelled`，`scan_flow` 派发前判定并即时反馈「已取消」）；PROP-2 结果列表增强（搜索框 + 计数 + ±合规筛选 + 类型筛选 + 行右键复制路径 + 多选后「打开所在文件夹」「导出选中路径」，新增 `ResultsViewState` 拆分 `results_list`/`results_filter`）；PROP-3 多扫描根（`pickers_state` 维护 `rootPaths`/`addRoot`，逗号/换行/「+」/拖拽追加，`scan_flow._resolveRoots` 展开多根）。
+
+### 杂项
+- chore: 同步版本至 v1.32.0（VERSION / pubspec `1.32.0+1` / `AppState.version` / `manifest.dart 示例` / README 徽章 / project.md / tasks.md）
+
+## [v1.31.0] - 2026-10-01
+
+### 功能
+- feat: 增量增强（评估中建议第三批）——PROP-4 备份管理 UI（新增 `backup_manager`/`backup_state`/`backup_dialog`，列出/恢复/删除 `.stignore.bak.*` 并自身再备份以保证可逆）；PROP-5 应用前预检（扫描后按 SHA 比对生效清单，结果列表 ✓✗ 标记 + 待应用/已符合计数）；PROP-7 启动自动检查更新（设置项默认关，复用 `checkAppUpdate`/`checkRulesetUpdate`）。
+
+### 杂项
+- chore: 同步版本至 v1.31.0（VERSION / pubspec `1.31.0+1` / `AppState.version` / `manifest.dart 示例` / README 徽章 / project.md / tasks.md）
+
 ## [v1.30.0] - 2026-10-01
 
 ### 功能

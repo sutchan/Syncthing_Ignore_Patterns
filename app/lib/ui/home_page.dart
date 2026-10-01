@@ -26,6 +26,7 @@ import 'action_row.dart';
 import 'log_list.dart';
 import 'options_row.dart';
 import 'results_list.dart';
+import 'results_filter.dart';
 import 'root_field.dart';
 import 'ruleset_card.dart';
 import 'scan_options.dart';
@@ -119,7 +120,8 @@ class HomePage extends StatelessWidget {
               ),
               // The lists are the only potentially long parts; their rows are
               // built lazily and share the page's single scroll position.
-              ResultsSliver(),
+              const ResultsHeader(),
+              const ResultsListSliver(),
               LogSliver(),
             ],
           ),

@@ -176,14 +176,20 @@ Future<List<StignoreRecord>> scanRoots(
   int maxFilesPerDir = 100,
   bool skipLargeDirs = false,
   void Function(int done, int total, int found, String current)? onProgress,
+  bool Function()? isCancelled,
 }) async {
   final records = <StignoreRecord>[];
   for (var i = 0; i < roots.length; i += maxThreads) {
+    // Stop before dispatching the next batch once the user hits Stop, so a
+    // running scan no longer walks every remaining root before acknowledging.
+    if (isCancelled?.call() == true) break;
     final batch = roots.sublist(i, min(i + maxThreads, roots.length));
     onProgress?.call(i, roots.length, records.length, batch.first);
-    var completed = 0;
-    await Future.wait(batch.map(
-      (root) => _scanOneRoot(
+    final futures = <Future<void>>[];
+    var done = i;
+    for (final root in batch) {
+      if (isCancelled?.call() == true) break;
+      futures.add(_scanOneRoot(
         root,
         skipDir: skipDir,
         maxDepth: maxDepth,
@@ -191,10 +197,12 @@ Future<List<StignoreRecord>> scanRoots(
         skipLargeDirs: skipLargeDirs,
       ).then((recs) {
         records.addAll(recs);
-        completed++;
-        onProgress?.call(i + completed, roots.length, records.length, root);
-      }),
-    ));
+        done++;
+        onProgress?.call(done, roots.length, records.length, root);
+      }));
+    }
+    await Future.wait(futures);
+    if (isCancelled?.call() == true) break;
   }
   return records;
 }

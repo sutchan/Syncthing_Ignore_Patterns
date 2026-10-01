@@ -76,6 +76,8 @@ class _RootFieldState extends State<RootField> {
               child: TextFormField(
                 key: const Key('root-input'),
                 controller: _root,
+                maxLines: 3,
+                minLines: 1,
                 onChanged: (v) => state.rootText = v,
                 decoration: InputDecoration(
                   hintText: loc.t('dragTip'),
@@ -85,10 +87,16 @@ class _RootFieldState extends State<RootField> {
             ),
             const SizedBox(width: 8),
             ElevatedButton(
-              key: const Key('root-browse'),
+              key: const Key('root-add'),
               onPressed: isBusy ? null : state.pickRoot,
-              child: Text(loc.t('browse')),
+              child: Text(loc.t('addRoot')),
             ),
+            if (rootText.trim().isNotEmpty)
+              ElevatedButton(
+                key: const Key('root-clear'),
+                onPressed: isBusy ? null : state.clearRoots,
+                child: Text(loc.t('clearSelection')),
+              ),
           ],
         ),
         const SizedBox(height: 8),

@@ -27,7 +27,7 @@ mixin BackupState on ChangeNotifier, LogState, PreferencesState {
     _loadingBackups = true;
     notifyListeners();
     try {
-      _backups = BackupManager.listForTargets(targets);
+      _backups = listForTargets(targets);
     } on Exception catch (e) {
       log('backup list failed: $e', 'error');
       _backups = const [];
@@ -42,7 +42,7 @@ mixin BackupState on ChangeNotifier, LogState, PreferencesState {
     final entry = _find(bakPath);
     if (entry == null) return;
     try {
-      await BackupManager.restore(entry);
+      await restore(entry);
       log(loc.t('backupRestored', [entry.targetName]), 'info');
     } on Exception catch (e) {
       log('${loc.t('backupRestoreFailed')}: $e', 'error');
@@ -55,7 +55,7 @@ mixin BackupState on ChangeNotifier, LogState, PreferencesState {
     final entry = _find(bakPath);
     if (entry == null) return;
     try {
-      await BackupManager.deleteEntry(entry);
+      await deleteEntry(entry);
       log(loc.t('backupDeleted', [entry.targetName]), 'info');
     } on Exception catch (e) {
       log('${loc.t('backupDeleteFailed')}: $e', 'error');
