@@ -139,6 +139,9 @@ class ResultsHeader extends StatelessWidget {
 
   Future<void> _exportPaths(BuildContext context) async {
     final state = context.read<AppState>();
+    // Capture the messenger before the awaited picker call so we never touch
+    // `context` across an async gap (which can be unmounted by then).
+    final messenger = ScaffoldMessenger.of(context);
     final uri = await FilePicker.saveFile(
       dialogTitle: state.loc.t('exportPaths'),
       fileName: 'stignore-paths.txt',
@@ -146,7 +149,6 @@ class ResultsHeader extends StatelessWidget {
     );
     if (uri == null) return;
     await state.exportSelected(uri.toFilePath());
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(state.loc.t('exportPaths'))));
+    messenger.showSnackBar(SnackBar(content: Text(state.loc.t('exportPaths'))));
   }
 }

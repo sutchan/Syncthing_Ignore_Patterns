@@ -101,7 +101,9 @@ mixin ResultsViewState on ChangeNotifier, ProgressState, ScanFlow {
   /// Writes the selected paths (one per line) to [file].
   Future<void> exportSelected(String file) async {
     final sink = File(file).openWrite();
-    for (final p in _selected) sink.writeln(p);
+    for (final p in _selected) {
+      sink.writeln(p);
+    }
     await sink.flush();
     await sink.close();
   }

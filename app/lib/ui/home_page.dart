@@ -120,8 +120,8 @@ class HomePage extends StatelessWidget {
               ),
               // The lists are the only potentially long parts; their rows are
               // built lazily and share the page's single scroll position.
-              const ResultsHeader(),
-              const ResultsListSliver(),
+              ResultsHeader(),
+              ResultsListSliver(),
               LogSliver(),
             ],
           ),

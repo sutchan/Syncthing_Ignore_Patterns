@@ -32,10 +32,11 @@ class SettingsDialog extends StatelessWidget {
           Text(loc.t('settings')),
         ],
       ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           Text(loc.t('lang')),
           const SizedBox(height: 8),
           SegmentedButton<String>(
@@ -152,6 +153,7 @@ class SettingsDialog extends StatelessWidget {
             onChanged: (v) => state.setBootCheckRuleset(v),
           ),
         ],
+        ),
       ),
       actions: [
         TextButton(
