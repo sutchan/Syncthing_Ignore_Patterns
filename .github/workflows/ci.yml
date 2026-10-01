@@ -180,14 +180,14 @@ jobs:
             @{ file = 'docs/tasks.md'; pat = "Flutter 桌面版：v$ver" }
             @{ file = 'docs/project.md';            pat = "构建为 exe，v$ver" }
             @{ file = 'docs/project.md';            pat = "（v$ver）为主实现" }
-            @{ file = 'docs/project.md';            pat = "如 \`$ver+1\`" }
+            @{ file = 'docs/project.md';            pat = "如 ``$ver+1``" }
             @{ file = 'docs/project.md';            pat = "SyncthingIgnoreGUI-v$ver-windows-x64.zip" }
             @{ file = 'docs/project.md';            pat = "perf_benchmark.dart，v$ver" }
             @{ file = 'CHANGELOG.md';               pat = "## [v$ver]" }
           )
           foreach ($c in $checks) {
             $content = Get-Content $c.file -Raw
-            if ($content -like "*$($c.pat)*") {
+            if ($content.Contains($c.pat)) {
               Write-Host "OK: $($c.file) references $ver"
             } else {
               Write-Error "Missing current version reference '$($c.pat)' in $($c.file)"
