@@ -8,6 +8,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../i18n.dart';
@@ -31,9 +32,22 @@ class LogSliver extends StatelessWidget {
           if (i == 0) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 4),
-              child: Text(loc.t('log'),
-                  key: const Key('log-label'),
-                  style: Theme.of(context).textTheme.titleMedium),
+              child: Row(
+                children: [
+                  Text(loc.t('log'),
+                      key: const Key('log-label'),
+                      style: Theme.of(context).textTheme.titleMedium),
+                  const Spacer(),
+                  IconButton(
+                    key: const Key('copy-log-button'),
+                    icon: const Icon(Icons.copy, size: 18),
+                    tooltip: loc.t('copyAll'),
+                    onPressed: logs.isEmpty
+                        ? null
+                        : () => _copyAll(context, logs, loc),
+                  ),
+                ],
+              ),
             );
           }
           final LogEntry entry = logs[i - 1];
@@ -48,6 +62,16 @@ class LogSliver extends StatelessWidget {
               style: TextStyle(fontSize: 12, color: color));
         },
       ),
+    );
+  }
+
+  /// Copies all log lines to the clipboard for easy issue reporting.
+  void _copyAll(
+      BuildContext context, List<LogEntry> logs, AppLocalizations loc) {
+    final text = logs.map((e) => e.text).join('\n');
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(loc.t('copied'))),
     );
   }
 }

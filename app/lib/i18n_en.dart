@@ -31,6 +31,8 @@ const Map<String, String> i18nEn = {
   'repo': 'Project: ',
   'summary': 'Found {0} .stignore file(s).',
   'clear': 'Clear log',
+  'copyAll': 'Copy all',
+  'copied': 'Copied',
   'stop': 'Stop',
   'results': 'Results:',
   'dragTip': 'Tip: pick a folder, or type a UNC/mapped path',

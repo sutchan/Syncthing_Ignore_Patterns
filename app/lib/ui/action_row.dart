@@ -14,8 +14,6 @@ class ActionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final loc = context.select<AppState, AppLocalizations>((s) => s.loc);
     final isBusy = context.select<AppState, bool>((s) => s.isBusy);
-    final preview = context.select<AppState, bool>((s) => s.preview);
-    final force = context.select<AppState, bool>((s) => s.force);
     final state = context.read<AppState>();
 
     return Wrap(
@@ -30,9 +28,7 @@ class ActionRow extends StatelessWidget {
         ),
         ElevatedButton.icon(
           key: const Key('apply-button'),
-          onPressed: isBusy
-              ? null
-              : () => _onApply(context, state, loc, preview, force),
+          onPressed: isBusy ? null : () => runApplyWithConfirm(context, state),
           icon: const Icon(Icons.upload),
           label: Text(loc.t('apply')),
         ),
@@ -53,40 +49,36 @@ class ActionRow extends StatelessWidget {
     );
   }
 
-  /// Runs Apply, but first asks for confirmation when the run would actually
-  /// write files (i.e. not preview-only and not force) — mirroring the safety
-  /// prompt in the PowerShell tool.
-  Future<void> _onApply(
-    BuildContext context,
-    AppState state,
-    AppLocalizations loc,
-    bool preview,
-    bool force,
-  ) async {
-    if (!preview && !force) {
-      final count = state.pendingApplyCount();
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          key: const Key('apply-confirm-dialog'),
-          title: Text(loc.t('applyTitle')),
-          content: Text(loc.t('applyConfirm', [count])),
-          actions: [
-            TextButton(
-              key: const Key('apply-confirm-cancel'),
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(loc.t('cancel')),
-            ),
-            FilledButton(
-              key: const Key('apply-confirm-ok'),
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(loc.t('apply')),
-            ),
-          ],
-        ),
-      );
-      if (confirmed != true) return;
-    }
-    await state.apply();
+}
+
+/// Runs Apply with the same confirmation prompt used by the Apply button.
+///
+/// Mirrors the safety prompt in the PowerShell tool: when the run would
+/// actually write files (not preview-only and not force) it asks first.
+Future<void> runApplyWithConfirm(BuildContext context, AppState state) async {
+  if (!state.preview && !state.force) {
+    final count = state.pendingApplyCount();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        key: const Key('apply-confirm-dialog'),
+        title: Text(state.loc.t('applyTitle')),
+        content: Text(state.loc.t('applyConfirm', [count])),
+        actions: [
+          TextButton(
+            key: const Key('apply-confirm-cancel'),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(state.loc.t('cancel')),
+          ),
+          FilledButton(
+            key: const Key('apply-confirm-ok'),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(state.loc.t('apply')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
   }
+  await state.apply();
 }

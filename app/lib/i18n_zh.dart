@@ -31,6 +31,8 @@ const Map<String, String> i18nZh = {
   'repo': '项目地址：',
   'summary': '已找到 {0} 个 .stignore 文件。',
   'clear': '清空日志',
+  'copyAll': '复制全部',
+  'copied': '已复制',
   'stop': '停止',
   'results': '结果：',
   'dragTip': '提示：可选文件夹，或输入 UNC/映射盘路径',

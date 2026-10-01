@@ -2,7 +2,7 @@
 ///
 /// Manifest JSON shape (UTF-8):
 /// {
-///   "version": "1.28.7",
+///   "version": "1.29.0",
 ///   "scannedAt": "2026-09-22T00:00:00.000Z",
 ///   "count": 2,
 ///   "roots": ["C:\\", "D:\\"],

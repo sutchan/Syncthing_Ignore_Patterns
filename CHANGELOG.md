@@ -5,6 +5,14 @@
 
 ---
 
+## [v1.29.0] - 2026-10-01
+
+### 功能
+- feat: 增量增强（评估中建议首批）——PROP-9 主容器语义化 id（`home_page` body 加 `Key('main-content')`）；PROP-6 清单「打开」按钮（复用 i18n `open`）；PROP-12 日志「复制全部」按钮（新增 i18n `copyAll`/`copied`）；PROP-10 全局快捷键 `Ctrl/Cmd+S` 扫描、`Ctrl/Cmd+A` 应用、`Delete` 清空日志（`Focus.onKeyEvent`，文本输入不受影响）
+
+### 杂项
+- chore: 同步版本至 v1.29.0（VERSION / pubspec `1.29.0+1` / `AppState.version` / `manifest.dart 示例` / README 徽章 / project.md / tasks.md）
+
 ## [v1.28.7] - 2026-10-01
 
 ### 重构

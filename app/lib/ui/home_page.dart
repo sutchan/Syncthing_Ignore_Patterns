@@ -13,7 +13,10 @@
 /// into view and share a single scroll position.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../i18n.dart';
@@ -54,36 +57,66 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: const CustomScrollView(
-        key: Key('home-scroll'),
-        slivers: [
-          // The form is short and cheap, so it is built eagerly as one box.
-          SliverPadding(
-            padding: EdgeInsets.all(16),
-            sliver: SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RootField(),
-                  SizedBox(height: 12),
-                  OptionsRow(),
-                  SizedBox(height: 12),
-                  ScanOptions(),
-                  SizedBox(height: 12),
-                  RulesetCard(),
-                  SizedBox(height: 12),
-                  ActionRow(),
-                  SizedBox(height: 12),
-                  _ProgressSection(),
-                ],
+      body: KeyedSubtree(
+        key: const Key('main-content'),
+        child: Focus(
+          autofocus: true,
+          onKeyEvent: (node, event) {
+            // PROP-10: global keyboard shortcuts (mirror the action buttons).
+            // Text fields consume their own keys first, so typing is unaffected.
+            if (event is KeyDownEvent) {
+              final s = context.read<AppState>();
+              if (event.logicalKey == LogicalKeyboardKey.keyS &&
+                  (HardwareKeyboard.instance.isControlPressed ||
+                      HardwareKeyboard.instance.isMetaPressed)) {
+                if (!s.isBusy) s.scan();
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.keyA &&
+                  (HardwareKeyboard.instance.isControlPressed ||
+                      HardwareKeyboard.instance.isMetaPressed)) {
+                if (!s.isBusy) unawaited(runApplyWithConfirm(context, s));
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.delete) {
+                if (!s.isBusy) s.clearLog();
+                return KeyEventResult.handled;
+              }
+            }
+            return KeyEventResult.ignored;
+          },
+          child: const CustomScrollView(
+            key: Key('home-scroll'),
+            slivers: [
+              // The form is short and cheap, so it is built eagerly as one box.
+              SliverPadding(
+                padding: EdgeInsets.all(16),
+                sliver: SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      RootField(),
+                      SizedBox(height: 12),
+                      OptionsRow(),
+                      SizedBox(height: 12),
+                      ScanOptions(),
+                      SizedBox(height: 12),
+                      RulesetCard(),
+                      SizedBox(height: 12),
+                      ActionRow(),
+                      SizedBox(height: 12),
+                      _ProgressSection(),
+                    ],
+                  ),
+                ),
               ),
-            ),
+              // The lists are the only potentially long parts; their rows are
+              // built lazily and share the page's single scroll position.
+              ResultsSliver(),
+              LogSliver(),
+            ],
           ),
-          // The lists are the only potentially long parts; their rows are
-          // built lazily and share the page's single scroll position.
-          ResultsSliver(),
-          LogSliver(),
-        ],
+        ),
       ),
     );
   }

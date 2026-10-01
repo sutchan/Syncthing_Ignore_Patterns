@@ -9,6 +9,8 @@
 /// notifying, so no rebuild is triggered for it).
 library;
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -35,6 +37,18 @@ class _RootFieldState extends State<RootField> {
     _root.dispose();
     _out.dispose();
     super.dispose();
+  }
+
+  /// Best-effort: open the manifest with its default editor (cmd start),
+  /// mirroring the result-list double-click behaviour.
+  void _openFile(String path) {
+    try {
+      if (Platform.isWindows) {
+        Process.run('cmd', ['/c', 'start', '', path], runInShell: true);
+      }
+    } on Exception {
+      // ignore - opening is a convenience only
+    }
   }
 
   @override
@@ -89,6 +103,14 @@ class _RootFieldState extends State<RootField> {
                 onChanged: (v) => state.manifestPath = v,
                 decoration: const InputDecoration(border: OutlineInputBorder()),
               ),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              key: const Key('manifest-open'),
+              onPressed: (isBusy || manifestPath.isEmpty)
+                  ? null
+                  : () => _openFile(manifestPath),
+              child: Text(loc.t('open')),
             ),
             const SizedBox(width: 8),
             ElevatedButton(
