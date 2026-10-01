@@ -98,7 +98,7 @@ The project ships two implementations with identical behavior (scan / apply / ba
 
 > **Two-track note**: both implementations share the same `.stignore` ruleset and docs. **The Flutter edition is the primary implementation (actively evolving)**; **the PowerShell edition is a legacy maintenance track (fix-only, no new features)** for environments without Flutter.
 
-#### Option 1: Dart + Flutter Desktop (recommended, primary · v1.32.4)
+#### Option 1: Dart + Flutter Desktop (recommended, primary · v1.33.0)
 
 Located in `app/`, built into a standalone `.exe` — no PowerShell required on the target machine:
 

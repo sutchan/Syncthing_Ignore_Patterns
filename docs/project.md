@@ -602,7 +602,7 @@ flutter test --coverage                 # 生成 coverage/lcov.info（含每文�
 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
 **Dart + Flutter 桌面版（v1.33.0）为主实现**，构建为独立 `.exe` 分发。两者共享同一
 `.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等状态与验证边界，
-见 [开发任务清单](tasks.md)；功能与 UI 的后续完善建议（PROP-1~13 已实现，PROP-14~18 列入 Backlog，按 P0/P1/P2 分级）
+见 [开发任务清单](tasks.md)；功能与 UI 的完善建议已全部实现（PROP-1~13 于 v1.32.0 前，PROP-14~18 于 v1.33.0；详见 `CHANGELOG.md` 与 `docs/feature-comparison.md`），无剩余 Backlog
 集中维护于 [任务清单](tasks.md) 的「评估中建议（Backlog）」一节（自 `spec.md` 迁移而来）。
 
 ### 9.5 构建产物命名规范

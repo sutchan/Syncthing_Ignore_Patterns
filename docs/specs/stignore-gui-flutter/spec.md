@@ -90,7 +90,7 @@ Dart + Flutter Windows 桌面应用，提供 `.stignore` 规则的批量扫描�
 > 完整任务跟踪（仅列未完成项）与验证边界统一维护在
 > [开发任务清单](../../tasks.md)。本文档不再重复列出任务，避免多处漂移。
 
-- **当前版本**：Flutter 主实现 **v1.32.4**（PowerShell 遗留版 v1.18.5）；PROP-1~13 已实现，PROP-14~18 列入 Backlog（见 `tasks.md`）。里程碑与详细条目见 `CHANGELOG.md` 与 `docs/project.md` §7。
+- **当前版本**：Flutter 主实现 **v1.33.0**（PowerShell 遗留版 v1.18.5）；PROP-1~18 均已实现（PROP-14~18 于 v1.33.0 完成，详见 `tasks.md` 与 `docs/feature-comparison.md`）。里程碑与详细条目见 `CHANGELOG.md` 与 `docs/project.md` §7。
 - 代码已完成：扫描 / 应用 / 备份轮转 / 中英双语 / 明暗主题 / 扫描清单 manifest / 窗口记忆 / 忽略规则集在线更新 / 应用确认与停止 / 扫描实时状态行 / 应用更新检查 / 窗口拖拽填入 / 一键下载并安装更新
 - `flutter analyze` 零告警已达成（v1.18.7 清零 52 项，CI `build-windows` 强制校验）
 - GitHub Actions `build-windows` 已落地，自动构建并发布 `SyncthingIgnoreGUI-vX.Y.Z-windows-x64.zip`（版本取自根 `VERSION`；归档内含 `SyncthingIgnoreGUI/` 顶层目录，解压不散落根目录）

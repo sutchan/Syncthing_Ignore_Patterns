@@ -16,6 +16,7 @@
 - 2026-10-01：质量门禁修复——补齐 `backup_manager` / `backup_state` / `results_view_state` / `pickers_state` / `preferences_state` 单测与 results 组件 widget 测试，行覆盖率 72.77% → **81.69%** 越过 ≥80% 门禁；修复 `ResultsListSliver` 在 `SliverList.builder` `itemBuilder` 中误用 `context.select` 的潜在崩溃（结果有数据时触发 provider 断言）；版本展示位同步至 v1.32.2。
 - 2026-10-01：代码审查补充 Backlog——新增 PROP-14（应用后刷新合规/结果）、PROP-15（跨平台窗口几何记忆）、PROP-16（失败状态行透出）、PROP-17（日志持久化/导出）、PROP-18（PowerShell 遗留版功能对账），均含优先级与预期成果；版本展示位同步至 v1.32.3。
 - 2026-10-01（本次更新时间戳）：采纳并实现 PROP-14~18 全部 5 项（v1.33.0），`flutter analyze` 零告警、`flutter test` 116/116 通过；版本展示位同步至 v1.33.0。
+- 2026-10-01（核对完成）：复核 `flutter analyze` 零告警、`flutter test` 116/116 通过、行覆盖率维持 ≥80% 门禁；PROP-14~18 实现经代码与 `docs/feature-comparison.md` 对账确认有效，无剩余任务；`project.md`/`spec.md` 状态段已同步修正（版本 v1.33.0、PROP 全部已实现）。
 
 ## 剩余任务（已采纳待办）
 
