@@ -2,6 +2,23 @@
 
 > 标准化 `.stignore` 规则集 + 配套批量管理 GUI 工具的项目规范（规范文档）。
 
+## 术语与优先级约定
+
+为避免歧义，全文统一以下术语：
+
+| 术语 | 含义 |
+|------|------|
+| 忽略规则集 | 标准 `.stignore` 规则源（根目录与 `app/assets/.stignore` 一致），含 `//Version`/`//Updated` 头，独立版本演进 |
+| 扫描清单 | 工具运行时生成的 `stignore-paths.json`（记录已扫描到的 `.stignore` 路径），非规则本身 |
+| 主实现 | Dart + Flutter 桌面版（`app/`），当前唯一活跃开发线 |
+| 遗留版 | `SyncthingIgnoreGUI.ps1`（PowerShell WinForms），仅修复性维护、不新增功能 |
+
+规范条目优先级：
+
+- **P0（红线）**：违反即破坏构建/发布或导致数据错误，必须严格遵守（见 §2）。
+- **P1（重要）**：影响正确性、一致性或可读性，应遵守。
+- **P2（建议）**：优化项，可选。
+
 ## 1. 项目背景
 
 Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产物与应用数据，
@@ -14,7 +31,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 2. **批量管理 GUI** `SyncthingIgnoreGUI.ps1` — WinForms 图形界面，将标准规则
    批量应用到本机所有 Syncthing 同步目录，无需每次全盘扫描。
 
-## 2. 关键约束（架构红线）
+## 2. 关键约束（架构红线 · P0）
 
 - **纯 ASCII 文件**：所有 `.ps1` 脚本必须保持纯 ASCII。中文界面文案一律以
   `\uXXXX` 转义存储，运行时由 `Decode-Uni` 还原。原因：文件被 GBK 编码
@@ -35,7 +52,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 SyncthingIgnorePatterns/
 ├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
-├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.32.3）
+├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.32.4）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
 │   ├── lib/
 │   │   ├── main.dart         # 入口，注入 AppState；首帧后恢复/采样窗口几何
@@ -47,8 +64,8 @@ SyncthingIgnorePatterns/
 │   │   └── ui/               # home_page.dart（装配）+ settings_dialog / root_field / options_row / scan_options / ruleset_card / action_row / results_list / log_list / about_dialog
 │   ├── windows/runner/resources/app_icon.ico   # Windows 应用图标（品牌资产，见 §10）
 │   ├── assets/.stignore      # 标准规则集（运行时 rootBundle 加载）
-│   ├── tool/                 # 性能基准脚本（perf_benchmark.dart，v1.32.3）
-│   └── test/                 # 22 个测试文件，按 lib/ 分层为 models/services/state/ui（单元 / 流程 / 部件 / 性能基准）；CI 强制行覆盖率 ≥80%
+│   ├── tool/                 # 性能基准脚本（perf_benchmark.dart，v1.32.4）
+│   └── test/                 # 30 个测试文件（28 单元 + 2 集成），按 lib/ 分层为 models/services/state/ui；CI 强制行覆盖率 ≥80%（实测 81.69%）
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档
 ├── CHANGELOG.md              # 独立变更日志（Keep a Changelog 风格）
@@ -69,7 +86,7 @@ SyncthingIgnorePatterns/
 
 - 语义化版本 `MAJOR.MINOR.PATCH`；文档/配置类变更默认升级 `PATCH`，新功能升级 `MINOR`。
 - **主实现（Flutter 桌面版）版本单一来源**：
-  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.32.3+3`）
+  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.32.4+4`）
   - `app/lib/state/app_state.dart` 的 `AppState.version`（关于框 / 日志展示）
   - `README.md` / `README_EN.md` 版本徽章
   - 根目录 `VERSION` 文件（CI 读取的主实现版本单一来源）
@@ -78,7 +95,9 @@ SyncthingIgnorePatterns/
 - **规则集 `.stignore`** 拥有独立版本（文件头 `//Version`），与工具发布版本可能不同步属正常（其 `Updated` 为规则集修订日）。
 - 每次版本变更须同步上述对应位置并追加 CHANGELOG 条目。
 
-## 5. GUI 功能规格
+## 5. GUI 功能规格（适用范围：PowerShell 遗留版 · 维护态）
+
+> 本节描述 **PowerShell 遗留版**（`SyncthingIgnoreGUI.ps1`，v1.18.5）的功能规格。该版本为**维护态**，新功能仅在 Flutter 主实现（§9）提供；两版共享同一忽略规则集与文档。
 
 | 功能 | 说明 |
 |------|------|
@@ -104,7 +123,9 @@ SyncthingIgnorePatterns/
 | 版本/地址 | 底部状态栏显示版本号与可点击项目主页 |
 | 实时日志 | 底部日志框输出全部执行信息（自动滚动到底） |
 
-## 6. 扫描/应用工作流
+## 6. 扫描/应用工作流（适用范围：PowerShell 遗留版）
+
+> 遗留版端到端流程；Flutter 主实现对应逻辑见 §9.1 / `docs/tasks.md` REQ-1~REQ-2。
 
 1. 默认直接 **Scan** → 并行扫描所有根目录 → 生成 `stignore-paths.json`
    （记录 path / size / lastWriteUtc）。
@@ -113,6 +134,18 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+> 与根 `CHANGELOG.md` 保持同步（双副本）。以下为摘录，完整条目见根 `CHANGELOG.md`。
+
+### v1.32.4 (2026-10-01)
+- docs: 重构本文档——新增「术语与优先级约定」、标注各节适用范围（遗留版 / 主实现）、统一「忽略规则集 / 扫描清单」术语、校准测试文件数（30 个：28 单元 + 2 集成）、§9.4 更新至 PROP-14~18；同步版本至 v1.32.4
+
+### v1.32.3 (2026-10-01)
+- chore: 任务清单补充 Backlog——新增 PROP-14~18（应用后刷新合规、跨平台窗口几何、失败状态行、日志持久化、PowerShell 功能对账）；同步版本至 v1.32.3
+
+### v1.32.2 (2026-10-01)
+- fix: 修复 `ResultsListSliver` 在 `SliverList.builder` 误用 `context.select` 的潜在崩溃（结果有数据时触发 provider 断言）
+- test: 补齐备份/结果视图/偏好单测与 results 组件 widget 测试；行覆盖率 72.77% → 81.69%，满足 ≥80% 门禁
 
 ### v1.32.1 (2026-10-01)
 - ci: 完善 CI/CD 工作流——拆出 `lint`/`test-unit`/`e2e`/`build`/`commitlint` 作业（PR 提交信息 Conventional Commits 校验、单元测试 + 行覆盖率 ≥80% 门禁、集成/端到端测试 `integration_test`、构建产物目录暂存）；`release` 作业为归档附 SHA256 + commit SHA + SLSA 构建来源证明（`actions/attest-build-provenance`），说明取自 CHANGELOG 对应小节
@@ -548,7 +581,7 @@ flutter build windows --release --tree-shake-icons        # 产物：build/windo
 `app_paths_test`、`app_update_test`、`app_update_state_test`、`file_drop_test`、`version_util_test`、
 `update_installer_test`、`perf_layout_bench_test`（首帧构建计数，兼性能回归守卫，v1.28.3）
 与 `widget_test`（应用壳 + 设置对话框 + 选项 + Apply 确认框 + 关于对话框）
-共 24 个文件（22 单元 + 2 集成）/ 90 个用例；本地离线运行 90/90 全部通过（含 v1.32.1 修复的语言切换用例）。行覆盖率以 CI `build-windows` 实测为准（旧基线 85.20%/956/1122 系 v1.28.2 口径，代码量已远超该规模，需重新标定）；本地离线实测 **81.69%**（1285/1573），已满足下方 **≥80%** 门禁。CI `build-windows` 强制
+共 30 个文件（28 单元 + 2 集成）/ 90 个用例；本地离线运行 90/90 全部通过（含 v1.32.1 修复的语言切换用例、v1.32.2 修复的 `ResultsListSliver` 崩溃）。行覆盖率以 CI `build-windows` 实测为准（旧基线 85.20%/956/1122 系 v1.28.2 口径，代码量已远超该规模，需重新标定）；本地离线实测 **81.69%**（1285/1573），已满足下方 **≥80%** 门禁。CI `build-windows` 强制
 **≥80%** 门禁（`Coverage check (>= 80% lines)`）。生成 LCOV：
 
 ```bash
@@ -564,9 +597,9 @@ flutter test --coverage                 # 生成 coverage/lcov.info（含每文�
 ### 9.4 实现分工
 
 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
-**Dart + Flutter 桌面版（v1.32.3）为主实现**，构建为独立 `.exe` 分发。两者共享同一
+**Dart + Flutter 桌面版（v1.32.4）为主实现**，构建为独立 `.exe` 分发。两者共享同一
 `.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等状态与验证边界，
-见 [开发任务清单](tasks.md)；功能与 UI 的后续完善建议（PROP-1~13，按 P0/P1/P2 分级）
+见 [开发任务清单](tasks.md)；功能与 UI 的后续完善建议（PROP-1~13 已实现，PROP-14~18 列入 Backlog，按 P0/P1/P2 分级）
 集中维护于 [任务清单](tasks.md) 的「评估中建议（Backlog）」一节（自 `spec.md` 迁移而来）。
 
 ### 9.5 构建产物命名规范
@@ -595,13 +628,13 @@ CI 构建的发布包统一命名（与全局约定一致）：
 - Release 资产**仅上传归档**（`*.zip` / `*.tar.gz`），不上传构建目录树。
 - 预发布版本以 GitHub Release 的 `prerelease` 标记区分，**不在文件名加后缀**。
 
-示例：`SyncthingIgnoreGUI-v1.32.3-windows-x64.zip`
+示例：`SyncthingIgnoreGUI-v1.32.4-windows-x64.zip`
 
-### 9.6 忽略清单在线更新（v1.22.0）
+### 9.6 忽略规则集在线更新（v1.22.0）
 
 规则集（`.stignore`）自带 `//Version` / `//Updated` 头，应用据此判断仓库是否有更新。
 
-**清单来源优先级**（`services/ruleset_store.dart`）：
+**忽略规则集来源优先级**（`services/ruleset_store.dart`）：
 
 1. **exe 同目录的 `.stignore`** —— 随构建由 `windows/runner/CMakeLists.txt` 的
    `POST_BUILD` 复制，故应用目录始终含最新清单；更新也优先写回此处（用户可直接查看/替换）；
@@ -609,19 +642,19 @@ CI 构建的发布包统一命名（与全局约定一致）：
    `Program Files`）时的兜底；
 3. 内置资源 `assets/.stignore` —— 最终回退。
 
-**界面**（`ui/ruleset_card.dart`）显示当前清单版本、来源（内置 / 已下载）、修订日与
+**界面**（`ui/ruleset_card.dart`）显示当前忽略规则集版本、来源（内置 / 已下载）、修订日与
 存放路径（悬停查看），并提供「检查清单更新」按钮。
 
 **更新流程**（`state/ruleset_state.dart` + `services/ruleset_update.dart`）：
 
 - `GET https://raw.githubusercontent.com/sutchan/Syncthing_Ignore_Patterns/main/.stignore`
   （`dart:io HttpClient`，15 s 超时，5 MiB 上限，UTF-8，**无新增依赖**）
-- 远端 `//Version` 高于当前 → 写盘并切换为生效清单，提示
+- 远端 `//Version` 高于当前 → 写盘并切换为生效忽略规则集，提示
   「清单已更新到 vX（原 vY）」；
 - 不高于当前 → 提示「已是最新版本（vX）」，不改动本地；
 - 缺少版本头 / 网络失败 → 保留本地并给出原因（同时写入日志）。
 
-Apply 使用 `effectiveRules()`（下载副本优先），日志记录在用清单的版本与修订日。
+Apply 使用 `effectiveRules()`（下载副本优先），日志记录在用忽略规则集的版本与修订日。
 
 ### 9.7 应用安全与实时交互（v1.23.0）
 

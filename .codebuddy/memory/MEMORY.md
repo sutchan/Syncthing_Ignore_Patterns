@@ -1,43 +1,55 @@
 # 长期记忆（MEMORY.md）
 
+> 维护约定：仅保留跨会话可复用、高可信的事实与坑；失效/重复内容及时清理。
+> 时效标签：✅ 已验证（代码/构建实证）｜🔶 历史（某版本结论，可能随重构失效）｜📌 约定（项目规则，长期有效）。
+
 ## 用户偏好
-- 简体中文对话；输出精简，结论先行，表格/短列表优先。
-- 大批量分批任务自动继续，无需每批确认。
+- 简体中文对话；输出精简、结论先行，表格/短列表优先。
+- 大批量任务自动继续，无需每批确认。
 - 模型/网络请求失败 → 等 30s 自动重试继续。
 - 代码主要容器/区块加语义化 id（kebab-case）。
+- 每次改动（代码/文档/配置）须 bump 最小版本号；仅被改文件头注释同步、禁止全仓库批量刷写（📌 约定）。
 
-## 项目约定（SyncthingIgnorePatterns）
-- 提交：`type: 描述`（首字母小写、动词开头、≤50字）。
-- **版本三轨独立**：① Flutter 主轨（当前 **v1.32.2**，CI 单一来源 `VERSION`；同步 `VERSION`↔`pubspec.yaml`↔`app_state.dart`的`AppState.version`↔`manifest.dart`示例↔`README*`徽章/正文，共 6 处须全等）② PowerShell 遗留轨（`SyncthingIgnoreGUI.ps1` 头 `//Version`+`$ScriptVersion`，v1.18.5）③ `.stignore` 规则集轨（根与 `app/assets/.stignore` 一致，头 `//Version: 1.18.5`，`//Updated` 为修订日）。动版本前必 `cat VERSION`+`git log` 实查（会话间隙常被外部 bump）。
-- **CI/CD**（`.github/workflows/ci.yml`，7 作业，v1.32.1 起）：`version` 读根 `VERSION` 校验 `v*` 标签；`validate` 做 ps1 语法 + 规则副本一致性(不一致即 exit 1) + 三轨版本一致性(6 处正则全等) + **文档/CHANGELOG 当前版本引用检查（tasks.md/project.md 全部当前版本展示位含 §4 `如 \`$ver+1\`` + `## [vX]` 条目，防漂移）**；`lint`(windows-latest) `flutter analyze` 零告警；`test-unit`(windows-latest) `flutter test --coverage` + 行覆盖率 ≥80% 门禁(上传 lcov 产物)；`e2e`(windows-latest) `flutter test integration_test`（服务级端到端 + 应用冒烟，无显示环境跳过）；`build`(windows-latest) 暂存产物目录(剔除 pdb/exp/lib + 附 VC++ CRT) 上传为 `SyncthingIgnoreGUI-v<版本>-windows-x64` 产物；`commitlint`(仅 PR) 校验 Conventional Commits；`release`(仅 `v*` 标签) 下载产物→压缩为 `SyncthingIgnoreGUI-v<版本>-windows-x64.zip`（归档内 `SyncthingIgnoreGUI/` 顶层目录）→ 说明取自 CHANGELOG 对应小节并注入 **commit SHA + 日期 + 标签链接** → 附 **SHA256** → `actions/attest-build-provenance` 生成 **SLSA 构建来源证明** → `softprops/action-gh-release` 发布（仅上传 zip + `.stignore`，`make_latest` 预发布自动 false）。版本均取自 `needs.version.outputs.version`，禁硬编码。
-- **集成/端到端测试（v1.32.1 起）**：`app/integration_test/` 含 `services_integration_test`（服务级端到端：临时工程扫描 → `loadStandardRules()` 应用内置标准规则，校验磁盘文件被改写；headless 安全，CI `e2e` 作业实跑）+ `app_smoke_test`（启动真实 app 验证首帧 MaterialApp；**GitHub Actions Windows runner 无交互桌面会话无法建窗口**，故 `GITHUB_ACTIONS` 环境变量下 `markTestSkipped` 跳过，开发者本机有显示器才真实跑）。`pubspec` 已加 `integration_test` 依赖；`flutter test`（不带路径）默认只跑 `test/` 不跑 `integration_test`。
-- **规则副本一致性（v1.23.1 起阻断）**：改规则集须同时改根 `.stignore` 与 `app/assets/.stignore`，否则 CI 失败。
-- **CHANGELOG 双副本**：根 `CHANGELOG.md` + `docs/project.md` §7 同写。
-- **许可**：根 `LICENSE`=MIT（`Copyright (c) 2019-2026 Sut`）。
-- **多 agent 并发提交风险**：会话间隙会被他人 `git add -A` 扫入；临时脚本勿放仓库根；动版本/规则集前 `git show HEAD:<file>` 核对真值。
-- **Dart isolate 闭包捕获陷阱**：`Isolate.run(f)` 序列化 `f` 及其捕获上下文；若 `f` 与捕获不可发送对象（`AppState`/`SettingsStore`/`_Future`）的闭包同作用域，Dart 共用 context→抛 `object is unsendable` 致真实运行中断。修复：闭包抽顶层函数仅捕获纯参数，回调只在主 isolate `.then` 调用。
-- **全局错误边界勿 `return true`（v1.28.2 修复"有进程无窗口"bug）**：`PlatformDispatcher.instance.onError` 返回 `true` 会压制 Flutter 错误界面，任何构建/首帧/初始化异常（如 `loadRulesetInfo` 走真实 `rootBundle.loadString` 路径在单测被 mock 覆盖、内置规则加载失败抛错）冒泡出 `main()` 被静默吞掉，致 `runApp` 不执行或首帧错误无界面，只剩原生空窗口。须 `return false`（或交默认处理）始终显示可见错误界面；启动期高风险点 `loadRulesetInfo` 真实 `rootBundle` 路径单测未覆盖，须兜底。
-- **偏好写入须串行化**（v1.22.0）：`SettingsStore.save` 用队列+`flush:true` 避免并发写竞态；`--coverage` 间歇红灯多查并发写/未 await 的 Future。
-- **构建产物/品牌**：`<产品名>-v<语义版本>-<os>-<arch>.<zip|tar.gz>`（`env.APP_NAME=SyncthingIgnoreGUI`）；exe=`SyncthingIgnoreGUI.exe`（`windows/CMakeLists.txt` `BINARY_NAME`，勿改 pubspec `name: syncthing_ignore_gui`）。品牌资产 `tools/generate-brand-assets.ps1` 产 logo+PNG+ico，改色/几何同步 SVG+脚本+`BRAND.md`；`release` 归档内以 `SyncthingIgnoreGUI/` 为顶层目录（由 `env.APP_NAME` 决定），解压不散落根目录（v1.25.3 起的 CI 打包行为，见 `ci.yml` `Package release archive`）。
-- **已实现功能（含复用坑）**：窗口几何记忆(v1.21.0 ffi `calloc` 是 Allocator 实例)、忽略清单在线更新(v1.22.0 `dart:io` 注入式下载器不触网)、应用确认+停止+实时状态行+双击打开(v1.23.0 `pendingApplyCount()` 同步读清单)、应用更新检查(v1.24.0 GitHub Releases API 仅提示无静默安装)、拖拽填入(v1.25.0 C++ `WM_DROPFILES`+MethodChannel `syncthing_ignore_gui/drop`，通道名须一致)+一键下载安装更新(v1.25.0 `update_installer.dart` PowerShell 助手，替换/重启须真实 Windows 验证)。
-- **扫描支持局域网/映射盘（v1.26.0）**：`listFixedDrives`→`listScanDrives`（`platform_io.dart`）纳入 DRIVE_REMOTE 映射网络盘；新增 `normalizeRootPath`（`Z:`→`Z:\`、/→\）；UNC（`\\server\share`）可直接填根目录；`_resolveRoots` 改用 `FileSystemEntity.isDirectorySync` 校验（文件作根目录会被拒绝而非静默无结果）；i18n 标签/提示更新。扫描 UNC/映射盘依赖网络可达与权限，已断开的映射盘在 isolate 内被跳过不报错。
-- **UI 选项不刷新坑**：可写通知态须走会 notify 的 setter（`setPreview`/`setForce`/`setBackup`），`root_field` 用 `TextEditingController`+监听 `AppState`。
-- **SliverList 内禁用 `context.select`**：`SliverList.builder` 的 `itemBuilder` 上下文是 `SliverWithKeepAliveWidget`，provider 的 `context.select` 会抛断言崩溃（`widget is! SliverWithKeepAliveWidget`）；选中态等需读取的应移入行组件自身 context 读取。`ResultsListSliver` 在 v1.32.2 修复此潜在崩溃（结果有数据时原会崩）。
-- **扫描约定**：始终跳 `dirname(Platform.resolvedExecutable)`；`maxDepth`(默认3)/`skipLargeDirs`(默认true)/`maxFilesPerDir`(默认100) 大目录流式判定。
-- **覆盖率基线**：v1.32.2 补齐 `backup_manager`/`backup_state`/`results_view_state`/`pickers_state`/`preferences_state` 单测 + results 组件 widget 测试后，本地离线实测 **81.69%**（1285/1573），已满足 CI ≥80% 门禁（此前 72.77% 低于门禁为回归风险）；`flutter test` 90 用例 90/90 通过（语言切换用例于 v1.32.1 修复）。须 `flutter test --coverage`（非 `test_with_coverage`）。
-- **第二批增量增强（v1.30.0）**：PROP-8 扫描默认值持久化（`AppSettings` 增 `maxDepth`/`filterLargeDirs`/`maxFilesPerDir`/`backup`；`PreferencesState on ChangeNotifier, ScanOptionsState` 以在 `loadSettings`/`_persistSettings` 读写；`settings_dialog` 滑块/开关调 `persistPreferences()`）；PROP-11 规则更新变更摘要（`ruleset_state._diffRules` 算新增/移除规则数，`ruleset_card` 展示）；PROP-13 扫描进度 ETA（`progress_state` 增 `elapsedSeconds`/`formatDuration`，`scan_flow._estimateEta` 多根估算剩余）。
-- **第三批增量增强（v1.31.0）**：PROP-4 备份管理 UI（`services/backup_manager.dart` 顶层函数 `listForTargets`/`restore`/`deleteEntry` + `state/backup_state.dart`(`BackupState` mixin) + `ui/backup_dialog.dart`；按扫描结果 `.stignore` 路径找 `*.bak.*`、恢复前自身再备份保证可逆）；PROP-5 应用前预检（`scan_flow` 扫描后 `_computeCompliance()` 按 SHA 比对生效清单，`results_list` 行首 ✓/✗ + 「待应用/已符合」计数，复用 `effectiveRules()`/`sha256OfString`）；PROP-7 启动检查更新（`AppSettings` 增 `bootCheckAppUpdate`/`bootCheckRuleset`，`main` 启动后按开关后台 `checkAppUpdate`/`checkRulesetUpdate`）。
-- **mixin 约束顺序坑**：`PreferencesState on ChangeNotifier, ScanOptionsState` 在 `app_state` 的 `with` 列表中 `ScanOptionsState` 须排在 `PreferencesState` 之前，否则报 "can't be mixed onto ChangeNotifier because ChangeNotifier doesn't implement ScanOptionsState"。
-- **backup_manager 是顶层函数非类**：`backup_manager.dart` 导出 `listForTargets`/`restore`/`deleteEntry` 等顶层函数（无 `BackupManager` 类），调用处直接用函数名，勿写 `BackupManager.xxx`。
-- **第四批收官增强（v1.32.0）**：PROP-1 扫描真正可取消（`scanner.scanRoots` 增 `isCancelled` 回调，`scan_flow` 派发前判定并即时反馈「已取消」）；PROP-2 结果列表增强（新增 `state/results_view_state.dart`(`ResultsViewState` mixin：搜索/±合规筛选/类型筛选/多选) + 拆分 `ui/results_list.dart`(`ResultsListSliver`+行组件) 与 `ui/results_filter.dart`(`ResultsHeader` 头部：搜索框+筛选 chips+多选工具条)；行右键复制路径、多选后「打开所在文件夹」「导出选中路径」）；PROP-3 多扫描根（`pickers_state` 增 `rootPaths`/`addRoot`/`clearRoots`，逗号/换行/「+」/拖拽追加，`scan_flow._resolveRoots` 展开多根）。至此 13 条评估建议（PROP-1~13）全部实现。
-- **results_list 拆分（200 行规则）**：扩展后超 200 行，拆为 `results_view_state.dart`(纯状态 + `filterResults` 纯函数) + `results_list.dart`(列表) + `results_filter.dart`(头部)，三者均 <200 行。列表订阅 `results`/`compliance`/`resultQuery`/`complianceFilter`/`typeFilter` 后在 build 内用 `filterResults()` 计算，避免 `filteredResults` 每次返回新列表触发全量重建。
-- **file_picker 本版 API 坑**：本仓库 file_picker ^13.1.0 **无 `getDirectoryPaths`**（多目录选择不可用），仅 `getDirectoryPath`(单目录)；`saveFile` 的 `bytes` 参数为**必填**（须 `bytes: Uint8List(0)`），返回 `Uri?`（用 `uri.toFilePath()`）。多根选择改以单目录 `addRoot` 追加实现。
-- **Dart+Flutter 重写**（v1.18.7 起 `flutter analyze` 零告警）：本机可离线 `pub get`/`analyze`/`test`；非 offline 的 pub get 失败，`build windows` 交 CI。`dart format` 新版对 >80 列重排勿全量套用。
-- **任务文档约定（单一来源）**：`docs/tasks.md` 是项目**所有任务记录的唯一来源**（Single Source of Truth）。结构为「剩余任务（已采纳待办）」+「评估中建议（Backlog，PROP-1~13 按 P0/P1/P2 分级）」+「版本说明」；已完成任务移除不归档，历史见 CHANGELOG+project.md §7。v1.28.5 起将 `spec.md`「改进建议（评估中）」PROP-1~13 整体迁入本文件，`spec.md` 仅保留指针，杜绝多处任务记录漂移。其他文档（spec.md/project.md）仅引用、不得重复维护任务内容。
+## 版本三轨（📌 约定）
+- ① Flutter 主轨（CI 单一来源 `VERSION`，当前 **v1.32.4**）：`VERSION`↔`pubspec.yaml version`↔`app_state.dart AppState.version`↔`manifest.dart` 示例↔`README*` 徽章，6 处全等。
+- ② PowerShell 遗留轨：`SyncthingIgnoreGUI.ps1` 头 `//Version`+`$ScriptVersion`，**v1.18.5**，仅修复性维护。
+- ③ 规则集轨：根与 `app/assets/.stignore` 一致，头 `//Version: 1.18.5`，`Updated` 为修订日，独立演进。
+- 动版本前必 `cat VERSION`+`git log` 实查（会话间隙常被外部 bump）。
 
-## 环境约束
+## CI/CD（✅ 已验证，v1.32.1 起）
+- 作业：`version`(读 VERSION 校验 v* 标签) / `validate`(ps1 语法 + 规则副本一致性[不一致 exit 1] + 三轨版本一致性[6 处正则] + 文档/CHANGELOG 当前版本引用检查) / `lint`(`flutter analyze` 零告警) / `test-unit`(`flutter test --coverage` + 行覆盖率 ≥80% 门禁) / `e2e`(`flutter test integration_test`) / `build`(暂存产物目录) / `commitlint`(仅 PR) / `release`(仅 v* 标签，附 SHA256 + SLSA 证明)。
+- 版本均取自 `needs.version.outputs.version`，禁硬编码。
+- 归档命名 `<产品名>-v<语义版本>-<os>-<arch>.<zip|tar.gz>`（`env.APP_NAME=SyncthingIgnoreGUI`），归档内以 `SyncthingIgnoreGUI/` 为顶层目录。
+
+## 关键实现坑（✅ 已验证，除非标注🔶）
+- **Dart isolate 闭包捕获**：`Isolate.run(f)` 序列化 `f` 与捕获上下文；同作用域捕获不可发送对象（`AppState`/`SettingsStore`/`_Future`）→ 抛 `object is unsendable`。修复：闭包抽顶层函数仅捕获纯参数（v1.25.2 真实扫描曾因此中断）。
+- **全局错误边界勿 `return true`**（v1.28.2）：`PlatformDispatcher.onError` 返回 `true` 压制错误界面致「有进程无窗口」；须 `return false` 并兜底 `loadRulesetInfo`。
+- **偏好写入串行化**（v1.22.0）：`SettingsStore.save` 队列+`flush:true`，避免并发写竞态（`--coverage` 间歇红灯多查未 await 的 Future）。
+- **SliverList 内禁用 `context.select`**（v1.32.2）：`SliverList.builder` 的 `itemBuilder` 上下文是 `SliverWithKeepAliveWidget`，provider `context.select` 抛断言；选中态移入行组件自身 context 读取。
+- **UI 可写通知态须走 setter**：`setPreview`/`setForce`/`setBackup`；`root_field` 用 `TextEditingController`+监听 `AppState`（v1.21.0 修复不刷新）。
+- **mixin 顺序**：`app_state` 的 `with` 列表 `ScanOptionsState` 须排在 `PreferencesState on ChangeNotifier, ScanOptionsState` 之前，否则 mixin 约束报错。
+- **backup_manager 是顶层函数非类**：导 `listForTargets`/`restore`/`deleteEntry`，勿写 `BackupManager.xxx`。
+- **file_picker ^13.1.0 API**：无 `getDirectoryPaths`（仅 `getDirectoryPath` 单目录）；`saveFile` 的 `bytes` 必填（`bytes: Uint8List(0)`），返回 `Uri?`（用 `uri.toFilePath()`）。
+- **规则副本一致性（v1.23.1 阻断）**：改规则集须同步根 `.stignore` 与 `app/assets/.stignore`，否则 CI 失败。
+- **扫描约定**：始终跳 `dirname(Platform.resolvedExecutable)`；`maxDepth`(默认3)/`skipLargeDirs`(默认true)/`maxFilesPerDir`(默认100)。
+
+## 已实现功能（✅，按批次）
+- v1.21.0 窗口几何记忆（ffi `calloc`）。v1.22.0 忽略规则集在线更新（`dart:io` 注入式下载器不触网）。v1.23.0 应用确认+停止+实时状态行+双击打开（`pendingApplyCount()`）。v1.24.0 应用更新检查（GitHub Releases API，仅提示无静默安装）。v1.25.0 窗口拖拽填入（C++ `WM_DROPFILES`+MethodChannel `syncthing_ignore_gui/drop`）+ 一键下载安装更新（`update_installer.dart` PowerShell 助手）。v1.26.0 扫描支持映射网络盘/UNC（`listScanDrives`+`normalizeRootPath`+`isDirectorySync` 校验）。
+- 增量增强：v1.29.0（PROP-9/6/12/10）｜v1.30.0（PROP-8/11/13）｜v1.31.0（PROP-4/5/7）｜v1.32.0（PROP-1/2/3）。PROP-1~13 全部实现；PROP-14~18 列入 Backlog（见 `docs/tasks.md`）。
+- 性能/内存（v1.28.0）：共享 `HttpClient` 连接池、日志 1000/结果 5000 环形缓冲、`CustomScrollView`+Sliver 懒加载。
+
+## 质量基线（✅ 实测，2026-10-01）
+- `flutter analyze` 零告警；`flutter test` **90/90** 通过；行覆盖率 **81.69%**（1285/1573）满足 ≥80% 门禁。测试文件 **30 个**（28 单元 + 2 集成：`app/integration_test/`）。须 `flutter test --coverage`（非 `test_with_coverage`）。
+- 规则集：**329 条规则 / 21 分类**（实算，v1.18.6 修正 off-by-one）。
+
+## 文档约定（📌）
+- `docs/tasks.md` 为任务唯一来源（Single Source of Truth）；`spec.md` 仅指针，不重复任务内容。
+- `CHANGELOG.md` 双副本：根 `CHANGELOG.md` + `docs/project.md` §7 须同步。
+- 文档/规范术语统一：「忽略规则集」=`.stignore`；「扫描清单」=`stignore-paths.json`。
+
+## 环境约束（✅）
+- 本机 Flutter SDK：`E:\Program Files\Flutter`（beta 3.40 / Dart 3.11）；可离线 `pub get`/`analyze`/`test`，`build windows` 交 CI。
+- **勿并行跑 `flutter analyze` 与 `flutter test`**：争抢启动锁致 `flutter test` 大量假阴性（曾 19 异步用例误判失败），须分开跑。
 - 本机可 `powershell -File` 但 GUI 脚本不实跑；git 提交由用户本地执行。
-- 本机 Flutter SDK 经 UAC `icacls` 修复，借 pub 缓存可离线 `pub get`/`analyze`/`test`；无外网，非 offline pub get 失败，`build windows` 交 CI。
-- **勿并行跑 `flutter analyze` 与 `flutter test`**：二者争抢 Flutter 启动锁，`flutter test` 会因此大量假阴性（曾现 19 个异步用例被误判失败）。务必分开单独跑。
-- **Flutter SDK 版本**：`E:\Program Files\Flutter`（beta 3.40 / Dart 3.11）。该 SDK 的 `SchedulerBinding` 仅有非可空 `static SchedulerBinding get instance`，**无 `maybeInstance`**（grep 确认，`BindingBase` 也没有）；需可空绑定用 `WidgetsBinding.instance`（`WidgetsBinding?`）。
-- **工作树会被外部自动改动**：会话间隙文件常被改写（如 `main.dart` 由串行 await 变 `Future.wait`、`log_state.dart` 被修正）。编辑前务必重新读取，否则 `replace_in_file` 的 `old_str` 与真实内容不符会写坏文件（曾因此把 main.dart 写坏，需整文件重写）。
+- 工作树会话间隙常被外部改写，编辑前重新读取，避免 `replace_in_file` old_str 不符写坏文件。
+- 多 agent 并发提交风险：临时脚本勿放仓库根；动版本/规则集前 `git show HEAD:<file>` 核对真值。

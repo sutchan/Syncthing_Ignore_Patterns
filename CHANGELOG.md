@@ -5,6 +5,14 @@
 
 ---
 
+## [v1.32.4] - 2026-10-01
+
+### 文档
+- docs: 重构 `docs/project.md`——新增「术语与优先级约定」、标注各节适用范围（PowerShell 遗留版 / Flutter 主实现）、统一「忽略规则集 / 扫描清单」术语、校准测试文件数（30 个：28 单元 + 2 集成）、§7 补 v1.32.2/v1.32.3 条目、§9.4 更新至 PROP-14~18
+- docs: 精简 `.codebuddy/memory/MEMORY.md`——按主题归类、去冗余、标时效
+- docs: 修正 README 中文第 21 类漏列 `.kilocode/`（与英文及 `.stignore` 一致）；`spec.md` 状态段更新至当前版本
+- chore: 同步版本至 v1.32.4（VERSION / pubspec `1.32.4+4` / `AppState.version` / `manifest.dart 示例` / README 徽章 / project.md / tasks.md）
+
 ## [v1.32.3] - 2026-10-01
 
 ### 杂项
@@ -800,6 +808,6 @@
 ---
 
 ## 待办 / 已知限制
-- [ ] 多驱动器并行度固定 4 线程，未根据驱动器数量自适应。
+- [ ] 多驱动器并行度固定 4 线程（Flutter 主实现 `scanner` 默认 4 isolate；PowerShell 遗留版同），未根据驱动器数量自适应。
 - [ ] 未做 git push 远程（需用户手动操作）。
-- [ ] 无自动化测试（PowerShell GUI 测试成本高，暂以语法解析 + 最小复现验证）。
+- [x] 自动化测试：Flutter 主实现已有 90 个单元用例 + 2 个集成测试（`app/integration_test`），CI `test-unit`/`e2e` 强制运行；仅 PowerShell 遗留版因 GUI 测试成本高暂以语法解析 + 最小复现验证。
