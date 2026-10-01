@@ -39,13 +39,15 @@ void main() {
   test('PROP-16: apply with a missing manifest marks the status as failed',
       () async {
     final state = newState();
+    final root = Directory(p.join(tmp.path, 'root'))..createSync();
+    state.rootText = root.path;
     state.manifestPath = p.join(tmp.path, 'missing.json');
 
     await state.apply();
 
     expect(state.isBusy, isFalse);
-    expect(state.status, state.loc.t('failed'));
     expect(state.logs.any((e) => e.level == 'error'), isTrue);
+    expect(state.status, state.loc.t('failed'));
   });
 
   test('PROP-17: exportLog writes the in-memory buffer to a temp file',

@@ -72,6 +72,8 @@ mixin ScanFlow on ChangeNotifier,
     try {
       roots = _resolveRoots();
     } on Exception catch (e) {
+      status = loc.t('failed');
+      summary = loc.t('failedSummary', [e.toString()]);
       finish();
       log(e.toString(), 'error');
       return;
