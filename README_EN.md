@@ -21,7 +21,7 @@
 - ✅ **Bilingual docs** plus a batch-sync GUI tool
 - ✅ **Actively maintained** as the ecosystem evolves
 
-> The `Updated` date in the `.stignore` header (`2026-09-22`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.32.0`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
+> The `Updated` date in the `.stignore` header (`2026-09-22`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.32.1`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
 
 ### Quick Start
 
@@ -96,7 +96,7 @@ The project ships two implementations with identical behavior (scan / apply / ba
 
 > **Two-track note**: both implementations share the same `.stignore` ruleset and docs. **The Flutter edition is the primary implementation (actively evolving)**; **the PowerShell edition is a legacy maintenance track (fix-only, no new features)** for environments without Flutter.
 
-#### Option 1: Dart + Flutter Desktop (recommended, primary · v1.32.0)
+#### Option 1: Dart + Flutter Desktop (recommended, primary · v1.32.1)
 
 Located in `app/`, built into a standalone `.exe` — no PowerShell required on the target machine:
 

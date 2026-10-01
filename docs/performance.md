@@ -24,7 +24,7 @@ flutter test test/perf_layout_bench_test.dart  # 首帧构建计数（需 Flutte
 ```
 
 - 纯 Dart 基准：[`app/tool/perf_benchmark.dart`](../app/tool/perf_benchmark.dart)
-- 布局基准（兼性能回归守卫）：[`app/test/perf_layout_bench_test.dart`](../app/test/perf_layout_bench_test.dart)
+- 布局基准（兼性能回归守卫）：[`app/test/ui/perf_layout_bench_test.dart`](../app/test/ui/perf_layout_bench_test.dart)
 
 ## 3. 日志缓冲：增长式复制 → 环形上限
 

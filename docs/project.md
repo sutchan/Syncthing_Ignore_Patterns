@@ -529,7 +529,7 @@ flutter build windows --release --tree-shake-icons        # 产物：build/windo
 > 且 CI `validate` 会校验根 `.stignore` 与 `app/assets/.stignore` 完全一致（不一致即失败，v1.23.1）。
 > 目标机无需另装运行库：发布包（`SyncthingIgnoreGUI-vX.Y.Z-windows-x64.zip`）已自带
 > `SyncthingIgnoreGUI.exe`、`flutter_windows.dll`、`data/`（`app.so` + `flutter_assets/`）、
-> 标准规则副本 `.stignore` 与 Visual C++ 运行库 DLL，并剔除调试符号（含 Flutter AOT 运行时）。
+> 标准规则副本 `.stignore` 与 Visual C++ 运行库 DLL，并剔除调试符号（`*.pdb`/`*.exp`/`*.lib`；Flutter AOT 运行时 `app.so`/`flutter_assets/` 仍随包提供）。
 > CI 自动构建：推送 `v*` 标签时由 `.github/workflows/ci.yml` 的 `build-windows` 作业
 > 构建并将运行文件暂存为**目录**产物，再由 `release` 作业压缩为并发布
 > `SyncthingIgnoreGUI-vX.Y.Z-windows-x64.zip`（版本取自根 `VERSION`）。
@@ -539,14 +539,14 @@ flutter build windows --release --tree-shake-icons        # 产物：build/windo
 端到端测试位于 `app/integration_test/`：`services_integration_test`（服务级端到端——扫描临时工程 → 应用内置标准规则）与 `app_smoke_test`（启动真实 app 验证首帧渲染，无显示环境自动跳过），由 CI `e2e` 作业运行。
 
 `app/test/` 覆盖纯逻辑、状态、流程与部件：`scanner_test`（遍历/跳过/并行/进度）、
-`applier_test`（替换/跳过/预览/备份轮转/取消）、`settings_store_test`（缺省/往返/损坏回退/
+`applier_test`/`applier_backup_test`（替换/跳过/预览/备份轮转/取消/隔离）、`settings_store_test`（缺省/往返/损坏回退/
 `AppState` 启动恢复与写盘/并发写）、`manifest_test`、`rules_source_test`、`state_mixins_test`
 （含 `applyDrop`）、`scan_flow_test`、`apply_flow_test`、`platform_io_test`、
 `window_bounds_service_test`、`ruleset_info_test`、`ruleset_update_test`、`ruleset_fetch_test`、
-`app_paths_test`、`app_update_test`、`app_update_state_test`、`file_drop_test`、
+`app_paths_test`、`app_update_test`、`app_update_state_test`、`file_drop_test`、`version_util_test`、
 `update_installer_test`、`perf_layout_bench_test`（首帧构建计数，兼性能回归守卫，v1.28.3）
 与 `widget_test`（应用壳 + 设置对话框 + 选项 + Apply 确认框 + 关于对话框）
-共 20 个文件 / 88 个用例。当前行覆盖率 **85.20%**（956/1122），CI `build-windows` 强制
+共 24 个文件（22 单元 + 2 集成）/ 90 个用例；本地离线运行 89 通过 / 1 失败（失败项为 `app/test/ui/widget_test.dart` 的语言切换用例，属代码问题待修）。行覆盖率以 CI `build-windows` 实测为准（旧基线 85.20%/956/1122 系 v1.28.2 口径，代码量已远超该规模，需重新标定）；本地离线实测约 **72.77%**（1144/1572），已低于下方 **≥80%** 门禁，存在回归风险。CI `build-windows` 强制
 **≥80%** 门禁（`Coverage check (>= 80% lines)`）。生成 LCOV：
 
 ```bash
