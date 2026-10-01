@@ -7,6 +7,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../services/window_bounds_service.dart';
 import '../state/app_state.dart';
 
 class SettingsDialog extends StatelessWidget {
@@ -68,6 +69,14 @@ class SettingsDialog extends StatelessWidget {
             selected: {state.dark},
             onSelectionChanged: (v) => state.setTheme(v.first),
           ),
+          if (!isWindowGeometrySupported())
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 4),
+              child: Text(
+                loc.t('windowGeometryWindowsOnly'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
           const SizedBox(height: 20),
           const Divider(),
           const SizedBox(height: 8),

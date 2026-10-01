@@ -133,4 +133,9 @@ const Map<String, String> i18nZh = {
   'selectedCount': '已选：{0}',
   'resultCount': '显示 {0} / 共 {1}',
   'noResults': '无结果。',
+  'failedSummary': '操作失败：{0}',
+  'windowGeometryWindowsOnly': '窗口位置与尺寸记忆仅支持 Windows。',
+  'exportLog': '导出日志',
+  'exportLogDone': '日志已导出：{0}',
+  'exportLogFailed': '日志导出失败',
 };

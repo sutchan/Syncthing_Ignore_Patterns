@@ -80,3 +80,10 @@ bool _isOnVirtualScreen(WindowBounds bounds) {
       bounds.x < left + width &&
       bounds.y < top + height;
 }
+
+/// Whether window geometry persistence is supported on the current platform.
+///
+/// Only Windows exposes the Win32 APIs this service relies on; other platforms
+/// keep the documented "Windows-only" behaviour so users are not surprised that
+/// their window layout is not restored elsewhere.
+bool isWindowGeometrySupported() => Platform.isWindows;

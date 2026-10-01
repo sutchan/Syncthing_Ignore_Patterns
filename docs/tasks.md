@@ -15,12 +15,18 @@
 - 2026-10-01：功能正常化——清理 PROP-2 新增文件 4 个 lint info（`flutter analyze` 零问题），修复设置对话框 `RenderFlex` 溢出（`widget_test` 语言切换用例恢复 90/90）；版本展示位同步至 v1.32.1。
 - 2026-10-01：质量门禁修复——补齐 `backup_manager` / `backup_state` / `results_view_state` / `pickers_state` / `preferences_state` 单测与 results 组件 widget 测试，行覆盖率 72.77% → **81.69%** 越过 ≥80% 门禁；修复 `ResultsListSliver` 在 `SliverList.builder` `itemBuilder` 中误用 `context.select` 的潜在崩溃（结果有数据时触发 provider 断言）；版本展示位同步至 v1.32.2。
 - 2026-10-01：代码审查补充 Backlog——新增 PROP-14（应用后刷新合规/结果）、PROP-15（跨平台窗口几何记忆）、PROP-16（失败状态行透出）、PROP-17（日志持久化/导出）、PROP-18（PowerShell 遗留版功能对账），均含优先级与预期成果；版本展示位同步至 v1.32.3。
+- 2026-10-01（本次更新时间戳）：采纳 PROP-14~18 为剩余任务，开始实现全部 5 项（目标版本 v1.33.0）；版本展示位将同步至 v1.33.0。
 
 ## 剩余任务（已采纳待办）
 
 > 以下由「评估中建议」采纳，按 P0→P2 推进；完整规格见下方 Backlog。完成时移入 CHANGELOG 并从本清单移除。
+> 本次更新（2026-10-01）采纳 PROP-14~18，状态如下；完成后移除并记入 `CHANGELOG.md` 与 `docs/project.md` §7。
 
-（无 — 所有已采纳任务均已完成，历史见 `CHANGELOG.md` 与 `docs/project.md` §7。）
+- **PROP-14（优先级 P1 · 进行中）** 应用后状态一致性：`apply()` 成功（非预览、非取消）后自动重算合规并刷新结果列表；UI 即时显示「全部已符合」，`needsApplyCount`/`compliantCount` 准确。
+- **PROP-16（优先级 P1 · 待实现）** 失败状态行透出：`scan()`/`apply()` 关键路径（根目录不存在、清单损坏、规则读取失败、`applyRules` 异常）捕获后于状态行显示失败文案 + `error` 日志；`apply()` 对 `applyRules` 就地 try-catch。
+- **PROP-15（优先级 P2 · 待实现）** 跨平台窗口几何记忆：抽象窗口边界存取；非 Windows 平台于 UI/文档明确标注「仅 Windows 记忆窗口」。
+- **PROP-17（优先级 P2 · 待实现）** 日志持久化/导出：提供「导出日志为文件」入口（落盘至用户选定路径）便于离线排障。
+- **PROP-18（优先级 P2 · 待实现）** PowerShell 遗留版功能对账：产出功能对账清单（逐项 Flutter 具备 / ps1 具备 / 差异），并在 README 与 ps1 头部明确废弃状态与使用边界。
 
 ## 评估中建议（Backlog，非待办）
 
@@ -30,7 +36,7 @@
 
 （PROP-1~13 已实现并移出，历史见 `CHANGELOG.md` 与 `docs/project.md` §7。）
 
-### 新增评估建议（2026-10-01 代码审查补充，PROP-14~18）
+### 新增评估建议（2026-10-01 代码审查补充，PROP-14~18 · 已采纳，移至剩余任务）
 
 - **PROP-14（优先级 P1 · 应用后状态一致性）**
   - 现状：`apply()` 完成后未重算 `_compliance`、也未刷新 `results`；仅 `scan()` 后调用 `_computeCompliance()`，故应用后「待应用/已符合」计数与结果行首 ✓/✗ 停留于应用前。
@@ -49,6 +55,6 @@
   - 预期成果：产出功能对账清单（逐项标注 Flutter 具备 / ps1 具备 / 差异），并在 README 与 ps1 头部明确废弃状态与使用边界。
 
 ## 版本说明
-- Flutter 桌面版：v1.32.4（pubspec `1.32.4+4`、`AppState.version`）
+- Flutter 桌面版：v1.33.0（pubspec `1.33.0+5`、`AppState.version`）
 - PowerShell 遗留版：v1.18.5（独立演进）
 - 规则集 `.stignore`：v1.18.5（独立版本，`Updated` 为规则集修订日）

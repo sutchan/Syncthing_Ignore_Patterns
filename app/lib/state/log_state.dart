@@ -1,8 +1,11 @@
 /// Log entries and the in-memory log buffer.
 library;
 
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:path/path.dart' as p;
 
 import '../i18n.dart';
 
@@ -84,5 +87,28 @@ mixin LogState on ChangeNotifier {
       _notifyScheduled = false;
       notifyListeners();
     });
+  }
+
+  /// Persists the current log buffer to a timestamped `.txt` file in the
+  /// system temp directory and returns its path, or `null` on failure.
+  ///
+  /// Lets users export logs for offline troubleshooting (PROP-17).
+  Future<String?> exportLog() async {
+    try {
+      final dir = await Directory.systemTemp.createTemp('stignore_log_');
+      final file = File(p.join(dir.path, 'stignore_log_${_logStamp()}.txt'));
+      await file.writeAsString(logs.map((e) => e.text).join('\n'));
+      return file.path;
+    } on Object catch (e) {
+      log('${loc.t('exportLogFailed')}: $e', 'error');
+      return null;
+    }
+  }
+
+  String _logStamp() {
+    final now = DateTime.now();
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${now.year}${two(now.month)}${two(now.day)}'
+        '_${two(now.hour)}${two(now.minute)}${two(now.second)}';
   }
 }

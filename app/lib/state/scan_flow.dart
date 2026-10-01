@@ -112,6 +112,8 @@ mixin ScanFlow on ChangeNotifier,
       status = loc.t('statusScanDone', [records.length, elapsed()]);
       log(loc.t('scanDone'), 'info');
     } on Exception catch (e) {
+      status = loc.t('failed');
+      summary = loc.t('failedSummary', [e.toString()]);
       log('${loc.t('failed')}: $e', 'error');
     } finally {
       finish();
@@ -165,6 +167,12 @@ mixin ScanFlow on ChangeNotifier,
     }
     _compliance = map;
     notifyListeners();
+  }
+
+  /// Recomputes per-result compliance; safe to call after Apply so the results
+  /// list reflects the files just written (PROP-14). Exposed for the apply flow.
+  Future<void> refreshCompliance() async {
+    await _computeCompliance();
   }
 
   /// Surfaces an existing manifest at startup: loads its paths into the results

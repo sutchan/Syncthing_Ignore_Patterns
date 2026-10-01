@@ -46,6 +46,14 @@ class LogSliver extends StatelessWidget {
                         ? null
                         : () => _copyAll(context, logs, loc),
                   ),
+                  IconButton(
+                    key: const Key('export-log-button'),
+                    icon: const Icon(Icons.download, size: 18),
+                    tooltip: loc.t('exportLog'),
+                    onPressed: logs.isEmpty
+                        ? null
+                        : () => _exportLog(context, loc),
+                  ),
                 ],
               ),
             );
@@ -72,6 +80,21 @@ class LogSliver extends StatelessWidget {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(loc.t('copied'))),
+    );
+  }
+
+  Future<void> _exportLog(
+      BuildContext context, AppLocalizations loc) async {
+    final path = await context.read<AppState>().exportLog();
+    if (!context.mounted) return;
+    if (path == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(loc.t('exportLogFailed'))),
+      );
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(loc.t('exportLogDone', [path]))),
     );
   }
 }

@@ -11,6 +11,7 @@ import '../services/applier.dart';
 import '../services/rules_source.dart';
 import 'log_state.dart';
 import 'pickers_state.dart';
+import 'scan_flow.dart';
 import 'preferences_state.dart';
 import 'progress_state.dart';
 import 'ruleset_state.dart';
@@ -22,11 +23,14 @@ mixin ApplyFlow on ChangeNotifier,
     LogState,
     ScanOptionsState,
     PickersState,
-    RulesetUpdateState {
+    RulesetUpdateState,
+    ScanFlow {
   /// Application version, recorded in the re-written manifest.
+  @override
   String get version;
 
   /// The running executable's directory, excluded from applying.
+  @override
   String get appDirectory;
 
   /// Number of paths in the manifest that [apply] would touch, or `0` when the
@@ -48,6 +52,8 @@ mixin ApplyFlow on ChangeNotifier,
     notifyListeners();
 
     if (!File(manifestPath).existsSync()) {
+      status = loc.t('failed');
+      summary = loc.t('failedSummary', [loc.t('noManifest')]);
       finish();
       log(loc.t('noManifest'), 'error');
       return;
@@ -57,6 +63,8 @@ mixin ApplyFlow on ChangeNotifier,
     try {
       sourceContent = await effectiveRules();
     } on Exception catch (e) {
+      status = loc.t('failed');
+      summary = loc.t('failedSummary', [e.toString()]);
       finish();
       log(e.toString(), 'error');
       return;
@@ -72,34 +80,51 @@ mixin ApplyFlow on ChangeNotifier,
     try {
       final decoded = jsonDecode(await File(manifestPath).readAsString());
       if (decoded is! Map<String, dynamic>) {
+        status = loc.t('failed');
+        summary = loc.t('failedSummary',
+            [loc.t('manifestParseFailed', [manifestPath])]);
         finish();
         log(loc.t('manifestParseFailed', [manifestPath]), 'error');
         return;
       }
       manifest = Manifest.fromJson(decoded);
     } on Object {
+      status = loc.t('failed');
+      summary = loc.t('failedSummary',
+          [loc.t('manifestParseFailed', [manifestPath])]);
       finish();
       log(loc.t('manifestParseFailed', [manifestPath]), 'error');
       return;
     }
     if (manifest.files.isEmpty) {
+      status = loc.t('failed');
+      summary = loc.t('failedSummary', [loc.t('noManifest')]);
       finish();
       log(loc.t('noManifest'), 'error');
       return;
     }
 
-    final result = await applyRules(
-      manifest: manifest,
-      sourceContent: sourceContent,
-      sourceHash: sourceHash,
-      sourcePath: rulesetPath,
-      skipRoots: [appDirectory],
-      whatIf: preview,
-      force: force,
-      backup: backup,
-      isCancelled: () => cancelled,
-      log: logTranslated,
-    );
+    ApplyResult result;
+    try {
+      result = await applyRules(
+        manifest: manifest,
+        sourceContent: sourceContent,
+        sourceHash: sourceHash,
+        sourcePath: rulesetPath,
+        skipRoots: [appDirectory],
+        whatIf: preview,
+        force: force,
+        backup: backup,
+        isCancelled: () => cancelled,
+        log: logTranslated,
+      );
+    } on Object catch (e) {
+      status = loc.t('failed');
+      summary = loc.t('failedSummary', [e.toString()]);
+      log('${loc.t('failed')}: $e', 'error');
+      finish();
+      return;
+    }
 
     if (!preview && (result.replaced > 0 || result.errors > 0)) {
       // Re-write the manifest dropping paths that no longer exist. `exists()`
@@ -129,6 +154,11 @@ mixin ApplyFlow on ChangeNotifier,
     summary = loc.t('statusApplyDone', [result.replaced, elapsed()]);
     status = loc.t('applyDone');
     log(loc.t('applyDone'), 'info');
+    if (!preview) {
+      // PROP-14: recompute compliance so the results list reflects the files
+      // just written (a successful apply should show "all compliant").
+      await refreshCompliance();
+    }
     finish();
   }
 }

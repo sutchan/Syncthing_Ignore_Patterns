@@ -133,4 +133,9 @@ const Map<String, String> i18nEn = {
   'selectedCount': 'Selected: {0}',
   'resultCount': 'Showing {0} of {1}',
   'noResults': 'No results.',
+  'failedSummary': 'Operation failed: {0}',
+  'windowGeometryWindowsOnly': 'Window position and size are remembered on Windows only.',
+  'exportLog': 'Export log',
+  'exportLogDone': 'Log exported: {0}',
+  'exportLogFailed': 'Log export failed',
 };

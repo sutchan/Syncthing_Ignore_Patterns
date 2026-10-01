@@ -5,6 +5,20 @@
 
 ---
 
+## [v1.33.0] - 2026-10-01
+
+### 新功能
+- feat(PROP-14): 应用成功后自动重算合规并刷新结果列表，UI 即时显示「全部已符合」
+- feat(PROP-16): 扫描 / 应用关键路径异常时于状态行透出失败文案 + `error` 日志；`applyRules` 就地 try-catch
+- feat(PROP-15): 设置对话框标注窗口几何记忆仅支持 Windows（跨平台限制透明化）
+- feat(PROP-17): 新增日志导出为文件入口（临时目录时间戳文件，便于离线排障）
+- feat(PROP-18): 新增 Flutter 版与 PowerShell 遗留版功能对账文档，README 与 ps1 头部明确废弃状态与使用边界
+
+### 杂项
+- chore: 同步版本至 v1.33.0（VERSION / pubspec `1.33.0+5` / `AppState.version` / `manifest.dart 示例` / README 徽章 / project.md / tasks.md）
+
+---
+
 ## [v1.32.4] - 2026-10-01
 
 ### 文档

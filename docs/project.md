@@ -52,7 +52,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 SyncthingIgnorePatterns/
 ├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
-├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.32.4）
+├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.33.0）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
 │   ├── lib/
 │   │   ├── main.dart         # 入口，注入 AppState；首帧后恢复/采样窗口几何
@@ -64,7 +64,7 @@ SyncthingIgnorePatterns/
 │   │   └── ui/               # home_page.dart（装配）+ settings_dialog / root_field / options_row / scan_options / ruleset_card / action_row / results_list / log_list / about_dialog
 │   ├── windows/runner/resources/app_icon.ico   # Windows 应用图标（品牌资产，见 §10）
 │   ├── assets/.stignore      # 标准规则集（运行时 rootBundle 加载）
-│   ├── tool/                 # 性能基准脚本（perf_benchmark.dart，v1.32.4）
+│   ├── tool/                 # 性能基准脚本（perf_benchmark.dart，v1.33.0）
 │   └── test/                 # 30 个测试文件（28 单元 + 2 集成），按 lib/ 分层为 models/services/state/ui；CI 强制行覆盖率 ≥80%（实测 81.69%）
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档
@@ -86,7 +86,7 @@ SyncthingIgnorePatterns/
 
 - 语义化版本 `MAJOR.MINOR.PATCH`；文档/配置类变更默认升级 `PATCH`，新功能升级 `MINOR`。
 - **主实现（Flutter 桌面版）版本单一来源**：
-  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.32.4+4`）
+  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.33.0+1`）
   - `app/lib/state/app_state.dart` 的 `AppState.version`（关于框 / 日志展示）
   - `README.md` / `README_EN.md` 版本徽章
   - 根目录 `VERSION` 文件（CI 读取的主实现版本单一来源）
@@ -597,7 +597,7 @@ flutter test --coverage                 # 生成 coverage/lcov.info（含每文�
 ### 9.4 实现分工
 
 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
-**Dart + Flutter 桌面版（v1.32.4）为主实现**，构建为独立 `.exe` 分发。两者共享同一
+**Dart + Flutter 桌面版（v1.33.0）为主实现**，构建为独立 `.exe` 分发。两者共享同一
 `.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等状态与验证边界，
 见 [开发任务清单](tasks.md)；功能与 UI 的后续完善建议（PROP-1~13 已实现，PROP-14~18 列入 Backlog，按 P0/P1/P2 分级）
 集中维护于 [任务清单](tasks.md) 的「评估中建议（Backlog）」一节（自 `spec.md` 迁移而来）。
@@ -628,7 +628,7 @@ CI 构建的发布包统一命名（与全局约定一致）：
 - Release 资产**仅上传归档**（`*.zip` / `*.tar.gz`），不上传构建目录树。
 - 预发布版本以 GitHub Release 的 `prerelease` 标记区分，**不在文件名加后缀**。
 
-示例：`SyncthingIgnoreGUI-v1.32.4-windows-x64.zip`
+示例：`SyncthingIgnoreGUI-v1.33.0-windows-x64.zip`
 
 ### 9.6 忽略规则集在线更新（v1.22.0）
 

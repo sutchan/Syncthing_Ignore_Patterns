@@ -2,6 +2,9 @@
 //File: SyncthingIgnoreGUI.ps1
 //Version: 1.18.5
 //Updated: 2026-08-31
+// DEPRECATED: This PowerShell GUI is in maintenance mode. The Flutter desktop
+// app (app/) is the recommended, actively developed implementation. See
+// docs/feature-comparison.md for the capability matrix and support boundary.
 .SYNOPSIS
     Graphical interface for scanning and applying Syncthing .stignore rules,
     with built-in English/Chinese UI switching.

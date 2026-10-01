@@ -4,7 +4,7 @@
 
 > A curated, ready-to-use `.stignore` rule set: 21 categories · 329 patterns that exclude system files, caches, build artifacts, and app data.
 
-![Version](https://img.shields.io/badge/version-v1.32.4-blue)
+![Version](https://img.shields.io/badge/version-v1.33.0-blue)
 ![CI](https://github.com/sutchan/Syncthing_Ignore_Patterns/actions/workflows/ci.yml/badge.svg)
 ![Updated](https://img.shields.io/badge/updated-2026--09--22-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -21,7 +21,9 @@
 - ✅ **Bilingual docs** plus a batch-sync GUI tool
 - ✅ **Actively maintained** as the ecosystem evolves
 
-> The `Updated` date in the `.stignore` header (`2026-09-22`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.32.4`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
+> The `Updated` date in the `.stignore` header (`2026-09-22`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.33.0`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
+
+> **GUI tool**: the Flutter desktop build (primary implementation, v1.33.0, actively maintained) is recommended. The legacy `SyncthingIgnoreGUI.ps1` (PowerShell) is in maintenance mode for compatibility only; new features land in the Flutter build. See [docs/feature-comparison.md](docs/feature-comparison.md) for the capability matrix.
 
 ### Quick Start
 
