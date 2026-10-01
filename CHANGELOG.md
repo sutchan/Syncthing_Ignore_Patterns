@@ -5,6 +5,12 @@
 
 ---
 
+## [v1.32.3] - 2026-10-01
+
+### 杂项
+- chore: 任务清单补充 Backlog——代码审查新增 PROP-14（应用后刷新合规/结果）、PROP-15（跨平台窗口几何记忆）、PROP-16（失败状态行透出）、PROP-17（日志持久化/导出）、PROP-18（PowerShell 遗留版功能对账），均含优先级与预期成果
+- chore: 同步版本至 v1.32.3（VERSION / pubspec `1.32.3+3` / `AppState.version` / `manifest.dart 示例` / README 徽章 / project.md / tasks.md）
+
 ## [v1.32.2] - 2026-10-01
 
 ### 修复
