@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syncthing_ignore_gui/models/window_bounds.dart';
-import 'package:syncthing_ignore_gui/services/window_bounds.dart';
+import 'package:syncthing_ignore_gui/services/window_bounds_service.dart';
 
 void main() {
   test('implausibly small geometry is refused before any Win32 call', () {

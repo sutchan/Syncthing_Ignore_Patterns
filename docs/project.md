@@ -35,20 +35,20 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 SyncthingIgnorePatterns/
 ├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
-├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.28.6）
+├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.28.7）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
 │   ├── lib/
 │   │   ├── main.dart         # 入口，注入 AppState；首帧后恢复/采样窗口几何
 │   │   ├── app.dart          # MaterialApp + 明暗主题
 │   │   ├── i18n.dart         # 中英双语字典（键对齐 $T）
 │   │   ├── models/           # manifest.dart / window_bounds.dart / ruleset_info.dart
-│   │   ├── services/         # scanner / applier / rules_source / platform_io / settings_store / window_bounds / app_paths / ruleset_store / ruleset_update / app_update / file_drop / update_installer / http_client
+│   │   ├── services/         # scanner / applier / rules_source / platform_io / settings_store / window_bounds_service / app_paths / ruleset_store / ruleset_update / app_update / file_drop / update_installer / http_client
 │   │   ├── state/            # app_state.dart（组合）+ preferences / scan_options / log / progress / pickers / ruleset / app_update + scan_flow / apply_flow
 │   │   └── ui/               # home_page.dart（装配）+ settings_dialog / root_field / options_row / scan_options / ruleset_card / action_row / results_list / log_list / about_dialog
 │   ├── windows/runner/resources/app_icon.ico   # Windows 应用图标（品牌资产，见 §10）
 │   ├── assets/.stignore      # 标准规则集（运行时 rootBundle 加载）
-│   ├── tool/                 # 性能基准脚本（perf_benchmark.dart，v1.28.6）
-│   └── test/                 # 20 个测试文件（单元 / 流程 / 部件 / 性能基准）；CI 强制行覆盖率 ≥80%
+│   ├── tool/                 # 性能基准脚本（perf_benchmark.dart，v1.28.7）
+│   └── test/                 # 22 个测试文件，按 lib/ 分层为 models/services/state/ui（单元 / 流程 / 部件 / 性能基准）；CI 强制行覆盖率 ≥80%
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档
 ├── CHANGELOG.md              # 独立变更日志（Keep a Changelog 风格）
@@ -60,8 +60,8 @@ SyncthingIgnorePatterns/
 │   ├── project.md
 │   ├── performance.md        # 性能基准报告（v1.28.0 优化实测，v1.28.1 起）
 │   ├── assets/               # 品牌资产：logo.svg / logo-512.png / logo-128.png / BRAND.md
-│   └── specs/                # stignore-gui/spec.md（遗留）+ stignore-gui-flutter/spec.md（主实现）
-├── tools/                    # generate-brand-assets.ps1（品牌资产生成，见 §10）
+│   └── specs/                # legacy/stignore-gui/spec.md（遗留）+ stignore-gui-flutter/spec.md（主实现）
+├── tools/                    # 仓库级 PowerShell 脚本（generate-brand-assets.ps1 品牌资产生成，见 §10）；与 `app/tool/`（应用级 Dart 工具脚本，依赖 app 包）作用域不同，前者面向仓库、后者面向应用
 └── SyncthingIgnorePatterns.code-workspace
 ```
 
@@ -69,7 +69,7 @@ SyncthingIgnorePatterns/
 
 - 语义化版本 `MAJOR.MINOR.PATCH`；文档/配置类变更默认升级 `PATCH`，新功能升级 `MINOR`。
 - **主实现（Flutter 桌面版）版本单一来源**：
-  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.28.6+1`）
+  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.28.7+1`）
   - `app/lib/state/app_state.dart` 的 `AppState.version`（关于框 / 日志展示）
   - `README.md` / `README_EN.md` 版本徽章
   - 根目录 `VERSION` 文件（CI 读取的主实现版本单一来源）
@@ -113,6 +113,11 @@ SyncthingIgnorePatterns/
 3. 失效路径（源文件已删除）仅在勾选 **强制** 时从清单清理。
 
 ## 7. CHANGELOG
+
+### v1.28.7 (2026-10-01)
+- refactor: 优化目录结构——`services/window_bounds.dart` 重命名为 `window_bounds_service.dart`（与测试名对齐，消除跨层同名）；测试目录镜像 `lib/` 分层（models/services/state/ui）
+- docs: 归档遗留规范至 `docs/specs/legacy/stignore-gui/spec.md`；README 新增双轨说明；`project.md` 补工具目录约定
+- chore: 同步版本至 v1.28.7（VERSION / pubspec `1.28.7+1` / `AppState.version` / `manifest.dart 示例` / README 徽章 / project.md / tasks.md）
 
 ### v1.28.6 (2026-09-30)
 - fix: 加固清单 JSON 解析与启动错误边界（`manifest`/`scan_flow`/`apply_flow`/`main`），损坏数据不再导致窗口不显示
@@ -288,7 +293,7 @@ SyncthingIgnorePatterns/
 - note: v1.18.6 同时对应 Dart + Flutter 桌面版（主实现），详见 README §9
 
 ### v1.18.5 (2026-09-22)
-- docs: 将 `openspec/` 规范文档迁移至 `docs/`（`docs/project.md` 与 `docs/specs/stignore-gui/spec.md`），更新目录结构树与内部引用
+- docs: 将 `openspec/` 规范文档迁移至 `docs/`（`docs/project.md` 与 `docs/specs/legacy/stignore-gui/spec.md`），更新目录结构树与内部引用
 - docs: 同步版本号至 v1.18.5（脚本头 `//Version` / `$ScriptVersion` / `.stignore` 头 / README 徽章）
 
 ### v1.18.4 (2026-09-21)
@@ -530,7 +535,7 @@ flutter test --coverage                 # 生成 coverage/lcov.info（含每文�
 ### 9.4 实现分工
 
 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
-**Dart + Flutter 桌面版（v1.28.6）为主实现**，构建为独立 `.exe` 分发。两者共享同一
+**Dart + Flutter 桌面版（v1.28.7）为主实现**，构建为独立 `.exe` 分发。两者共享同一
 `.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等状态与验证边界，
 见 [开发任务清单](tasks.md)；功能与 UI 的后续完善建议（PROP-1~13，按 P0/P1/P2 分级）
 集中维护于 [任务清单](tasks.md) 的「评估中建议（Backlog）」一节（自 `spec.md` 迁移而来）。
@@ -561,7 +566,7 @@ CI 构建的发布包统一命名（与全局约定一致）：
 - Release 资产**仅上传归档**（`*.zip` / `*.tar.gz`），不上传构建目录树。
 - 预发布版本以 GitHub Release 的 `prerelease` 标记区分，**不在文件名加后缀**。
 
-示例：`SyncthingIgnoreGUI-v1.28.6-windows-x64.zip`
+示例：`SyncthingIgnoreGUI-v1.28.7-windows-x64.zip`
 
 ### 9.6 忽略清单在线更新（v1.22.0）
 

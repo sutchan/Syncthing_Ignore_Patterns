@@ -5,6 +5,17 @@
 
 ---
 
+## [v1.28.7] - 2026-10-01
+
+### 重构
+- refactor: 优化目录结构——`services/window_bounds.dart` 重命名为 `window_bounds_service.dart`（与测试名对齐，消除跨层同名）；测试目录镜像 `lib/` 分层（models/services/state/ui）
+
+### 文档
+- docs: 归档遗留规范至 `docs/specs/legacy/stignore-gui/spec.md`；README 新增双轨说明；`project.md` 补工具目录约定
+
+### 杂项
+- chore: 同步版本至 v1.28.7（VERSION / pubspec `1.28.7+1` / `AppState.version` / `manifest.dart 示例` / README 徽章 / project.md / tasks.md）
+
 ## [v1.28.6] - 2026-09-30
 
 ### 修复

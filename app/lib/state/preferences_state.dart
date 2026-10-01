@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart';
 import '../i18n.dart';
 import '../models/window_bounds.dart';
 import '../services/settings_store.dart';
-import '../services/window_bounds.dart';
+import '../services/window_bounds_service.dart';
 
 /// Preferences shared by the UI; mixed into `AppState`.
 ///

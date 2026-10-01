@@ -9,7 +9,7 @@
 ## 进度状态（2026-09-30 核对）
 
 - 原始需求 REQ-1 ~ REQ-10 全部完成，无已知功能缺口：扫描（含映射网络盘 / UNC 路径，v1.26.0）、应用（SHA-256 比对 + 写前备份 + ≤3 轮转 + 应用阶段可停止）、中英双语 / 明暗主题、窗口几何记忆、忽略清单在线更新、应用前确认 + 扫描实时状态行、应用更新检查（含一键下载安装）、窗口拖拽填入。
-- 健康度：`flutter analyze` 零告警；`flutter test` 全量 **90/90** 通过（`lib/`）；版本三轨一致（Flutter `1.28.6` / PowerShell `1.18.5` / 规则集 `1.18.5`）。性能基准与实测数据见 [performance.md](performance.md)。
+- 健康度：`flutter analyze` 零告警；`flutter test` 全量 **90/90** 通过（`lib/`）；版本三轨一致（Flutter `1.28.7` / PowerShell `1.18.5` / 规则集 `1.18.5`）。性能基准与实测数据见 [performance.md](performance.md)。
 - 评估中建议：13 条（P0×3 / P1×5 / P2×5，见下方「评估中建议」），均未列入待办。
 
 ## 剩余任务（已采纳待办）
@@ -75,6 +75,6 @@
 - **PROP-13 进度 ETA**：状态行在已知总量（多根）时给出预计剩余时间，提升大扫描可预期性。
 
 ## 版本说明
-- Flutter 桌面版：v1.28.6（pubspec `1.28.6+1`、`AppState.version`）
+- Flutter 桌面版：v1.28.7（pubspec `1.28.7+1`、`AppState.version`）
 - PowerShell 遗留版：v1.18.5（独立演进）
 - 规则集 `.stignore`：v1.18.5（独立版本，`Updated` 为规则集修订日）

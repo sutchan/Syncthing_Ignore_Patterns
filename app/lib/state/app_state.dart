@@ -38,7 +38,7 @@ class AppState extends ChangeNotifier
         ScanFlow,
         ApplyFlow {
   AppState({
-    this.version = '1.28.6',
+    this.version = '1.28.7',
     SettingsStore? settingsStore,
     RulesetStore? rulesetStore,
     RulesetFetcher? rulesetFetcher,
