@@ -4,7 +4,7 @@
 
 > A curated, ready-to-use `.stignore` rule set: 21 categories · 329 patterns that exclude system files, caches, build artifacts, and app data.
 
-![Version](https://img.shields.io/badge/version-v1.32.1-blue)
+![Version](https://img.shields.io/badge/version-v1.32.2-blue)
 ![CI](https://github.com/sutchan/Syncthing_Ignore_Patterns/actions/workflows/ci.yml/badge.svg)
 ![Updated](https://img.shields.io/badge/updated-2026--09--22-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -21,7 +21,7 @@
 - ✅ **Bilingual docs** plus a batch-sync GUI tool
 - ✅ **Actively maintained** as the ecosystem evolves
 
-> The `Updated` date in the `.stignore` header (`2026-09-22`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.32.1`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
+> The `Updated` date in the `.stignore` header (`2026-09-22`) is the ruleset revision date; the tool release version lives in CHANGELOG (currently `v1.32.2`). One tracks "ruleset revision", the other "tool release" — they may differ and that is expected.
 
 ### Quick Start
 
@@ -96,7 +96,7 @@ The project ships two implementations with identical behavior (scan / apply / ba
 
 > **Two-track note**: both implementations share the same `.stignore` ruleset and docs. **The Flutter edition is the primary implementation (actively evolving)**; **the PowerShell edition is a legacy maintenance track (fix-only, no new features)** for environments without Flutter.
 
-#### Option 1: Dart + Flutter Desktop (recommended, primary · v1.32.1)
+#### Option 1: Dart + Flutter Desktop (recommended, primary · v1.32.2)
 
 Located in `app/`, built into a standalone `.exe` — no PowerShell required on the target machine:
 

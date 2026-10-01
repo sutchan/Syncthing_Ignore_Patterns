@@ -44,9 +44,7 @@ class ResultsListSliver extends StatelessWidget {
         itemBuilder: (context, i) {
           final path = items[i];
           final ok = compliance[path] ?? false;
-          final isSel =
-              context.select<AppState, bool>((s) => s.isSelected(path));
-          return _ResultsRow(path: path, ok: ok, selected: isSel);
+          return _ResultsRow(path: path, ok: ok);
         },
       ),
     );
@@ -57,16 +55,15 @@ class _ResultsRow extends StatelessWidget {
   const _ResultsRow({
     required this.path,
     required this.ok,
-    required this.selected,
   });
 
   final String path;
   final bool ok;
-  final bool selected;
 
   @override
   Widget build(BuildContext context) {
     final state = context.read<AppState>();
+    final selected = context.select<AppState, bool>((s) => s.isSelected(path));
     return InkWell(
       key: Key('result-row-$path'),
       onTap: () => _openFolder(path),

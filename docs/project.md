@@ -35,7 +35,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 SyncthingIgnorePatterns/
 ├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
-├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.32.1）
+├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.32.2）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
 │   ├── lib/
 │   │   ├── main.dart         # 入口，注入 AppState；首帧后恢复/采样窗口几何
@@ -47,7 +47,7 @@ SyncthingIgnorePatterns/
 │   │   └── ui/               # home_page.dart（装配）+ settings_dialog / root_field / options_row / scan_options / ruleset_card / action_row / results_list / log_list / about_dialog
 │   ├── windows/runner/resources/app_icon.ico   # Windows 应用图标（品牌资产，见 §10）
 │   ├── assets/.stignore      # 标准规则集（运行时 rootBundle 加载）
-│   ├── tool/                 # 性能基准脚本（perf_benchmark.dart，v1.32.1）
+│   ├── tool/                 # 性能基准脚本（perf_benchmark.dart，v1.32.2）
 │   └── test/                 # 22 个测试文件，按 lib/ 分层为 models/services/state/ui（单元 / 流程 / 部件 / 性能基准）；CI 强制行覆盖率 ≥80%
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档
@@ -69,7 +69,7 @@ SyncthingIgnorePatterns/
 
 - 语义化版本 `MAJOR.MINOR.PATCH`；文档/配置类变更默认升级 `PATCH`，新功能升级 `MINOR`。
 - **主实现（Flutter 桌面版）版本单一来源**：
-  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.32.1+1`）
+  - `app/pubspec.yaml` 的 `version:` 字段（如 `1.32.2+2`）
   - `app/lib/state/app_state.dart` 的 `AppState.version`（关于框 / 日志展示）
   - `README.md` / `README_EN.md` 版本徽章
   - 根目录 `VERSION` 文件（CI 读取的主实现版本单一来源）
@@ -548,7 +548,7 @@ flutter build windows --release --tree-shake-icons        # 产物：build/windo
 `app_paths_test`、`app_update_test`、`app_update_state_test`、`file_drop_test`、`version_util_test`、
 `update_installer_test`、`perf_layout_bench_test`（首帧构建计数，兼性能回归守卫，v1.28.3）
 与 `widget_test`（应用壳 + 设置对话框 + 选项 + Apply 确认框 + 关于对话框）
-共 24 个文件（22 单元 + 2 集成）/ 90 个用例；本地离线运行 89 通过 / 1 失败（失败项为 `app/test/ui/widget_test.dart` 的语言切换用例，属代码问题待修）。行覆盖率以 CI `build-windows` 实测为准（旧基线 85.20%/956/1122 系 v1.28.2 口径，代码量已远超该规模，需重新标定）；本地离线实测约 **72.77%**（1144/1572），已低于下方 **≥80%** 门禁，存在回归风险。CI `build-windows` 强制
+共 24 个文件（22 单元 + 2 集成）/ 90 个用例；本地离线运行 90/90 全部通过（含 v1.32.1 修复的语言切换用例）。行覆盖率以 CI `build-windows` 实测为准（旧基线 85.20%/956/1122 系 v1.28.2 口径，代码量已远超该规模，需重新标定）；本地离线实测 **81.69%**（1285/1573），已满足下方 **≥80%** 门禁。CI `build-windows` 强制
 **≥80%** 门禁（`Coverage check (>= 80% lines)`）。生成 LCOV：
 
 ```bash
@@ -564,7 +564,7 @@ flutter test --coverage                 # 生成 coverage/lcov.info（含每文�
 ### 9.4 实现分工
 
 `SyncthingIgnoreGUI.ps1`（PowerShell WinForms，v1.18.5）已转为**遗留维护态**；
-**Dart + Flutter 桌面版（v1.32.1）为主实现**，构建为独立 `.exe` 分发。两者共享同一
+**Dart + Flutter 桌面版（v1.32.2）为主实现**，构建为独立 `.exe` 分发。两者共享同一
 `.stignore` 规则集与文档。Flutter 版相较 PowerShell 版的功能对等状态与验证边界，
 见 [开发任务清单](tasks.md)；功能与 UI 的后续完善建议（PROP-1~13，按 P0/P1/P2 分级）
 集中维护于 [任务清单](tasks.md) 的「评估中建议（Backlog）」一节（自 `spec.md` 迁移而来）。
@@ -595,7 +595,7 @@ CI 构建的发布包统一命名（与全局约定一致）：
 - Release 资产**仅上传归档**（`*.zip` / `*.tar.gz`），不上传构建目录树。
 - 预发布版本以 GitHub Release 的 `prerelease` 标记区分，**不在文件名加后缀**。
 
-示例：`SyncthingIgnoreGUI-v1.32.1-windows-x64.zip`
+示例：`SyncthingIgnoreGUI-v1.32.2-windows-x64.zip`
 
 ### 9.6 忽略清单在线更新（v1.22.0）
 

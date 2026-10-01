@@ -5,6 +5,17 @@
 
 ---
 
+## [v1.32.2] - 2026-10-01
+
+### 修复
+- fix: 修复 `ResultsListSliver` 在 `SliverList.builder` 的 `itemBuilder` 中误用 `context.select` 导致的潜在崩溃——结果列表有数据时触发 provider 断言（`widget is! SliverWithKeepAliveWidget`）；将选中态读取移入 `_ResultsRow.build` 自身上下文
+
+### 测试
+- test: 补齐 `backup_manager` / `backup_state` / `results_view_state` / `pickers_state` / `preferences_state` 单测与 results 组件（`results_filter` / `results_list`）widget 测试；行覆盖率 72.77% → 81.69%，满足 CI ≥80% 门禁
+
+### 杂项
+- chore: 同步版本至 v1.32.2（VERSION / pubspec `1.32.2+2` / `AppState.version` / `manifest.dart 示例` / README 徽章 / project.md / tasks.md）；校正 project.md §9.3 文档漂移（语言切换用例 90/90、覆盖率实测值）
+
 ## [v1.32.1] - 2026-10-01
 
 ### CI
