@@ -21,7 +21,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  coverage: ^1.10.0
+  coverage: ^1.16.0
   integration_test:
     sdk: flutter
 
