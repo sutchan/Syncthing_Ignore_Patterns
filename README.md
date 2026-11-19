@@ -2,11 +2,11 @@
 
 # Syncthing 忽略模式
 
-> 开箱即用的 `.stignore` 规则集：21 个分类 · 329 条规则，自动排除系统文件、缓存、构建产物与应用数据。
+> 开箱即用的 `.stignore` 规则集：21 个分类 · 328 条规则，自动排除系统文件、缓存、构建产物与应用数据。
 
 ![Version](https://img.shields.io/badge/version-v1.33.0-blue)
 ![CI](https://github.com/sutchan/Syncthing_Ignore_Patterns/actions/workflows/ci.yml/badge.svg)
-![Updated](https://img.shields.io/badge/updated-2026--09--22-brightgreen)
+![Updated](https://img.shields.io/badge/updated-2026--11--19-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Categories](https://img.shields.io/badge/categories-21-blueviolet)
 
@@ -16,12 +16,12 @@
 
 ## 中文说明
 
-- ✅ **21 分类 / 329 条规则**，覆盖系统、缓存、构建产物、数据库等噪音文件
+- ✅ **21 分类 / 328 条规则**，覆盖系统、缓存、构建产物、数据库等噪音文件
 - ✅ **开箱即用**：复制到同步根目录即可生效
 - ✅ **中英双语文档**，附批量同步 GUI 工具
 - ✅ **持续维护**，随生态更新规则
 
-> `.stignore` 文件头 `Updated`（`2026-09-22`）是规则集修订日；工具发布版本见 CHANGELOG（当前 `v1.33.0`）。两者分别对应"规则集修订"与"工具发布"，不同步属正常。
+> `.stignore` 文件头 `Updated`（`2026-11-19`）是规则集修订日、版本为 `v1.18.6`；工具发布版本见 CHANGELOG（当前 `v1.33.0`）。两者分别对应"规则集修订"与"工具发布"，不同步属正常。
 
 > **GUI 工具**：推荐使用 Flutter 桌面版（主实现，v1.33.0，持续维护）。遗留的 `SyncthingIgnoreGUI.ps1`（PowerShell 版）已进入维护模式，仅作兼容保留，新功能请使用 Flutter 版；能力差异详见 [docs/feature-comparison.md](docs/feature-comparison.md)。
 

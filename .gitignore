@@ -42,3 +42,4 @@ app/.flutter-plugins-dependencies
 app/coverage/
 *.sync-conflict-*
 *.bak
+.tmp/
