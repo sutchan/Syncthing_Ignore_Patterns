@@ -20,7 +20,7 @@
 ```bash
 cd app
 dart run tool/perf_benchmark.dart       # 缓冲策略 + HTTP 连接复用（纯 Dart）
-flutter test test/perf_layout_bench_test.dart  # 首帧构建计数（需 Flutter 引擎）
+flutter test test/ui/perf_layout_bench_test.dart  # 首帧构建计数（需 Flutter 引擎）
 ```
 
 - 纯 Dart 基准：[`app/tool/perf_benchmark.dart`](../app/tool/perf_benchmark.dart)

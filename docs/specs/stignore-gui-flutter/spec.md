@@ -58,7 +58,7 @@ Dart + Flutter Windows 桌面应用，提供 `.stignore` 规则的批量扫描�
 
 ### REQ-7 窗口（v1.21.0）
 - 记忆主窗口大小与位置：下次启动恢复到上次几何
-- 实现：`lib/services/window_bounds.dart` 经 win32 按窗口类名 `FLUTTER_RUNNER_WIN32_WINDOW` 定位宿主窗口，`GetWindowRect` 读取 / `SetWindowPos` 恢复；无新增依赖、无原生插件
+- 实现：`lib/services/window_bounds_service.dart` 经 win32 按窗口类名 `FLUTTER_RUNNER_WIN32_WINDOW` 定位宿主窗口，`GetWindowRect` 读取 / `SetWindowPos` 恢复；无新增依赖、无原生插件（v1.28.7 由 `window_bounds.dart` 重命名）
 - 持久化：随偏好写入 `settings.json` 的 `window` 字段；启动首帧后 `restoreWindowBounds()` 恢复，运行中每 2 秒采样一次变更并落盘（移动/缩放通知需原生钩子，故采用轮询）
 - 稳健性：过小（<320×240）或完全落在虚拟屏幕（所有显示器并集）之外的几何被忽略，避免显示器变更后窗口出现在屏幕外
 

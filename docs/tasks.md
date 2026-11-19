@@ -6,11 +6,12 @@
 > ② **评估中建议（Backlog）** = 功能 / UI 完善提案（PROP 编号），采纳后转入剩余任务；
 > ③ 已完成任务一律移除，历史见 `CHANGELOG.md` 与 `docs/project.md` §7。
 
-## 进度状态（2026-10-01 核对）
+## 进度状态（2026-11-19 核对）
 
 - 原始需求 REQ-1 ~ REQ-10 全部完成，无已知功能缺口：扫描（含映射网络盘 / UNC 路径，v1.26.0）、应用（SHA-256 比对 + 写前备份 + ≤3 轮转 + 应用阶段可停止）、中英双语 / 明暗主题、窗口几何记忆、忽略清单在线更新、应用前确认 + 扫描实时状态行、应用更新检查（含一键下载安装）、窗口拖拽填入。
 - 健康度：`flutter analyze` 零告警；`flutter test` 全量 **116/116** 通过（`lib/` 29 个单元测试文件）；行覆盖率实测 **80.56%（1314/1631）**，满足 CI **≥80%** 门禁；版本三轨一致（Flutter `1.33.0` / PowerShell `1.18.5` / 规则集 `1.18.6`）。性能基准与实测数据见 [performance.md](performance.md)。
-- 评估中建议：18 条（PROP-1~18）现已全部实现并移出，无剩余任务、无 Backlog：PROP-9/6/12/10（v1.29.0）+ PROP-8/11/13（v1.30.0）+ PROP-4/5/7（v1.31.0）+ PROP-1/2/3（v1.32.0）+ PROP-14/15/16/17/18（v1.33.0）。
+- 评估中建议：18 条（PROP-1~18）现已全部实现并移出，无 Backlog：PROP-9/6/12/10（v1.29.0）+ PROP-8/11/13（v1.30.0）+ PROP-4/5/7（v1.31.0）+ PROP-1/2/3（v1.32.0）+ PROP-14/15/16/17/18（v1.33.0）。
+- 2026-11-19：代码审查发现 5 项待修复缺陷（BUG-1~5，4 项 P1 + 1 项 P2），详见下方「剩余任务」；均为实现与既有规格/契约的偏差，版本仍为 v1.33.0，未升版。
 - 2026-10-01：首批 PROP-9/6/12/10（v1.29.0）+ 第二批 PROP-8/11/13（v1.30.0）+ 第三批 PROP-4/5/7（v1.31.0）+ 第四批 PROP-1/2/3（v1.32.0）已实现；所有 Backlog 项完成，本文件为单一来源。
 - 2026-10-01：功能正常化——清理 PROP-2 新增文件 4 个 lint info（`flutter analyze` 零问题），修复设置对话框 `RenderFlex` 溢出（`widget_test` 语言切换用例恢复 90/90）；版本展示位同步至 v1.32.1。
 - 2026-10-01：质量门禁修复——补齐 `backup_manager` / `backup_state` / `results_view_state` / `pickers_state` / `preferences_state` 单测与 results 组件 widget 测试，行覆盖率 72.77% → **81.69%** 越过 ≥80% 门禁；修复 `ResultsListSliver` 在 `SliverList.builder` `itemBuilder` 中误用 `context.select` 的潜在崩溃（结果有数据时触发 provider 断言）；版本展示位同步至 v1.32.2。
@@ -20,8 +21,17 @@
 
 ## 剩余任务（已采纳待办）
 
-> 所有已采纳任务（PROP-1~18）均已实现并移出，无剩余任务。完整规格与历史见下方 Backlog 与 `CHANGELOG.md`、`docs/project.md` §7。
-> 2026-10-01：PROP-14~18 全部实现（v1.33.0），详见 `CHANGELOG.md` 与 `docs/project.md` §7。
+> 2026-11-19 代码审查发现以下缺陷，尚未修复（按严重程度分级）。修复后应移出本节并写入 `CHANGELOG.md`。
+
+### 代码审查缺陷（2026-11-19，待修复）
+
+- **BUG-1（P1）Apply 异常时界面锁死**：`state/apply_flow.dart` 的 `apply()` 缺整体 `try/finally`；清单重写（约 :142）与合规重算（约 :160）抛异常时 `finish()` 不执行，`isBusy` 永久为 `true`。建议主体包 `try/catch/finally`，保底 `finish()`。
+- **BUG-2（P1）清单重写违背 force 契约**：`state/apply_flow.dart:129-144` 只要非预览且发生替换/错误就重写清单剔除不存在路径，**不检查 `force`**，且发生在 `result.cancelled` 判定之前（`applier.dart:126-133` 的 force 分支仅记 `cleanedStale` 计数）。与规格「仅 force 清理失效路径」及「停止后不再写入」冲突。建议依 `result.cleaned`/force 判定，并将取消判定上移。
+- **BUG-3（P1）坏文件中断整批 Apply**：`services/applier.dart:135` 的目标文件 `readAsString()` 在 `try` 外，单个编码非法/被占用文件会冒泡终止整批。建议纳入逐文件 try/catch，失败记 `errors++` 并继续。
+- **BUG-4（P1）备份恢复可能删错文件**：`services/backup_manager.dart:57-68` 先轮转备份再复制待恢复文件，若目标备份恰在轮转范围内会被先删。建议先校验并恢复、最后轮转，且轮转排除该备份。
+- **BUG-5（P2）更新归档无完整性校验**：`services/updater_script.dart:67` 的 `Expand-Archive -Force` 覆盖应用目录，下载仅校验 zip 魔数与大小上限，无 SHA256/签名与 zip-slip 显式防护。建议校验发布方 SHA256 并检查条目路径。
+
+> 历史：所有已采纳功能任务（PROP-1~18）均已实现并移出（v1.33.0）。完整规格与历史见 `CHANGELOG.md`、`docs/project.md` §7。
 
 ## 评估中建议（Backlog，非待办）
 

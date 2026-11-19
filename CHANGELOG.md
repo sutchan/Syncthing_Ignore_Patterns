@@ -17,6 +17,7 @@
 ### 杂项
 - chore: 同步版本至 v1.33.0（VERSION / pubspec `1.33.0+5` / `AppState.version` / `manifest.dart 示例` / README 徽章 / project.md / tasks.md）
 - docs（2026-11-19 口径校准，不升版本）: 规则集版本/条数/修订日统一至 HEAD 根 `.stignore` 权威值 `v1.18.6` / 328 条 / `Updated 2026-11-19`（README 中英徽章与正文、project.md、tasks.md、feature-comparison.md、CONTRIBUTING.md）；测试口径统一为 `flutter test` 116/116、29 单元 + 2 集成文件、行覆盖率实测 80.56%（1314/1631）（project.md §3/§9.3、tasks.md）；修正 `.github/` 文档失效的 `openspec/` 路径为 `docs/`、补齐 Flutter 主实现版本同步位与双轨版本查询命令。注：`app/assets/.stignore` 打包副本仍为 v1.18.5/329 条，与根不同步，作为已知缺陷标注，未改动任何 `.stignore` 文件。
+- docs（2026-11-19 文档-代码事实复核，不升版本）: 修正 `SECURITY.md`（三轨版本支持、三项用户主动联网行为、移除"纯本地不联网"错误表述、更新归档无 SHA256 校验的已知短板）；修正 `feature-comparison.md`（PowerShell 版明暗主题与窗口拖拽实际均支持）；修正文档失效路径（`spec.md`/`project.md` 的 `window_bounds.dart`→`window_bounds_service.dart`、`performance.md` 布局基准测试路径补 `ui/`）；`perf_layout_bench_test` 新增版本标注 v1.28.3→v1.28.1；`project.md` 术语表规则集"一致"改为指向已知缺陷；`tasks.md` 登记代码审查发现的 5 项待修缺陷（BUG-1~5，4×P1 + 1×P2）。
 
 ---
 

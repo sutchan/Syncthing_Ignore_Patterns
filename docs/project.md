@@ -8,7 +8,7 @@
 
 | 术语 | 含义 |
 |------|------|
-| 忽略规则集 | 标准 `.stignore` 规则源（根目录与 `app/assets/.stignore` 一致），含 `//Version`/`//Updated` 头，独立版本演进 |
+| 忽略规则集 | 标准 `.stignore` 规则源（根目录与打包副本 `app/assets/.stignore` **应一致**，CI `validate` 阻断不一致；当前副本滞后，见 §4 已知缺陷），含 `//Version`/`//Updated` 头，独立版本演进 |
 | 扫描清单 | 工具运行时生成的 `stignore-paths.json`（记录已扫描到的 `.stignore` 路径），非规则本身 |
 | 主实现 | Dart + Flutter 桌面版（`app/`），当前唯一活跃开发线 |
 | 遗留版 | `SyncthingIgnoreGUI.ps1`（PowerShell WinForms），仅修复性维护、不新增功能 |
@@ -521,7 +521,7 @@ SyncthingIgnorePatterns/
 | `lib/services/applier.dart` | 应用标准规则：SHA-256 比对跳过一致文件、写前 `.bak.<时间戳>` 备份、`<base>.bak.*` 轮转保留 ≤3、仅 `force` 清理失效路径；`applyRules` 支持 `skipRoots`（v1.19.1）自动跳过应用自身目录子树、`isCancelled` 回调支持应用阶段中止（`ApplyResult.cancelled`，v1.23.0） |
 | `lib/services/rules_source.dart` | 从 `assets/.stignore` 加载标准规则并计算 SHA-256 |
 | `lib/services/platform_io.dart` | Windows 驱动器枚举（win32 `GetLogicalDrives` / `GetDriveType`）；v1.26.0 起 `listScanDrives` 由仅固定盘扩展为固定 + 映射网络驱动器（DRIVE_REMOTE），新增 `normalizeRootPath` 归一化裸盘符 `Z:`→`Z:\`、正斜杠→反斜杠、UNC 路径可直填 |
-| `lib/services/window_bounds.dart` | 经 win32 按窗口类名 `FLUTTER_RUNNER_WIN32_WINDOW` 找宿主窗口，`GetWindowRect` 读取 / `SetWindowPos` 恢复几何；越界/过小几何忽略，非 Windows 为 no-op（v1.21.0） |
+| `lib/services/window_bounds_service.dart` | 经 win32 按窗口类名 `FLUTTER_RUNNER_WIN32_WINDOW` 找宿主窗口，`GetWindowRect` 读取 / `SetWindowPos` 恢复几何；越界/过小几何忽略，非 Windows 为 no-op（v1.21.0；v1.28.7 由 `window_bounds.dart` 重命名；非 Windows 平台经 `isWindowGeometrySupported()` 明确标注不支持） |
 | `lib/services/settings_store.dart` | 用户偏好（语言 / 主题 / 窗口几何）JSON 持久化：`%APPDATA%\SyncthingIgnoreGUI\settings.json`；纯 `dart:io`，无新增依赖，缺失/损坏回退默认值 |
 | `lib/services/app_paths.dart` | 共享的用户数据目录（`%APPDATA%\SyncthingIgnoreGUI`），`settings_store` 与清单缓存复用（v1.22.0） |
 | `lib/services/ruleset_store.dart` | 清单（`.stignore`）读写：来源优先级 exe 同目录 → 用户数据目录 → 内置资源；写入优先 exe 同目录、失败回退（v1.22.0） |
@@ -582,7 +582,7 @@ flutter build windows --release --tree-shake-icons        # 产物：build/windo
 （含 `applyDrop`）、`scan_flow_test`、`apply_flow_test`、`platform_io_test`、
 `window_bounds_service_test`、`ruleset_info_test`、`ruleset_update_test`、`ruleset_fetch_test`、
 `app_paths_test`、`app_update_test`、`app_update_state_test`、`file_drop_test`、`version_util_test`、
-`update_installer_test`、`perf_layout_bench_test`（首帧构建计数，兼性能回归守卫，v1.28.3）
+`update_installer_test`、`perf_layout_bench_test`（首帧构建计数，兼性能回归守卫，v1.28.1）
 与 `widget_test`（应用壳 + 设置对话框 + 选项 + Apply 确认框 + 关于对话框）
 共 **29 个单元测试文件 + 2 个集成测试文件（31 个）**，本地离线 `flutter test` **116/116 全部通过**（含 v1.32.1 修复的语言切换用例、v1.32.2 修复的 `ResultsListSliver` 崩溃）。行覆盖率实测 **80.56%（1314/1631）**，满足 CI **≥80%** 门禁（旧值 81.69%/1285/1573 与 85.20%/956/1122 均为历史口径，代码量增长后已失效，以本节实测为准）。CI `build-windows` 强制
 **≥80%** 门禁（`Coverage check (>= 80% lines)`）。生成 LCOV：
