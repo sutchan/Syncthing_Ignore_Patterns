@@ -1,6 +1,6 @@
 //Syncthing Ignore Patterns Lists
-//Version: 1.18.5
-//Updated: 2026-09-22
+//Version: 1.18.6
+//Updated: 2026-11-19
 
 //System & OS Files
 **/$RECYCLE.BIN/
@@ -95,7 +95,6 @@
 **/.secretAlbum/
 **/.streams/
 **/.stignore-extra
-**/.sync/
 **/.tmfs/
 **/.trashBin/
 **/.webaxs/
