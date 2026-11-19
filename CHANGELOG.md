@@ -16,6 +16,7 @@
 
 ### 杂项
 - chore: 同步版本至 v1.33.0（VERSION / pubspec `1.33.0+5` / `AppState.version` / `manifest.dart 示例` / README 徽章 / project.md / tasks.md）
+- docs（2026-11-19 口径校准，不升版本）: 规则集版本/条数/修订日统一至 HEAD 根 `.stignore` 权威值 `v1.18.6` / 328 条 / `Updated 2026-11-19`（README 中英徽章与正文、project.md、tasks.md、feature-comparison.md、CONTRIBUTING.md）；测试口径统一为 `flutter test` 116/116、29 单元 + 2 集成文件、行覆盖率实测 80.56%（1314/1631）（project.md §3/§9.3、tasks.md）；修正 `.github/` 文档失效的 `openspec/` 路径为 `docs/`、补齐 Flutter 主实现版本同步位与双轨版本查询命令。注：`app/assets/.stignore` 打包副本仍为 v1.18.5/329 条，与根不同步，作为已知缺陷标注，未改动任何 `.stignore` 文件。
 
 ---
 

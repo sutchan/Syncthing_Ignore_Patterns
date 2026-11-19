@@ -12,9 +12,10 @@ assignees: ''
 
 ## 影响范围
 
-- [ ] GUI 工具（`SyncthingIgnoreGUI.ps1`）
+- [ ] GUI 工具（Flutter 主实现 `app/`）
+- [ ] GUI 工具（PowerShell 遗留版 `SyncthingIgnoreGUI.ps1`）
 - [ ] 规则集（`.stignore`）
-- [ ] 文档（README / README_EN / openspec）
+- [ ] 文档（README / README_EN / docs）
 
 ## 复现步骤
 
@@ -34,18 +35,24 @@ assignees: ''
 ## 环境信息
 
 ```text
+使用的实现（Flutter 版 / PowerShell 版）：
 工具版本：
+规则集版本（作用于哪版均请填）：
 Windows 版本：
-PowerShell 版本（$PSVersionTable.PSVersion）：
+PowerShell 版本（仅 PowerShell 版需要）：
 ```
 
 获取方式：
 
 ```powershell
-Select-String -Path .\SyncthingIgnoreGUI.ps1 -Pattern '^\$ScriptVersion'
+Get-Content .\VERSION                                          # Flutter 主实现版本
+Select-String -Path .\SyncthingIgnoreGUI.ps1 -Pattern '^\$ScriptVersion'  # PS 遗留版版本
+Select-String -Path .\.stignore -Pattern '^//Version'          # 规则集版本
 $PSVersionTable.PSVersion
 [System.Environment]::OSVersion.VersionString
 ```
+
+Flutter 版亦可在「关于」对话框直接查看应用版本。
 
 ## 日志输出
 

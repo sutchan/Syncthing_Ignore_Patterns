@@ -50,7 +50,7 @@ Syncthing 同步文件夹时默认包含大量系统文件、缓存、构建产�
 
 ```
 SyncthingIgnorePatterns/
-├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.5，独立演进）
+├── .stignore                 # 标准规则源文件（Apply 依赖，规则集版本 v1.18.6 / 328 条 / Updated 2026-11-19，独立演进）
 ├── SyncthingIgnoreGUI.ps1    # 遗留实现（PowerShell WinForms，纯 ASCII，维护态，v1.18.5）
 ├── app/                      # Dart + Flutter 桌面版（主实现，构建为 exe，v1.33.0）
 │   ├── pubspec.yaml          # 依赖与 windows 桌面配置
@@ -65,7 +65,7 @@ SyncthingIgnorePatterns/
 │   ├── windows/runner/resources/app_icon.ico   # Windows 应用图标（品牌资产，见 §10）
 │   ├── assets/.stignore      # 标准规则集（运行时 rootBundle 加载）
 │   ├── tool/                 # 性能基准脚本（perf_benchmark.dart，v1.33.0）
-│   └── test/                 # 30 个测试文件（28 单元 + 2 集成），按 lib/ 分层为 models/services/state/ui；CI 强制行覆盖率 ≥80%（实测 81.69%）
+│   └── test/                 # 29 个单元测试文件（按 lib/ 分层为 models/services/state/ui）+ 2 个集成测试文件；CI 强制行覆盖率 ≥80%（实测 80.56%，1314/1631）
 ├── README.md                 # 中文文档
 ├── README_EN.md              # 英文文档
 ├── CHANGELOG.md              # 独立变更日志（Keep a Changelog 风格）
@@ -92,7 +92,7 @@ SyncthingIgnorePatterns/
   - 根目录 `VERSION` 文件（CI 读取的主实现版本单一来源）
   - 根目录 `CHANGELOG.md`（与本文档第 7 节一致）
 - **遗留实现（PowerShell 版）** 版本独立演进：`SyncthingIgnoreGUI.ps1` 文件头 `//Version` 与 `$ScriptVersion`。
-- **规则集 `.stignore`** 拥有独立版本（文件头 `//Version`），与工具发布版本可能不同步属正常（其 `Updated` 为规则集修订日）。
+- **规则集 `.stignore`** 拥有独立版本（文件头 `//Version`），与工具发布版本可能不同步属正常（其 `Updated` 为规则集修订日）。当前 `v1.18.6` / 328 条 / `Updated 2026-11-19`；根 `.stignore` 与打包副本 `app/assets/.stignore` 须完全一致（CI `validate` 阻断不一致）。**已知缺陷**：当前打包副本仍为 v1.18.5 / 329 条（含 `**/.sync/`），与根不同步，待同步。
 - 每次版本变更须同步上述对应位置并追加 CHANGELOG 条目。
 
 ## 5. GUI 功能规格（适用范围：PowerShell 遗留版 · 维护态）
@@ -584,7 +584,7 @@ flutter build windows --release --tree-shake-icons        # 产物：build/windo
 `app_paths_test`、`app_update_test`、`app_update_state_test`、`file_drop_test`、`version_util_test`、
 `update_installer_test`、`perf_layout_bench_test`（首帧构建计数，兼性能回归守卫，v1.28.3）
 与 `widget_test`（应用壳 + 设置对话框 + 选项 + Apply 确认框 + 关于对话框）
-共 30 个文件（28 单元 + 2 集成）/ 90 个用例；本地离线运行 90/90 全部通过（含 v1.32.1 修复的语言切换用例、v1.32.2 修复的 `ResultsListSliver` 崩溃）。行覆盖率以 CI `build-windows` 实测为准（旧基线 85.20%/956/1122 系 v1.28.2 口径，代码量已远超该规模，需重新标定）；本地离线实测 **81.69%**（1285/1573），已满足下方 **≥80%** 门禁。CI `build-windows` 强制
+共 **29 个单元测试文件 + 2 个集成测试文件（31 个）**，本地离线 `flutter test` **116/116 全部通过**（含 v1.32.1 修复的语言切换用例、v1.32.2 修复的 `ResultsListSliver` 崩溃）。行覆盖率实测 **80.56%（1314/1631）**，满足 CI **≥80%** 门禁（旧值 81.69%/1285/1573 与 85.20%/956/1122 均为历史口径，代码量增长后已失效，以本节实测为准）。CI `build-windows` 强制
 **≥80%** 门禁（`Coverage check (>= 80% lines)`）。生成 LCOV：
 
 ```bash

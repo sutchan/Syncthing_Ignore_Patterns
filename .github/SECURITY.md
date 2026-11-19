@@ -1,4 +1,4 @@
-<!-- SyncthingIgnorePatterns v1.16.2 -->
+<!-- SyncthingIgnorePatterns v1.33.0 -->
 
 # 安全策略
 

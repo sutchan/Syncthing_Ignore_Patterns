@@ -1,4 +1,4 @@
-<!-- SyncthingIgnorePatterns v1.16.2 -->
+<!-- SyncthingIgnorePatterns v1.33.0 -->
 
 # 贡献指南
 
@@ -6,9 +6,10 @@
 
 | 组成部分 | 文件 | 说明 |
 |---------|------|------|
-| 规则集 | `.stignore` | 20 个分类、285 条 Syncthing 忽略模式 |
-| GUI 工具 | `SyncthingIgnoreGUI.ps1` | WinForms 批量扫描/应用工具（单一自包含脚本） |
-| 文档 | `README.md` / `README_EN.md` / `CHANGELOG.md` / `openspec/` | 中英双语文档与项目规范 |
+| 规则集 | `.stignore` | 21 个分类、328 条 Syncthing 忽略模式（v1.18.6，修订日 2026-11-19） |
+| GUI 工具（主实现） | `app/`（Dart + Flutter 桌面版） | v1.33.0，持续维护，详见 `docs/specs/stignore-gui-flutter/spec.md` |
+| GUI 工具（遗留） | `SyncthingIgnoreGUI.ps1` | WinForms 批量扫描/应用工具（单一自包含脚本，v1.18.5，维护态） |
+| 文档 | `README.md` / `README_EN.md` / `CHANGELOG.md` / `docs/` | 中英双语文档与项目规范（原 `openspec/` 已迁移至 `docs/`） |
 
 ---
 
@@ -90,13 +91,13 @@ $errs
 
 ## 四、文档与版本同步（必做）
 
-每次改动都要升级一次最小版本号（patch），并同步以下**全部**位置：
+三轨版本**相互独立**，按你改动的部分只升级对应轨道的最小版本号（patch），并同步该轨道的**全部**展示位：
 
-- `SyncthingIgnoreGUI.ps1`：文件头 `//Version: x.y.z` 与变量 `$ScriptVersion`
-- `.stignore`：文件头 `//Version: x.y.z`
-- `README.md` / `README_EN.md`：版本徽章与正文中的版本引用（两份必须同时改）
-- `openspec/project.md`：第 3 节目录结构注记 **与** 第 7 节 CHANGELOG
-- `CHANGELOG.md`：新增对应版本小节（**根目录 `CHANGELOG.md` 与 `openspec/project.md` §7 是双副本，两处都要写**）
+- **Flutter 主实现**（当前 v1.33.0）：`VERSION` → `app/pubspec.yaml` `version:` → `app/lib/state/app_state.dart` `version` → `app/lib/models/manifest.dart` 示例 → `README.md` / `README_EN.md` 版本徽章 → `docs/project.md` → `docs/tasks.md` → 根 `CHANGELOG.md`
+- **PowerShell 遗留版**（当前 v1.18.5）：`SyncthingIgnoreGUI.ps1` 文件头 `//Version: x.y.z` 与变量 `$ScriptVersion`
+- **规则集**（当前 v1.18.6）：根 `.stignore` 与打包副本 `app/assets/.stignore` 文件头 `//Version`/`//Updated`（**两份必须完全一致**，CI `validate` 会阻断不一致）
+
+文档骨架：`docs/project.md`（第 3 节目录结构注记 + 第 7 节 CHANGELOG 摘录）与根 `CHANGELOG.md` 为双副本，两处都要写。`docs/` 为原 `openspec/` 迁移后的目录。
 
 未改动的文件**不要**批量刷写头注释版本号。
 
@@ -110,7 +111,7 @@ $errs
 feat: 新增浏览器缓存分类
 fix: 修复嵌套 node_modules 漏网
 docs: 同步 README 分类列表至 20 类
-chore: 升级版本至 v1.16.2
+chore: 升级版本至 v1.33.0
 ```
 
 PR 前请确认：
@@ -118,9 +119,10 @@ PR 前请确认：
 - [ ] 规则集改动已在 Syncthing 忽略模式预览中验证，且无新增误伤
 - [ ] 脚本为纯 ASCII、无语法错误、GUI 实际启动通过
 - [ ] 界面文案中英双份齐全
-- [ ] 版本号已在上述全部位置同步
-- [ ] `CHANGELOG.md` 与 `openspec/project.md` §7 均已追加条目
+- [ ] 对应轨道的版本号已在上述全部位置同步
+- [ ] 根 `CHANGELOG.md` 与 `docs/project.md` §7 均已追加条目
 - [ ] 中文与英文 README 同步更新
+- [ ] 若改动规则集：根 `.stignore` 与 `app/assets/.stignore` 完全一致（含版本头）
 
 ---
 

@@ -1,4 +1,4 @@
-<!-- SyncthingIgnorePatterns v1.16.2 -->
+<!-- SyncthingIgnorePatterns v1.33.0 -->
 
 # 获取帮助
 
@@ -11,7 +11,7 @@
 | 规则集内容、分类、安装方法 | [`README.md`](../README.md)（中文）/ [`README_EN.md`](../README_EN.md)（English） |
 | GUI 工具的每个功能、选项、工作流 | README 的「批量同步工具」一节 |
 | 版本历史与已知修复 | [`CHANGELOG.md`](../CHANGELOG.md) |
-| 项目架构红线与完整功能规格 | [`openspec/project.md`](../openspec/project.md) |
+| 项目架构红线与完整功能规格 | [`docs/project.md`](../docs/project.md) |
 | 贡献代码/规则 | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
 
 ## 提交 Issue
@@ -25,15 +25,21 @@
 提交 Bug 报告前请准备好：
 
 ```powershell
-# 工具版本
+# Flutter 主实现版本（推荐，app/ 下）
+Get-Content .\VERSION                 # 如 1.33.0
+
+# PowerShell 遗留版版本（仅维护态）
 Select-String -Path .\SyncthingIgnoreGUI.ps1 -Pattern '^\$ScriptVersion'
 
-# PowerShell 版本
-$PSVersionTable.PSVersion
+# 规则集版本
+Select-String -Path .\.stignore -Pattern '^//Version'
 
-# Windows 版本
+# 运行环境
+$PSVersionTable.PSVersion              # PowerShell 版本
 [System.Environment]::OSVersion.VersionString
 ```
+
+Flutter 版主界面「关于」对话框亦显示应用版本与清单版本。
 
 同时请附上：复现步骤（点了哪些按钮、勾了哪些选项）、GUI 底部日志框的输出（**请先脱敏路径**）、期望结果与实际结果。
 
