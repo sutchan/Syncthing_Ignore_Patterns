@@ -456,7 +456,7 @@ jobs:
       - name: Attest build provenance
         # SLSA 构建来源证明：将归档摘要绑定到本次构建的 OIDC 身份，可供
         # `gh attestation verify` 校验产物确实由本仓库 CI 产出（可追溯、防篡改）
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: ${{ env.APP_NAME }}-v${{ needs.version.outputs.version }}-windows-x64.zip
       - name: Create release
